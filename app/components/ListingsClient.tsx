@@ -33,6 +33,7 @@ const MILEAGE_CAPS = [
 export default function ListingsClient({ listings }: { listings: Listing[] }) {
   const [search, setSearch] = useState('')
   const [make, setMake] = useState('')
+  const [model, setModel] = useState('')
   const [city, setCity] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [maxMileage, setMaxMileage] = useState('')
@@ -57,7 +58,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       })
       const { filters } = await res.json() as { filters: AIFilters }
       setAiFilters(filters)
-      setMake(''); setCity(''); setMaxPrice(''); setMaxMileage(''); setSearch('')
+      setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage(''); setSearch('')
       const parts: string[] = []
       if (filters.make) parts.push(filters.make)
       if (filters.model) parts.push(filters.model)
@@ -82,6 +83,10 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   }
 
   const makes = useMemo(() => [...new Set(listings.map(l => l.make))].sort(), [listings])
+  const models = useMemo(() => {
+    if (!make) return []
+    return [...new Set(listings.filter(l => l.make === make).map(l => l.model))].sort()
+  }, [listings, make])
   const cities = useMemo(() => [...new Set(listings.map(l => l.city))].sort(), [listings])
 
   const filtered = useMemo(() => {
@@ -92,9 +97,10 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       result = result.filter(l => `${l.make} ${l.model}`.toLowerCase().includes(q))
     }
     const effectiveMake = aiFilters.make ?? (make || undefined)
+    const effectiveModel = aiFilters.model ?? (model || undefined)
     const effectiveCity = aiFilters.city ?? (city || undefined)
     if (effectiveMake) result = result.filter(l => l.make.toLowerCase() === effectiveMake.toLowerCase())
-    if (aiFilters.model) result = result.filter(l => l.model.toLowerCase() === aiFilters.model!.toLowerCase())
+    if (effectiveModel) result = result.filter(l => l.model.toLowerCase() === effectiveModel.toLowerCase())
     if (effectiveCity) result = result.filter(l => l.city === effectiveCity)
     const effectiveMaxPrice = aiFilters.maxPrice ?? (maxPrice ? parseInt(maxPrice) : undefined)
     if (effectiveMaxPrice) result = result.filter(l => l.price <= effectiveMaxPrice)
@@ -110,12 +116,12 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       if (sort === 'price_desc') return b.price - a.price
       return b.year - a.year
     })
-  }, [listings, search, make, city, maxPrice, maxMileage, sort, aiFilters])
+  }, [listings, search, make, model, city, maxPrice, maxMileage, sort, aiFilters])
 
-  const hasFilters = search || make || city || maxPrice || maxMileage || Object.keys(aiFilters).length > 0
+  const hasFilters = search || make || model || city || maxPrice || maxMileage || Object.keys(aiFilters).length > 0
 
   function clearFilters() {
-    setSearch(''); setMake(''); setCity(''); setMaxPrice(''); setMaxMileage('')
+    setSearch(''); setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage('')
     clearNlSearch()
   }
 
@@ -179,10 +185,16 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
             onChange={e => setSearch(e.target.value)}
             className="flex-1 min-w-44 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <select value={make} onChange={e => setMake(e.target.value)} className={selectCls}>
+          <select value={make} onChange={e => { setMake(e.target.value); setModel('') }} className={selectCls}>
             <option value="">All Makes</option>
             {makes.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
+          {make && (
+            <select value={model} onChange={e => setModel(e.target.value)} className={selectCls}>
+              <option value="">All Models</option>
+              {models.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          )}
           <select value={city} onChange={e => setCity(e.target.value)} className={selectCls}>
             <option value="">All Cities</option>
             {cities.map(c => <option key={c} value={c}>{c}</option>)}
