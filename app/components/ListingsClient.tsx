@@ -5,7 +5,7 @@ import type { Listing } from '@/lib/supabase'
 import { translations, cityLabel, type Lang } from '@/lib/translations'
 import ListingCard from './ListingCard'
 
-type SortKey = 'deal_score' | 'price_asc' | 'price_desc' | 'year_desc'
+type SortKey = 'deal_score' | 'price_asc' | 'price_desc' | 'year_desc' | 'mileage_asc'
 
 type AIFilters = {
   make?: string
@@ -52,8 +52,9 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: nlQuery }),
       })
-      const { filters } = await res.json() as { filters: AIFilters }
+      const { filters, sort: aiSort } = await res.json() as { filters: AIFilters; sort: string | null }
       setAiFilters(filters)
+      if (aiSort) setSort(aiSort as SortKey)
       setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage(''); setSearch('')
       const parts: string[] = []
       if (filters.make) parts.push(filters.make)
@@ -88,31 +89,63 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   }, [listings, make])
   const cities = useMemo(() => [...new Set(listings.map(l => l.city))].sort(), [listings])
 
-  const filtered = useMemo(() => {
-    let result = listings
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      result = result.filter(l => `${l.make} ${l.model}`.toLowerCase().includes(q))
+  const { filtered, isFallback } = useMemo(() => {
+    const sortFn = (a: typeof listings[0], b: typeof listings[0]) => {
+      if (sort === 'deal_score')  return (b.deal_score ?? 0) - (a.deal_score ?? 0)
+      if (sort === 'price_asc')   return a.price - b.price
+      if (sort === 'price_desc')  return b.price - a.price
+      if (sort === 'mileage_asc') return (a.mileage ?? Infinity) - (b.mileage ?? Infinity)
+      return b.year - a.year
     }
+
     const effectiveMake  = aiFilters.make  ?? (make  || undefined)
     const effectiveModel = aiFilters.model ?? (model || undefined)
     const effectiveCity  = aiFilters.city  ?? (city  || undefined)
-    if (effectiveMake)  result = result.filter(l => l.make.toLowerCase()  === effectiveMake.toLowerCase())
-    if (effectiveModel) result = result.filter(l => l.model.toLowerCase() === effectiveModel.toLowerCase())
-    if (effectiveCity)  result = result.filter(l => l.city === effectiveCity)
     const effectiveMaxPrice   = aiFilters.maxPrice   ?? (maxPrice   ? parseInt(maxPrice)   : undefined)
     const effectiveMaxMileage = aiFilters.maxMileage ?? (maxMileage ? parseInt(maxMileage) : undefined)
-    if (effectiveMaxPrice)   result = result.filter(l => l.price <= effectiveMaxPrice)
-    if (aiFilters.minPrice)  result = result.filter(l => l.price >= aiFilters.minPrice!)
-    if (effectiveMaxMileage) result = result.filter(l => l.mileage == null || l.mileage <= effectiveMaxMileage)
-    if (aiFilters.minYear)   result = result.filter(l => l.year >= aiFilters.minYear!)
-    if (aiFilters.maxYear)   result = result.filter(l => l.year <= aiFilters.maxYear!)
-    return [...result].sort((a, b) => {
-      if (sort === 'deal_score') return (b.deal_score ?? 0) - (a.deal_score ?? 0)
-      if (sort === 'price_asc')  return a.price - b.price
-      if (sort === 'price_desc') return b.price - a.price
-      return b.year - a.year
-    })
+
+    function applySearch(pool: typeof listings) {
+      if (!search.trim()) return pool
+      const q = search.toLowerCase()
+      return pool.filter(l => `${l.make} ${l.model}`.toLowerCase().includes(q))
+    }
+
+    function applyCategorical(pool: typeof listings) {
+      let r = pool
+      if (effectiveMake)  r = r.filter(l => l.make.toLowerCase()  === effectiveMake!.toLowerCase())
+      if (effectiveModel) r = r.filter(l => l.model.toLowerCase() === effectiveModel!.toLowerCase())
+      if (effectiveCity)  r = r.filter(l => l.city === effectiveCity)
+      return r
+    }
+
+    function applyNumeric(pool: typeof listings) {
+      let r = pool
+      if (effectiveMaxPrice)   r = r.filter(l => l.price <= effectiveMaxPrice!)
+      if (aiFilters.minPrice)  r = r.filter(l => l.price >= aiFilters.minPrice!)
+      if (effectiveMaxMileage) r = r.filter(l => l.mileage == null || l.mileage <= effectiveMaxMileage!)
+      if (aiFilters.minYear)   r = r.filter(l => l.year >= aiFilters.minYear!)
+      if (aiFilters.maxYear)   r = r.filter(l => l.year <= aiFilters.maxYear!)
+      return r
+    }
+
+    const searched = applySearch(listings)
+    const categorical = applyCategorical(searched)
+    const strict = applyNumeric(categorical)
+
+    if (strict.length > 0) {
+      return { filtered: [...strict].sort(sortFn), isFallback: false }
+    }
+
+    const hasAiNumeric = aiFilters.maxPrice || aiFilters.minPrice || aiFilters.maxMileage || aiFilters.minYear || aiFilters.maxYear
+    if (hasAiNumeric && categorical.length > 0) {
+      return { filtered: [...categorical].sort(sortFn), isFallback: true }
+    }
+
+    if (strict.length === 0 && (effectiveMake || effectiveModel || effectiveCity || search.trim())) {
+      return { filtered: [], isFallback: false }
+    }
+
+    return { filtered: [...searched].sort(sortFn), isFallback: false }
   }, [listings, search, make, model, city, maxPrice, maxMileage, sort, aiFilters])
 
   const hasFilters = search || make || model || city || maxPrice || maxMileage || Object.keys(aiFilters).length > 0
@@ -219,6 +252,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
             <option value="deal_score">{tr.sortBestDeal}</option>
             <option value="price_asc">{tr.sortPriceAsc}</option>
             <option value="price_desc">{tr.sortPriceDesc}</option>
+            <option value="mileage_asc">{tr.sortMileageAsc}</option>
             <option value="year_desc">{tr.sortNewest}</option>
           </select>
         </div>
@@ -226,6 +260,13 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
 
       {/* Results */}
       <main className="max-w-7xl mx-auto px-4 py-6">
+        {isFallback && (
+          <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-2.5 rounded-xl">
+            <span>⚠️</span>
+            <span>{tr.noExactMatch}</span>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 mb-5">
           <p className="text-sm font-medium text-gray-500">{tr.listingsFound(filtered.length)}</p>
           {hasFilters && (

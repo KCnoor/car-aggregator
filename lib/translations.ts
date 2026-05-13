@@ -26,6 +26,8 @@ export type Translations = {
   sortPriceAsc: string
   sortPriceDesc: string
   sortNewest: string
+  sortMileageAsc: string
+  noExactMatch: string
   listingsFound: (n: number) => string
   clearFilters: string
   noListings: string
@@ -72,6 +74,8 @@ export const translations: Record<Lang, Translations> = {
     sortPriceAsc: 'السعر: من الأقل',
     sortPriceDesc: 'السعر: من الأعلى',
     sortNewest: 'الأحدث أولاً',
+    sortMileageAsc: 'الأقل عداداً',
+    noExactMatch: 'ما في تطابق دقيق — هذي أقرب النتائج',
     listingsFound: (n) => `${n.toLocaleString()} إعلان`,
     clearFilters: 'مسح الفلاتر',
     noListings: 'ما في إعلانات تطابق بحثك',
@@ -125,6 +129,8 @@ export const translations: Record<Lang, Translations> = {
     sortPriceAsc: 'Price: Low → High',
     sortPriceDesc: 'Price: High → Low',
     sortNewest: 'Newest First',
+    sortMileageAsc: 'Lowest Mileage',
+    noExactMatch: 'No exact match — here are the closest results',
     listingsFound: (n) => `${n.toLocaleString()} ${n === 1 ? 'listing' : 'listings'} found`,
     clearFilters: 'Clear filters',
     noListings: 'No listings match your filters',
