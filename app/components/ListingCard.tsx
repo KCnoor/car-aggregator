@@ -33,20 +33,66 @@ function SourceBadge({ source }: { source: string }) {
   )
 }
 
+type TierConfig = {
+  label: string
+  bg: string
+  numberColor: string
+  labelColor: string
+  shadow: string
+}
+
 function DealScoreBadge({ score, lang }: { score: number | null; lang: Lang }) {
   if (score === null) return null
   const tr = translations[lang]
-  let label: string
-  let cls: string
-  if (score >= 8)   { label = tr.greatDeal; cls = 'bg-green-500 text-white' }
-  else if (score >= 6.5) { label = tr.goodDeal; cls = 'bg-emerald-500 text-white' }
-  else if (score >= 5)   { label = tr.fairPrice; cls = 'bg-amber-400 text-amber-900' }
-  else                   { label = tr.overpriced; cls = 'bg-red-100 text-red-600' }
+
+  let cfg: TierConfig
+  if (score >= 8) {
+    cfg = {
+      label: tr.greatDeal,
+      bg: 'bg-green-500',
+      numberColor: 'text-white',
+      labelColor: 'text-green-100',
+      shadow: '0 4px 14px rgba(34,197,94,0.45)',
+    }
+  } else if (score >= 6.5) {
+    cfg = {
+      label: tr.goodDeal,
+      bg: 'bg-emerald-500',
+      numberColor: 'text-white',
+      labelColor: 'text-emerald-100',
+      shadow: '0 4px 14px rgba(16,185,129,0.4)',
+    }
+  } else if (score >= 5) {
+    cfg = {
+      label: tr.fairPrice,
+      bg: 'bg-amber-400',
+      numberColor: 'text-amber-950',
+      labelColor: 'text-amber-800',
+      shadow: '0 4px 14px rgba(251,191,36,0.45)',
+    }
+  } else {
+    cfg = {
+      label: tr.overpriced,
+      bg: 'bg-red-100',
+      numberColor: 'text-red-600',
+      labelColor: 'text-red-400',
+      shadow: '0 2px 8px rgba(239,68,68,0.2)',
+    }
+  }
 
   return (
-    <span dir="ltr" className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${cls}`}>
-      {score.toFixed(1)} · {label}
-    </span>
+    <div
+      dir="ltr"
+      className={`inline-flex flex-col items-center px-3 py-1.5 rounded-xl ${cfg.bg} shrink-0`}
+      style={{ boxShadow: cfg.shadow }}
+    >
+      <span className={`text-xl font-black leading-none tracking-tight ${cfg.numberColor}`}>
+        {score.toFixed(1)}
+      </span>
+      <span className={`text-[9px] font-bold tracking-wider mt-0.5 leading-none whitespace-nowrap ${cfg.labelColor}`}>
+        {cfg.label}
+      </span>
+    </div>
   )
 }
 
@@ -56,15 +102,15 @@ export default function ListingCard({ listing, lang }: { listing: Listing; lang:
     .filter(Boolean).join(' · ')
 
   return (
-    <div className={`bg-white rounded-2xl border border-gray-100 border-t-4 ${dealAccentCls(listing.deal_score)} p-5 flex flex-col gap-3 shadow-sm hover:shadow-xl transition-all duration-200 cursor-pointer`}>
+    <div className={`bg-white rounded-2xl border border-gray-100 border-t-4 ${dealAccentCls(listing.deal_score)} p-4 flex flex-col gap-3 shadow-sm hover:shadow-xl transition-all duration-200 cursor-pointer`}>
 
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="flex items-start justify-between gap-2">
         <SourceBadge source={listing.source} />
         <DealScoreBadge score={listing.deal_score} lang={lang} />
       </div>
 
       <div>
-        <h3 className="text-base font-bold text-gray-900 leading-snug" dir="ltr">
+        <h3 className="text-sm font-bold text-gray-900 leading-snug" dir="ltr">
           {listing.year} {listing.make} {listing.model}
         </h3>
         {specs && <p className="text-xs text-gray-400 mt-0.5" dir="ltr">{specs}</p>}
@@ -75,19 +121,21 @@ export default function ListingCard({ listing, lang }: { listing: Listing; lang:
         {' '}<span className="text-sm font-medium text-gray-400">{tr.sar}</span>
       </div>
 
-      <div className="flex flex-wrap gap-2 text-xs">
-        <span className="bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5">📍 {cityLabel(listing.city, lang)}</span>
+      <div className="flex flex-wrap gap-1.5 text-xs">
+        <span className="bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5 font-medium">
+          📍 {cityLabel(listing.city, lang)}
+        </span>
         {listing.mileage != null && (
-          <span className="bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5" dir="ltr">
+          <span className="bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5 font-medium" dir="ltr">
             {listing.mileage.toLocaleString()} {tr.km}
           </span>
         )}
         {listing.color && (
-          <span className="bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5">{listing.color}</span>
+          <span className="bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5 font-medium">{listing.color}</span>
         )}
       </div>
 
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-gray-400 font-medium">
         {listing.seller_type === 'dealer' ? tr.dealer : tr.privateSeller}
       </p>
 
