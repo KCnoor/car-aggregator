@@ -40,7 +40,6 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     document.documentElement.lang = lang
   }, [lang])
 
-  const [search, setSearch]       = useState('')
   const [make, setMake]           = useState('')
   const [model, setModel]         = useState('')
   const [city, setCity]           = useState('')
@@ -69,7 +68,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       const { filters, sort: aiSort } = await res.json() as { filters: AIFilters; sort: string | null }
       setAiFilters(filters)
       if (aiSort) setSort(aiSort as SortKey)
-      setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage(''); setSearch('')
+      setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage('')
       const parts: string[] = []
       if (filters.make) parts.push(filters.make)
       if (filters.model) parts.push(filters.model)
@@ -118,11 +117,6 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     const effectiveMaxPrice   = aiFilters.maxPrice   ?? (maxPrice   ? parseInt(maxPrice)   : undefined)
     const effectiveMaxMileage = aiFilters.maxMileage ?? (maxMileage ? parseInt(maxMileage) : undefined)
 
-    const applySearch = (pool: Listing[]) => {
-      if (!search.trim()) return pool
-      const q = search.toLowerCase()
-      return pool.filter(l => `${l.make} ${l.model}`.toLowerCase().includes(q))
-    }
     const applyCategorical = (pool: Listing[]) => {
       let r = pool
       if (effectiveMake)  r = r.filter(l => l.make.toLowerCase()  === effectiveMake!.toLowerCase())
@@ -140,8 +134,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       return r
     }
 
-    const searched    = applySearch(listings)
-    const categorical = applyCategorical(searched)
+    const categorical = applyCategorical(listings)
     const strict      = applyNumeric(categorical)
 
     if (strict.length > 0) return { filtered: [...strict].sort(sortFn), isFallback: false }
@@ -153,15 +146,15 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     }
 
     // Relax everything — show all listings sorted by deal score as closest
-    const hasAnyFilter = effectiveMake || effectiveModel || effectiveCity || search.trim()
+    const hasAnyFilter = effectiveMake || effectiveModel || effectiveCity
     if (hasAnyFilter && listings.length > 0) {
       return { filtered: [...listings].sort((a, b) => (b.deal_score ?? 0) - (a.deal_score ?? 0)), isFallback: true }
     }
 
     return { filtered: [...strict].sort(sortFn), isFallback: false }
-  }, [listings, search, make, model, city, maxPrice, maxMileage, sort, aiFilters])
+  }, [listings, make, model, city, maxPrice, maxMileage, sort, aiFilters])
 
-  const hasFilters = search || make || model || city || maxPrice || maxMileage || Object.keys(aiFilters).length > 0
+  const hasFilters = make || model || city || maxPrice || maxMileage || Object.keys(aiFilters).length > 0
 
   const activeFilterCount = useMemo(() =>
     [make, model, city, maxPrice, maxMileage, Object.keys(aiFilters).length > 0 ? '1' : ''].filter(Boolean).length,
@@ -169,7 +162,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   )
 
   function clearFilters() {
-    setSearch(''); setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage('')
+    setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage('')
     clearNlSearch()
   }
 
@@ -275,16 +268,8 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       {/* Sticky filter bar */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10 shadow-md">
         <div className="max-w-7xl mx-auto">
-          {/* Mobile: search + filter button */}
+          {/* Mobile: filter button */}
           <div className="flex sm:hidden items-center gap-2">
-            <input
-              type="text"
-              placeholder={tr.searchPlaceholder}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              dir="auto"
-              className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-            />
             <button
               onClick={() => setFilterSheetOpen(true)}
               className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors shrink-0"
@@ -300,14 +285,6 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
 
           {/* Desktop: all filters inline */}
           <div className="hidden sm:flex flex-wrap gap-2">
-            <input
-              type="text"
-              placeholder={tr.searchPlaceholder}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              dir="auto"
-              className="flex-1 min-w-44 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-            />
             <FilterControls />
           </div>
         </div>
