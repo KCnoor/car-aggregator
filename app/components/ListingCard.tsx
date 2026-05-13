@@ -1,35 +1,25 @@
 'use client'
 
-import { useState } from 'react'
 import type { Listing } from '@/lib/supabase'
 
-const SOURCES: Record<string, { name: string; logo: string }> = {
-  sayarah:     { name: 'Sayarah',     logo: 'https://logo.clearbit.com/sayarah.com' },
-  soum:        { name: 'Soum',        logo: 'https://logo.clearbit.com/soum.com.sa' },
-  haraj:       { name: 'Haraj',       logo: 'https://logo.clearbit.com/haraj.com.sa' },
-  motory:      { name: 'Motory',      logo: 'https://logo.clearbit.com/motory.sa' },
-  saudi_deals: { name: 'Saudi Deals', logo: 'https://logo.clearbit.com/saudidrives.com' },
+const SOURCES: Record<string, { name: string; cls: string; logo?: string }> = {
+  sayarah:     { name: 'Sayarah',     cls: 'bg-blue-600 text-white' },
+  soum:        { name: 'Soum',        cls: 'bg-emerald-600 text-white' },
+  haraj:       { name: 'Haraj',       cls: 'bg-orange-500 text-white', logo: '/logos/haraj.ico' },
+  motory:      { name: 'Motory',      cls: 'bg-red-600 text-white' },
+  saudi_deals: { name: 'Saudi Deals', cls: 'bg-purple-600 text-white' },
 }
 
 function SourceBadge({ source }: { source: string }) {
-  const [logoFailed, setLogoFailed] = useState(false)
   const config = SOURCES[source]
   const name = config?.name ?? source.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-
-  if (config?.logo && !logoFailed) {
-    return (
-      <img
-        src={config.logo}
-        alt={name}
-        title={name}
-        onError={() => setLogoFailed(true)}
-        className="h-6 w-auto object-contain rounded"
-      />
-    )
-  }
+  const cls = config?.cls ?? 'bg-gray-500 text-white'
 
   return (
-    <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold ${cls}`}>
+      {config?.logo && (
+        <img src={config.logo} alt="" className="h-3.5 w-3.5 object-contain rounded-sm brightness-0 invert" />
+      )}
       {name}
     </span>
   )
