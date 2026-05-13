@@ -1,4 +1,39 @@
+'use client'
+
+import { useState } from 'react'
 import type { Listing } from '@/lib/supabase'
+
+const SOURCES: Record<string, { name: string; logo: string }> = {
+  sayarah:     { name: 'Sayarah',     logo: 'https://logo.clearbit.com/sayarah.com' },
+  soum:        { name: 'Soum',        logo: 'https://logo.clearbit.com/soum.com.sa' },
+  haraj:       { name: 'Haraj',       logo: 'https://logo.clearbit.com/haraj.com.sa' },
+  motory:      { name: 'Motory',      logo: 'https://logo.clearbit.com/motory.sa' },
+  saudi_deals: { name: 'Saudi Deals', logo: 'https://logo.clearbit.com/saudidrives.com' },
+}
+
+function SourceBadge({ source }: { source: string }) {
+  const [logoFailed, setLogoFailed] = useState(false)
+  const config = SOURCES[source]
+  const name = config?.name ?? source.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+  if (config?.logo && !logoFailed) {
+    return (
+      <img
+        src={config.logo}
+        alt={name}
+        title={name}
+        onError={() => setLogoFailed(true)}
+        className="h-6 w-auto object-contain rounded"
+      />
+    )
+  }
+
+  return (
+    <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+      {name}
+    </span>
+  )
+}
 
 function DealScoreBadge({ score }: { score: number | null }) {
   if (score === null) return null
@@ -22,10 +57,6 @@ function DealScoreBadge({ score }: { score: number | null }) {
   )
 }
 
-function sourceLabel(source: string) {
-  return source.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-}
-
 export default function ListingCard({ listing }: { listing: Listing }) {
   const specs = [listing.body_type, listing.transmission, listing.engine_size]
     .filter(Boolean).join(' · ')
@@ -33,9 +64,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-3 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-2 flex-wrap">
-        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-          {sourceLabel(listing.source)}
-        </span>
+        <SourceBadge source={listing.source} />
         <DealScoreBadge score={listing.deal_score} />
       </div>
 
