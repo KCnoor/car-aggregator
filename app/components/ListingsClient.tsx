@@ -1,10 +1,21 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import type { Listing } from '@/lib/supabase'
 import ListingCard from './ListingCard'
 
 type SortKey = 'deal_score' | 'price_asc' | 'price_desc' | 'year_desc'
+
+type AIFilters = {
+  make?: string
+  model?: string
+  city?: string
+  maxPrice?: number
+  minPrice?: number
+  maxMileage?: number
+  minYear?: number
+  maxYear?: number
+}
 
 const PRICE_CAPS = [
   { label: 'Under 70,000 SAR', value: '70000' },
@@ -27,6 +38,48 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   const [maxMileage, setMaxMileage] = useState('')
   const [sort, setSort] = useState<SortKey>('deal_score')
 
+  const [nlQuery, setNlQuery] = useState('')
+  const [nlLoading, setNlLoading] = useState(false)
+  const [nlSummary, setNlSummary] = useState('')
+  const [aiFilters, setAiFilters] = useState<AIFilters>({})
+  const nlInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleNlSearch(e: React.FormEvent) {
+    e.preventDefault()
+    if (!nlQuery.trim() || nlLoading) return
+    setNlLoading(true)
+    setNlSummary('')
+    try {
+      const res = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: nlQuery }),
+      })
+      const { filters } = await res.json() as { filters: AIFilters }
+      setAiFilters(filters)
+      const parts: string[] = []
+      if (filters.make) parts.push(filters.make)
+      if (filters.model) parts.push(filters.model)
+      if (filters.city) parts.push(`in ${filters.city}`)
+      if (filters.minYear && filters.maxYear && filters.minYear === filters.maxYear) parts.push(`year ${filters.minYear}`)
+      else if (filters.minYear) parts.push(`from ${filters.minYear}`)
+      if (filters.maxPrice) parts.push(`under ${filters.maxPrice.toLocaleString()} SAR`)
+      if (filters.maxMileage) parts.push(`under ${filters.maxMileage.toLocaleString()} km`)
+      setNlSummary(parts.length ? `Showing: ${parts.join(', ')}` : 'No specific filters found — showing all listings')
+    } catch {
+      setNlSummary('Something went wrong. Try again.')
+    } finally {
+      setNlLoading(false)
+    }
+  }
+
+  function clearNlSearch() {
+    setNlQuery('')
+    setAiFilters({})
+    setNlSummary('')
+    nlInputRef.current?.focus()
+  }
+
   const makes = useMemo(() => [...new Set(listings.map(l => l.make))].sort(), [listings])
   const cities = useMemo(() => [...new Set(listings.map(l => l.city))].sort(), [listings])
 
@@ -37,10 +90,18 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       const q = search.toLowerCase()
       result = result.filter(l => `${l.make} ${l.model}`.toLowerCase().includes(q))
     }
-    if (make) result = result.filter(l => l.make === make)
-    if (city) result = result.filter(l => l.city === city)
-    if (maxPrice) result = result.filter(l => l.price <= parseInt(maxPrice))
-    if (maxMileage) result = result.filter(l => l.mileage == null || l.mileage <= parseInt(maxMileage))
+    const effectiveMake = aiFilters.make ?? (make || undefined)
+    const effectiveCity = aiFilters.city ?? (city || undefined)
+    if (effectiveMake) result = result.filter(l => l.make.toLowerCase() === effectiveMake.toLowerCase())
+    if (aiFilters.model) result = result.filter(l => l.model.toLowerCase() === aiFilters.model!.toLowerCase())
+    if (effectiveCity) result = result.filter(l => l.city === effectiveCity)
+    const effectiveMaxPrice = aiFilters.maxPrice ?? (maxPrice ? parseInt(maxPrice) : undefined)
+    if (effectiveMaxPrice) result = result.filter(l => l.price <= effectiveMaxPrice)
+    if (aiFilters.minPrice) result = result.filter(l => l.price >= aiFilters.minPrice!)
+    const effectiveMaxMileage = aiFilters.maxMileage ?? (maxMileage ? parseInt(maxMileage) : undefined)
+    if (effectiveMaxMileage) result = result.filter(l => l.mileage == null || l.mileage <= effectiveMaxMileage)
+    if (aiFilters.minYear) result = result.filter(l => l.year >= aiFilters.minYear!)
+    if (aiFilters.maxYear) result = result.filter(l => l.year <= aiFilters.maxYear!)
 
     return [...result].sort((a, b) => {
       if (sort === 'deal_score') return (b.deal_score ?? 0) - (a.deal_score ?? 0)
@@ -50,10 +111,11 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     })
   }, [listings, search, make, city, maxPrice, maxMileage, sort])
 
-  const hasFilters = search || make || city || maxPrice || maxMileage
+  const hasFilters = search || make || city || maxPrice || maxMileage || Object.keys(aiFilters).length > 0
 
   function clearFilters() {
     setSearch(''); setMake(''); setCity(''); setMaxPrice(''); setMaxMileage('')
+    clearNlSearch()
   }
 
   const selectCls = 'border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -72,6 +134,39 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
           </span>
         </div>
       </header>
+
+      {/* AI natural language search */}
+      <div className="bg-blue-50 border-b border-blue-100 px-4 py-4">
+        <div className="max-w-7xl mx-auto">
+          <form onSubmit={handleNlSearch} className="flex gap-2">
+            <input
+              ref={nlInputRef}
+              type="text"
+              placeholder='Try: "cheap Camry in Riyadh" or "باترول بأقل من 200 ألف"'
+              value={nlQuery}
+              onChange={e => setNlQuery(e.target.value)}
+              dir="auto"
+              className="flex-1 border border-blue-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+            />
+            <button
+              type="submit"
+              disabled={nlLoading || !nlQuery.trim()}
+              className="px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {nlLoading ? 'Thinking…' : 'Search'}
+            </button>
+          </form>
+          {nlSummary && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-blue-700">
+              <span>✦ {nlSummary}</span>
+              <button onClick={clearNlSearch} className="text-blue-500 hover:underline text-xs">clear</button>
+            </div>
+          )}
+          {!nlSummary && (
+            <p className="mt-1.5 text-xs text-blue-400">Powered by Claude AI · supports English and Arabic</p>
+          )}
+        </div>
+      </div>
 
       {/* Sticky filter bar */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10 shadow-sm">
