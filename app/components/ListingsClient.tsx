@@ -90,28 +90,26 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
 
   const filtered = useMemo(() => {
     let result = listings
-
     if (search.trim()) {
       const q = search.toLowerCase()
       result = result.filter(l => `${l.make} ${l.model}`.toLowerCase().includes(q))
     }
-    const effectiveMake = aiFilters.make ?? (make || undefined)
+    const effectiveMake  = aiFilters.make  ?? (make  || undefined)
     const effectiveModel = aiFilters.model ?? (model || undefined)
-    const effectiveCity = aiFilters.city ?? (city || undefined)
-    if (effectiveMake) result = result.filter(l => l.make.toLowerCase() === effectiveMake.toLowerCase())
+    const effectiveCity  = aiFilters.city  ?? (city  || undefined)
+    if (effectiveMake)  result = result.filter(l => l.make.toLowerCase()  === effectiveMake.toLowerCase())
     if (effectiveModel) result = result.filter(l => l.model.toLowerCase() === effectiveModel.toLowerCase())
-    if (effectiveCity) result = result.filter(l => l.city === effectiveCity)
-    const effectiveMaxPrice = aiFilters.maxPrice ?? (maxPrice ? parseInt(maxPrice) : undefined)
-    if (effectiveMaxPrice) result = result.filter(l => l.price <= effectiveMaxPrice)
-    if (aiFilters.minPrice) result = result.filter(l => l.price >= aiFilters.minPrice!)
+    if (effectiveCity)  result = result.filter(l => l.city === effectiveCity)
+    const effectiveMaxPrice   = aiFilters.maxPrice   ?? (maxPrice   ? parseInt(maxPrice)   : undefined)
     const effectiveMaxMileage = aiFilters.maxMileage ?? (maxMileage ? parseInt(maxMileage) : undefined)
+    if (effectiveMaxPrice)   result = result.filter(l => l.price <= effectiveMaxPrice)
+    if (aiFilters.minPrice)  result = result.filter(l => l.price >= aiFilters.minPrice!)
     if (effectiveMaxMileage) result = result.filter(l => l.mileage == null || l.mileage <= effectiveMaxMileage)
-    if (aiFilters.minYear) result = result.filter(l => l.year >= aiFilters.minYear!)
-    if (aiFilters.maxYear) result = result.filter(l => l.year <= aiFilters.maxYear!)
-
+    if (aiFilters.minYear)   result = result.filter(l => l.year >= aiFilters.minYear!)
+    if (aiFilters.maxYear)   result = result.filter(l => l.year <= aiFilters.maxYear!)
     return [...result].sort((a, b) => {
       if (sort === 'deal_score') return (b.deal_score ?? 0) - (a.deal_score ?? 0)
-      if (sort === 'price_asc') return a.price - b.price
+      if (sort === 'price_asc')  return a.price - b.price
       if (sort === 'price_desc') return b.price - a.price
       return b.year - a.year
     })
@@ -124,35 +122,34 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     clearNlSearch()
   }
 
-  const selectCls = 'border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+  const selectCls = 'border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700'
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{tr.title}</h1>
-            <p className="text-sm text-gray-400">{tr.subtitle}</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400 hidden sm:block">
-              {tr.listingsIndexed(listings.length)}
-            </span>
-            <button
-              onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
-              className="text-sm font-medium text-blue-600 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-50 transition-colors"
-            >
-              {tr.toggleLang}
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-50">
 
-      {/* AI natural language search */}
-      <div className="bg-blue-50 border-b border-blue-100 px-4 py-4">
-        <div className="max-w-7xl mx-auto">
-          <form onSubmit={handleNlSearch} className="flex gap-2">
+      {/* Hero header */}
+      <header className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 px-4 pt-5 pb-8">
+        <div className="max-w-4xl mx-auto">
+
+          {/* Top bar */}
+          <div className="flex items-center justify-between mb-7">
+            <div>
+              <h1 className="text-2xl font-black text-white tracking-tight">{tr.title}</h1>
+              <p className="text-blue-400 text-xs mt-0.5">{tr.subtitle}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-blue-400 text-xs hidden sm:block">{tr.listingsIndexed(listings.length)}</span>
+              <button
+                onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
+                className="text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg px-3 py-1.5 transition-colors"
+              >
+                {tr.toggleLang}
+              </button>
+            </div>
+          </div>
+
+          {/* AI search bar */}
+          <form onSubmit={handleNlSearch} className="flex gap-2 bg-white/10 backdrop-blur-sm p-1.5 rounded-2xl border border-white/20 focus-within:border-blue-400/50 transition-colors">
             <input
               ref={nlInputRef}
               type="text"
@@ -160,30 +157,33 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
               value={nlQuery}
               onChange={e => setNlQuery(e.target.value)}
               dir="auto"
-              className="flex-1 border border-blue-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+              className="flex-1 bg-transparent text-white text-sm px-3 py-2 focus:outline-none placeholder:text-blue-300/60 min-w-0"
             />
             <button
               type="submit"
               disabled={nlLoading || !nlQuery.trim()}
-              className="px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="shrink-0 px-5 py-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-colors"
             >
               {nlLoading ? tr.nlThinking : tr.nlSearch}
             </button>
           </form>
-          {nlSummary && (
-            <div className="mt-2 flex items-center gap-2 text-sm text-blue-700" dir="auto">
-              <span>✦ {nlSummary}</span>
-              <button onClick={clearNlSearch} className="text-blue-500 hover:underline text-xs">{tr.nlClear}</button>
+
+          {nlSummary ? (
+            <div className="mt-3 flex items-center gap-2 text-sm" dir="auto">
+              <span className="text-blue-400">✦</span>
+              <span className="text-blue-200">{nlSummary}</span>
+              <button onClick={clearNlSearch} className="text-blue-400 hover:text-white text-xs underline transition-colors">
+                {tr.nlClear}
+              </button>
             </div>
-          )}
-          {!nlSummary && (
-            <p className="mt-1.5 text-xs text-blue-400">{tr.nlPowered}</p>
+          ) : (
+            <p className="mt-2.5 text-center text-xs text-blue-400/60">{tr.nlPowered}</p>
           )}
         </div>
-      </div>
+      </header>
 
       {/* Sticky filter bar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10 shadow-sm">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-wrap gap-2">
           <input
             type="text"
@@ -191,7 +191,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             dir="auto"
-            className="flex-1 min-w-44 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 min-w-44 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
           />
           <select value={make} onChange={e => { setMake(e.target.value); setModel('') }} className={selectCls}>
             <option value="">{tr.allMakes}</option>
@@ -226,20 +226,20 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
 
       {/* Results */}
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex items-center gap-3 mb-4">
-          <p className="text-sm text-gray-500">{tr.listingsFound(filtered.length)}</p>
+        <div className="flex items-center gap-3 mb-5">
+          <p className="text-sm font-medium text-gray-500">{tr.listingsFound(filtered.length)}</p>
           {hasFilters && (
-            <button onClick={clearFilters} className="text-sm text-blue-600 hover:underline">
+            <button onClick={clearFilters} className="text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-full transition-colors">
               {tr.clearFilters}
             </button>
           )}
         </div>
 
         {filtered.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-5xl mb-4">🔍</p>
-            <p className="text-lg font-medium text-gray-600">{tr.noListings}</p>
-            <p className="text-sm mt-1">{tr.noListingsSub}</p>
+          <div className="text-center py-24">
+            <p className="text-6xl mb-4">🔍</p>
+            <p className="text-lg font-bold text-gray-700">{tr.noListings}</p>
+            <p className="text-sm text-gray-400 mt-1">{tr.noListingsSub}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
