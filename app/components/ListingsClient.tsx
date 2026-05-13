@@ -57,6 +57,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       })
       const { filters } = await res.json() as { filters: AIFilters }
       setAiFilters(filters)
+      setMake(''); setCity(''); setMaxPrice(''); setMaxMileage(''); setSearch('')
       const parts: string[] = []
       if (filters.make) parts.push(filters.make)
       if (filters.model) parts.push(filters.model)
@@ -109,7 +110,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       if (sort === 'price_desc') return b.price - a.price
       return b.year - a.year
     })
-  }, [listings, search, make, city, maxPrice, maxMileage, sort])
+  }, [listings, search, make, city, maxPrice, maxMileage, sort, aiFilters])
 
   const hasFilters = search || make || city || maxPrice || maxMileage || Object.keys(aiFilters).length > 0
 
