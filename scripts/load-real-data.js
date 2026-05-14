@@ -46,8 +46,9 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 })
 
-const HARAJ_FILE  = path.join(__dirname, '..', '..', 'haraj-scraper', 'haraj-listings-normalized.json')
-const SYARAH_FILE = path.join(__dirname, '..', '..', 'haraj-scraper', 'syarah-listings.json')
+const HARAJ_FILE   = path.join(__dirname, '..', '..', 'haraj-scraper', 'haraj-listings-normalized.json')
+const SYARAH_FILE  = path.join(__dirname, '..', '..', 'haraj-scraper', 'syarah-listings.json')
+const MOTORY_FILE  = path.join(__dirname, '..', '..', 'haraj-scraper', 'motory-listings.json')
 
 // ── Deal score computation ────────────────────────────────────────────────────
 
@@ -99,8 +100,10 @@ function computeDealScores(rows) {
         r.low_price_warning = true
       }
 
-      r.deal_score       = Math.round(score * 10) / 10
-      r.deal_score_label = labelFromRatio(ratio)
+      r.deal_score        = Math.round(score * 10) / 10
+      r.deal_score_label  = labelFromRatio(ratio)
+      r.score_source      = 'db_median'
+      r.score_comparables = group.length
       scored++
     }
   }
@@ -139,6 +142,8 @@ function harajToRow(l) {
     trim:              l.trim ?? null,
     deal_score:        null,
     deal_score_label:  null,
+    score_source:      null,
+    score_comparables: null,
     low_price_warning: false,
     contact_for_price: l.price == null,
     is_active:         true,
@@ -177,6 +182,8 @@ function syarahToRow(l) {
     trim:              l.trim ?? null,
     deal_score:        null,
     deal_score_label:  null,
+    score_source:      null,
+    score_comparables: null,
     low_price_warning: false,
     contact_for_price: l.price_sar == null,
     is_active:         true,
@@ -188,18 +195,63 @@ function syarahToRow(l) {
   }
 }
 
+function motoryToRow(l) {
+  return {
+    source:            'motory',
+    source_url:        l.url ?? null,
+    source_id:         l.id  ?? null,
+    make_slug:         l.make_slug ?? null,
+    make_en:           l.make_en   ?? null,
+    make_ar:           l.make_ar   ?? l.make ?? null,
+    model_slug:        l.model_slug ?? null,
+    model_en:          l.model_en   ?? null,
+    model_ar:          l.model_ar   ?? l.model ?? null,
+    year:              l.year       ?? null,
+    price_sar:         l.price_sar  ?? null,
+    mileage_km:        l.mileage_km ?? null,
+    city_slug:         l.city_slug  ?? null,
+    city_en:           l.city_en    ?? null,
+    city_ar:           l.city_ar    ?? l.city ?? null,
+    color_slug:        l.color_slug ?? null,
+    color_en:          l.color_en   ?? null,
+    color_ar:          l.color_ar   ?? l.color ?? null,
+    fuel_type_slug:    l.fuel_type_slug ?? null,
+    transmission_slug: l.transmission_slug ?? null,
+    body_type_slug:    l.body_type_slug ?? null,
+    condition:         l.condition  ?? 'used',
+    trim:              l.trim ?? null,
+    deal_score:        null,
+    deal_score_label:  null,
+    score_source:      null,
+    score_comparables: null,
+    low_price_warning: false,
+    contact_for_price: l.contact_for_price ?? (l.price_sar == null),
+    is_active:         true,
+    seller_type:       l.seller_type ?? 'dealer',
+    title:             l.title ?? null,
+    description_ar:    l.description ?? null,
+    photo_urls:        Array.isArray(l.photo_urls) ? l.photo_urls : null,
+    scraped_at:        l.scraped_at ?? null,
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 ;(async () => {
   // 1. Load raw data
   log('Loading data files…')
   const harajRaw  = JSON.parse(fs.readFileSync(HARAJ_FILE,  'utf8'))
   const syarahRaw = JSON.parse(fs.readFileSync(SYARAH_FILE, 'utf8'))
+  const motoryRaw = fs.existsSync(MOTORY_FILE)
+    ? JSON.parse(fs.readFileSync(MOTORY_FILE, 'utf8'))
+    : []
   log(`  Haraj:  ${harajRaw.length} listings`)
   log(`  Syarah: ${syarahRaw.length} listings`)
+  log(`  Motory: ${motoryRaw.length} listings`)
 
   const rows = [
     ...harajRaw.map(harajToRow),
     ...syarahRaw.map(syarahToRow),
+    ...motoryRaw.map(motoryToRow),
   ]
   log(`  Merged: ${rows.length} rows`)
 
@@ -238,12 +290,14 @@ function syarahToRow(l) {
   // 5. Report
   const harajCount  = rows.filter(r => r.source === 'haraj').length
   const syarahCount = rows.filter(r => r.source === 'syarah').length
+  const motoryCount = rows.filter(r => r.source === 'motory').length
 
   process.stdout.write('\n')
   process.stdout.write('══════════════════════════════════════════════════\n')
   process.stdout.write(`Total inserted: ${rows.length}\n`)
   process.stdout.write(`  Haraj:  ${harajCount}\n`)
   process.stdout.write(`  Syarah: ${syarahCount}\n`)
+  process.stdout.write(`  Motory: ${motoryCount}\n`)
   process.stdout.write(`Deal scores:\n`)
   process.stdout.write(`  Scored (real score):      ${scored}\n`)
   process.stdout.write(`  Pending (group < 5):      ${pending}\n`)

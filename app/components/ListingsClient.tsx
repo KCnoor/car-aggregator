@@ -1,23 +1,35 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { Listing } from '@/lib/supabase'
 import { translations, cityLabel, type Lang } from '@/lib/translations'
 import ListingCard from './ListingCard'
+import VoiceAdvisor from './VoiceAdvisor'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { Button } from '@/components/ui/button'
 
+// ── Types ──────────────────────────────────────────────────────────────────────
 type SortKey = 'deal_score' | 'price_asc' | 'price_desc' | 'year_desc' | 'mileage_asc'
-
 type AIFilters = {
-  make?:       string
-  model?:      string
-  city?:       string
-  maxPrice?:   number
-  minPrice?:   number
-  maxMileage?: number
-  minYear?:    number
-  maxYear?:    number
+  make?: string; model?: string; city?: string
+  maxPrice?: number; minPrice?: number; maxMileage?: number
+  minYear?: number; maxYear?: number
 }
 
+// ── Geometric SVG pattern (unchanged) ─────────────────────────────────────────
 const GEO_PATTERN = `url("data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56">' +
   '<path d="M28 3 L53 28 L28 53 L3 28 Z" fill="none" stroke="white" stroke-width="0.7"/>' +
@@ -30,8 +42,16 @@ const GEO_PATTERN = `url("data:image/svg+xml,${encodeURIComponent(
   '</svg>'
 )}")`
 
+const ALL = '__all__'
+
+// ── Container animation ────────────────────────────────────────────────────────
+const container = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.04 } },
+}
+
 export default function ListingsClient({ listings }: { listings: Listing[] }) {
-  const [lang, setLang] = useState<Lang>('ar')
+  const [lang, setLang]   = useState<Lang>('ar')
   const tr = translations[lang]
 
   useEffect(() => {
@@ -39,6 +59,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     document.documentElement.lang = lang
   }, [lang])
 
+  // ── Filter state ──────────────────────────────────────────────────────────
   const [make,                setMake]                = useState('')
   const [model,               setModel]               = useState('')
   const [city,                setCity]                = useState('')
@@ -47,13 +68,34 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   const [sort,                setSort]                = useState<SortKey>('deal_score')
   const [showContactForPrice, setShowContactForPrice] = useState(false)
   const [filterSheetOpen,     setFilterSheetOpen]     = useState(false)
+  const [voiceOpen,           setVoiceOpen]           = useState(false)
 
+  // AI-search state
   const [nlQuery,   setNlQuery]   = useState('')
   const [nlLoading, setNlLoading] = useState(false)
   const [nlSummary, setNlSummary] = useState('')
   const [aiFilters, setAiFilters] = useState<AIFilters>({})
   const nlInputRef = useRef<HTMLInputElement>(null)
 
+  // Voice filter callback
+  const handleVoiceFilters = useCallback((f: {
+    make?: string; model?: string; city?: string
+    price_max?: number; price_min?: number; mileage_max?: number
+    year_min?: number; year_max?: number
+  }) => {
+    setAiFilters({
+      make: f.make, model: f.model, city: f.city,
+      maxPrice: f.price_max, minPrice: f.price_min,
+      maxMileage: f.mileage_max, minYear: f.year_min, maxYear: f.year_max,
+    })
+    if (f.make)  setMake(f.make)
+    if (f.model) setModel(f.model)
+    if (f.city)  setCity(f.city)
+    if (f.price_max)   setMaxPrice(String(f.price_max))
+    if (f.mileage_max) setMaxMileage(String(f.mileage_max))
+  }, [])
+
+  // ── AI search ─────────────────────────────────────────────────────────────
   async function handleNlSearch(e: React.FormEvent) {
     e.preventDefault()
     if (!nlQuery.trim() || nlLoading) return
@@ -61,9 +103,9 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     setNlSummary('')
     try {
       const res = await fetch('/api/search', {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ query: nlQuery }),
+        body: JSON.stringify({ query: nlQuery }),
       })
       const { filters, sort: aiSort } = await res.json() as { filters: AIFilters; sort: string | null }
       setAiFilters(filters)
@@ -73,12 +115,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       if (filters.make)  parts.push(filters.make)
       if (filters.model) parts.push(filters.model)
       if (filters.city)  parts.push(`${tr.nlIn} ${cityLabel(filters.city, lang)}`)
-      if (filters.minYear && filters.maxYear && filters.minYear === filters.maxYear) {
-        parts.push(`${tr.nlYear} ${filters.minYear}`)
-      } else if (filters.minYear) {
-        parts.push(`${tr.nlFrom} ${filters.minYear}`)
-      }
-      if (filters.maxPrice)   parts.push(`${tr.nlUnderPrice} ${filters.maxPrice.toLocaleString()} ${tr.sar}`)
+      if (filters.maxPrice) parts.push(`${tr.nlUnderPrice} ${filters.maxPrice.toLocaleString()} ${tr.sar}`)
       if (filters.maxMileage) parts.push(`${tr.nlUnderMileage} ${filters.maxMileage.toLocaleString()} ${tr.km}`)
       setNlSummary(parts.length ? `${tr.nlShowing} ${parts.join(tr.separator)}` : tr.nlNoFilters)
     } catch {
@@ -89,17 +126,15 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   }
 
   function clearNlSearch() {
-    setNlQuery('')
-    setAiFilters({})
-    setNlSummary('')
+    setNlQuery(''); setAiFilters({}); setNlSummary('')
     nlInputRef.current?.focus()
   }
 
-  // Build unique filter option lists from real data
+  // ── Derived lists for selects ──────────────────────────────────────────────
   const makes = useMemo(() =>
-    [...new Set(listings.map(l => l.make_en).filter(Boolean))].sort() as string[],
-    [listings]
-  )
+    [...new Set(listings.map(l => l.make_en).filter(Boolean))].sort() as string[]
+  , [listings])
+
   const models = useMemo(() => {
     if (!make) return []
     return [...new Set(
@@ -107,319 +142,406 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     )].sort() as string[]
   }, [listings, make])
 
-  // city list with both en+ar for display
   const cityOptions = useMemo(() => {
     const map = new Map<string, { en: string; ar: string | null }>()
     for (const l of listings) {
-      if (l.city_en && !map.has(l.city_en)) {
-        map.set(l.city_en, { en: l.city_en, ar: l.city_ar ?? null })
-      }
+      if (l.city_en && !map.has(l.city_en)) map.set(l.city_en, { en: l.city_en, ar: l.city_ar ?? null })
     }
     return [...map.values()].sort((a, b) => a.en.localeCompare(b.en))
   }, [listings])
 
-  const sortFn = (a: Listing, b: Listing): number => {
+  // ── Sort function ──────────────────────────────────────────────────────────
+  const sortFn = useCallback((a: Listing, b: Listing): number => {
     if (sort === 'deal_score') {
-      // Scored listings first (by score), then pending, then contact-for-price
-      const aScore = a.deal_score ?? (a.contact_for_price ? -2 : -1)
-      const bScore = b.deal_score ?? (b.contact_for_price ? -2 : -1)
-      return bScore - aScore
+      const aS = a.deal_score ?? (a.contact_for_price ? -2 : -1)
+      const bS = b.deal_score ?? (b.contact_for_price ? -2 : -1)
+      return bS - aS
     }
-    if (sort === 'price_asc') {
-      const ap = a.price_sar ?? Infinity
-      const bp = b.price_sar ?? Infinity
-      return ap - bp
-    }
-    if (sort === 'price_desc') {
-      const ap = a.price_sar ?? -Infinity
-      const bp = b.price_sar ?? -Infinity
-      return bp - ap
-    }
+    if (sort === 'price_asc')  return (a.price_sar ?? Infinity) - (b.price_sar ?? Infinity)
+    if (sort === 'price_desc') return (b.price_sar ?? -Infinity) - (a.price_sar ?? -Infinity)
     if (sort === 'mileage_asc') return (a.mileage_km ?? Infinity) - (b.mileage_km ?? Infinity)
     return (b.year ?? 0) - (a.year ?? 0)
-  }
+  }, [sort])
 
+  // ── Filtering ──────────────────────────────────────────────────────────────
   const { filtered, isFallback } = useMemo(() => {
-    const effectiveMake       = aiFilters.make  ?? (make  || undefined)
-    const effectiveModel      = aiFilters.model ?? (model || undefined)
-    const effectiveCity       = aiFilters.city  ?? (city  || undefined)
-    const effectiveMaxPrice   = aiFilters.maxPrice   ?? (maxPrice   ? parseInt(maxPrice)   : undefined)
-    const effectiveMaxMileage = aiFilters.maxMileage ?? (maxMileage ? parseInt(maxMileage) : undefined)
+    const eMake       = aiFilters.make  ?? (make  || undefined)
+    const eModel      = aiFilters.model ?? (model || undefined)
+    const eCity       = aiFilters.city  ?? (city  || undefined)
+    const eMaxPrice   = aiFilters.maxPrice   ?? (maxPrice   ? parseInt(maxPrice)   : undefined)
+    const eMaxMileage = aiFilters.maxMileage ?? (maxMileage ? parseInt(maxMileage) : undefined)
 
-    const applyCategorical = (pool: Listing[]) => {
+    const applyCat = (pool: Listing[]) => {
       let r = pool
-      if (effectiveMake)  r = r.filter(l => (l.make_en  ?? '').toLowerCase() === effectiveMake!.toLowerCase())
-      if (effectiveModel) r = r.filter(l => (l.model_en ?? '').toLowerCase() === effectiveModel!.toLowerCase())
-      if (effectiveCity)  r = r.filter(l => (l.city_en  ?? '').toLowerCase() === effectiveCity!.toLowerCase())
+      if (eMake)  r = r.filter(l => (l.make_en  ?? '').toLowerCase() === eMake!.toLowerCase())
+      if (eModel) r = r.filter(l => (l.model_en ?? '').toLowerCase() === eModel!.toLowerCase())
+      if (eCity)  r = r.filter(l => (l.city_en  ?? '').toLowerCase() === eCity!.toLowerCase())
       return r
     }
-    const applyNumeric = (pool: Listing[]) => {
+    const applyNum = (pool: Listing[]) => {
       let r = pool
-      if (effectiveMaxPrice)   r = r.filter(l => l.price_sar != null && l.price_sar <= effectiveMaxPrice!)
-      if (aiFilters.minPrice)  r = r.filter(l => l.price_sar != null && l.price_sar >= aiFilters.minPrice!)
-      if (effectiveMaxMileage) r = r.filter(l => l.mileage_km == null || l.mileage_km <= effectiveMaxMileage!)
-      if (aiFilters.minYear)   r = r.filter(l => (l.year ?? 0) >= aiFilters.minYear!)
-      if (aiFilters.maxYear)   r = r.filter(l => (l.year ?? 9999) <= aiFilters.maxYear!)
+      if (eMaxPrice)          r = r.filter(l => l.price_sar != null && l.price_sar <= eMaxPrice!)
+      if (aiFilters.minPrice) r = r.filter(l => l.price_sar != null && l.price_sar >= aiFilters.minPrice!)
+      if (eMaxMileage)        r = r.filter(l => l.mileage_km == null || l.mileage_km <= eMaxMileage!)
+      if (aiFilters.minYear)  r = r.filter(l => (l.year ?? 0) >= aiFilters.minYear!)
+      if (aiFilters.maxYear)  r = r.filter(l => (l.year ?? 9999) <= aiFilters.maxYear!)
       return r
     }
 
-    // Base pool: hide contact-for-price unless toggle is on
     let base = showContactForPrice ? listings : listings.filter(l => !l.contact_for_price)
-
-    const categorical = applyCategorical(base)
-    const strict      = applyNumeric(categorical)
+    const cat    = applyCat(base)
+    const strict = applyNum(cat)
 
     if (strict.length > 0) return { filtered: [...strict].sort(sortFn), isFallback: false }
 
-    const hasNumeric = aiFilters.maxPrice || aiFilters.minPrice || aiFilters.maxMileage || aiFilters.minYear || aiFilters.maxYear || maxPrice || maxMileage
-    if (hasNumeric && categorical.length > 0) {
-      return { filtered: [...categorical].sort(sortFn), isFallback: true }
-    }
+    const hasNum = aiFilters.maxPrice || aiFilters.minPrice || aiFilters.maxMileage ||
+      aiFilters.minYear || aiFilters.maxYear || maxPrice || maxMileage
+    if (hasNum && cat.length > 0) return { filtered: [...cat].sort(sortFn), isFallback: true }
 
-    const hasAnyFilter = effectiveMake || effectiveModel || effectiveCity
-    if (hasAnyFilter && base.length > 0) {
-      return { filtered: [...base].sort(sortFn), isFallback: true }
-    }
+    const hasAny = eMake || eModel || eCity
+    if (hasAny && base.length > 0) return { filtered: [...base].sort(sortFn), isFallback: true }
 
     return { filtered: [...strict].sort(sortFn), isFallback: false }
-  }, [listings, make, model, city, maxPrice, maxMileage, sort, aiFilters, showContactForPrice])
+  }, [listings, make, model, city, maxPrice, maxMileage, sort, aiFilters, showContactForPrice, sortFn])
 
   const hasFilters = make || model || city || maxPrice || maxMileage || Object.keys(aiFilters).length > 0
-
-  const activeFilterCount = useMemo(() =>
-    [make, model, city, maxPrice, maxMileage, Object.keys(aiFilters).length > 0 ? '1' : ''].filter(Boolean).length,
-    [make, model, city, maxPrice, maxMileage, aiFilters]
-  )
+  const activeFilterCount = [make, model, city, maxPrice, maxMileage, Object.keys(aiFilters).length > 0 ? '1' : '']
+    .filter(Boolean).length
 
   function clearFilters() {
     setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage('')
     clearNlSearch()
   }
 
-  const selectCls = 'border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 w-full sm:w-auto'
-
-  const FilterControls = () => (
-    <>
-      <select value={make} onChange={e => { setMake(e.target.value); setModel('') }} className={selectCls}>
-        <option value="">{tr.allMakes}</option>
-        {makes.map(m => <option key={m} value={m}>{m}</option>)}
-      </select>
-      {make && (
-        <select value={model} onChange={e => setModel(e.target.value)} className={selectCls}>
-          <option value="">{tr.allModels}</option>
-          {models.map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
-      )}
-      <select value={city} onChange={e => setCity(e.target.value)} className={selectCls}>
-        <option value="">{tr.allCities}</option>
-        {cityOptions.map(c => (
-          <option key={c.en} value={c.en}>
-            {lang === 'ar' ? (c.ar ?? c.en) : c.en}
-          </option>
-        ))}
-      </select>
-      <select value={maxPrice} onChange={e => setMaxPrice(e.target.value)} className={selectCls}>
-        <option value="">{tr.anyPrice}</option>
-        {tr.priceCaps.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-      <select value={maxMileage} onChange={e => setMaxMileage(e.target.value)} className={selectCls}>
-        <option value="">{tr.anyMileage}</option>
-        {tr.mileageCaps.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-      <select value={sort} onChange={e => setSort(e.target.value as SortKey)} className={selectCls}>
-        <option value="deal_score">{tr.sortBestDeal}</option>
-        <option value="price_asc">{tr.sortPriceAsc}</option>
-        <option value="price_desc">{tr.sortPriceDesc}</option>
-        <option value="mileage_asc">{tr.sortMileageAsc}</option>
-        <option value="year_desc">{tr.sortNewest}</option>
-      </select>
-    </>
-  )
-
   const pricedCount  = listings.filter(l => !l.contact_for_price).length
   const displayTotal = showContactForPrice ? listings.length : pricedCount
 
-  return (
-    <div className="min-h-screen bg-slate-50">
+  // ── shadcn Select helper ───────────────────────────────────────────────────
+  const Sel = ({
+    value, onChange, placeholder, children, className = ''
+  }: {
+    value: string
+    onChange: (v: string) => void
+    placeholder: string
+    children: React.ReactNode
+    className?: string
+  }) => (
+    <Select value={value || ALL} onValueChange={v => onChange(v === ALL ? '' : (v ?? ''))}>
+      <SelectTrigger
+        className={`h-9 text-sm border-border/70 bg-white hover:bg-muted/50 focus:ring-primary/30 rounded-xl min-w-[130px] ${className}`}
+        dir={lang === 'ar' ? 'rtl' : 'ltr'}
+      >
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <SelectItem value={ALL}>{placeholder}</SelectItem>
+        {children}
+      </SelectContent>
+    </Select>
+  )
 
-      {/* Hero header */}
-      <header className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 px-4 pt-5 pb-8 overflow-hidden">
+  const FilterControls = () => (
+    <>
+      <Sel value={make} onChange={v => { setMake(v); setModel('') }} placeholder={tr.allMakes}>
+        {makes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+      </Sel>
+
+      {make && (
+        <Sel value={model} onChange={setModel} placeholder={tr.allModels}>
+          {models.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+        </Sel>
+      )}
+
+      <Sel value={city} onChange={setCity} placeholder={tr.allCities}>
+        {cityOptions.map(c => (
+          <SelectItem key={c.en} value={c.en}>
+            {lang === 'ar' ? (c.ar ?? c.en) : c.en}
+          </SelectItem>
+        ))}
+      </Sel>
+
+      <Sel value={maxPrice} onChange={setMaxPrice} placeholder={tr.anyPrice}>
+        {tr.priceCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+      </Sel>
+
+      <Sel value={maxMileage} onChange={setMaxMileage} placeholder={tr.anyMileage}>
+        {tr.mileageCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+      </Sel>
+
+      <Sel value={sort} onChange={v => setSort(v as SortKey)} placeholder={tr.sortBestDeal}>
+        <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
+        <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
+        <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>
+        <SelectItem value="mileage_asc">{tr.sortMileageAsc}</SelectItem>
+        <SelectItem value="year_desc">{tr.sortNewest}</SelectItem>
+      </Sel>
+
+      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none whitespace-nowrap">
+        <input
+          type="checkbox"
+          checked={showContactForPrice}
+          onChange={e => setShowContactForPrice(e.target.checked)}
+          className="rounded border-border"
+        />
+        {lang === 'ar' ? 'بدون سعر' : 'No-price'}
+      </label>
+    </>
+  )
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen bg-background">
+
+      {/* Voice Advisor */}
+      <VoiceAdvisor
+        onApplyFilters={handleVoiceFilters}
+        externalOpen={voiceOpen}
+        onExternalOpenHandled={() => setVoiceOpen(false)}
+      />
+
+      {/* ── Hero header ──────────────────────────────────────────────────── */}
+      <header className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 px-4 pt-6 pb-10 overflow-hidden">
         <div
           className="absolute inset-0 opacity-[0.055] pointer-events-none"
           style={{ backgroundImage: GEO_PATTERN, backgroundRepeat: 'repeat' }}
         />
 
         <div className="relative max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-7">
+          {/* Logo row */}
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="font-logo text-3xl font-bold text-white tracking-wide">{tr.title}</h1>
-              <p className="text-blue-400 text-xs mt-0.5">{tr.subtitle}</p>
+              <h1 className="font-logo text-4xl font-bold text-white tracking-wide leading-none">
+                {tr.title}
+              </h1>
+              <p className="text-blue-400/80 text-xs mt-1.5 font-medium">{tr.subtitle}</p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-blue-400 text-xs hidden sm:block">{tr.listingsIndexed(displayTotal)}</span>
-              <button
+              <span className="text-blue-300/70 text-xs hidden sm:block font-medium">
+                {tr.listingsIndexed(displayTotal)}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
-                className="text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg px-3 py-1.5 transition-colors"
+                className="text-xs font-semibold bg-white/10 hover:bg-white/20 border-white/20 text-white rounded-xl h-8 px-3"
               >
                 {tr.toggleLang}
-              </button>
+              </Button>
             </div>
           </div>
 
-          {/* AI search */}
-          <form onSubmit={handleNlSearch} className="flex gap-2 bg-white/10 backdrop-blur-sm p-1.5 rounded-2xl border border-white/20 focus-within:border-blue-400/50 transition-colors">
-            <input
-              ref={nlInputRef}
-              type="text"
-              placeholder={tr.nlPlaceholder}
-              value={nlQuery}
-              onChange={e => setNlQuery(e.target.value)}
-              dir="auto"
-              className="flex-1 bg-transparent text-white text-sm px-3 py-2 focus:outline-none placeholder:text-blue-300/60 min-w-0"
-            />
-            <button
-              type="submit"
-              disabled={nlLoading || !nlQuery.trim()}
-              className="shrink-0 px-5 py-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-colors"
-            >
-              {nlLoading ? tr.nlThinking : tr.nlSearch}
-            </button>
-          </form>
+          {/* Hero search form */}
+          <form onSubmit={handleNlSearch}>
+            <div className="flex items-stretch bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 focus-within:border-blue-400/60 transition-colors overflow-hidden">
+              {/* Search button (left in RTL = start) */}
+              <button
+                type="submit"
+                disabled={nlLoading || !nlQuery.trim()}
+                className="shrink-0 px-5 bg-primary hover:bg-primary/90 disabled:opacity-40 text-white text-sm font-bold transition-colors"
+              >
+                {nlLoading ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                ) : tr.nlSearch}
+              </button>
 
-          {nlSummary ? (
-            <div className="mt-3 flex items-center gap-2 text-sm" dir="auto">
-              <span className="text-blue-400">✦</span>
-              <span className="text-blue-200">{nlSummary}</span>
-              <button onClick={clearNlSearch} className="text-blue-400 hover:text-white text-xs underline transition-colors">
-                {tr.nlClear}
+              {/* Input */}
+              <input
+                ref={nlInputRef}
+                type="text"
+                placeholder={tr.nlPlaceholder}
+                value={nlQuery}
+                onChange={e => setNlQuery(e.target.value)}
+                dir="auto"
+                className="flex-1 bg-transparent text-white text-sm px-4 py-4 focus:outline-none placeholder:text-blue-300/50 min-w-0"
+              />
+
+              {/* Mic button (right in RTL) */}
+              <button
+                type="button"
+                onClick={() => setVoiceOpen(true)}
+                className="shrink-0 px-4 text-blue-300 hover:text-white transition-colors"
+                aria-label="مستشار كارسا الصوتي"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2H3v2a9 9 0 0 0 8 8.94V23h2v-2.06A9 9 0 0 0 21 12v-2h-2z"/>
+                </svg>
               </button>
             </div>
-          ) : (
-            <p className="mt-2.5 text-center text-xs text-blue-400/60">{tr.nlPowered}</p>
-          )}
+          </form>
+
+          {/* AI summary / powered by */}
+          <div className="mt-3 min-h-[20px]">
+            {nlSummary ? (
+              <div className="flex items-center gap-2 text-sm" dir="auto">
+                <span className="text-blue-400">✦</span>
+                <span className="text-blue-200 text-xs">{nlSummary}</span>
+                <button onClick={clearNlSearch} className="text-blue-400 hover:text-white text-xs underline transition-colors">
+                  {tr.nlClear}
+                </button>
+              </div>
+            ) : (
+              <p className="text-center text-xs text-blue-400/50">{tr.nlPowered}</p>
+            )}
+          </div>
         </div>
       </header>
 
-      {/* Sticky filter bar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10 shadow-md">
-        <div className="max-w-7xl mx-auto">
-          {/* Mobile: filter button */}
+      {/* ── Sticky filter bar ─────────────────────────────────────────────── */}
+      <div className="bg-white/95 backdrop-blur-sm border-b border-border sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-2.5">
+          {/* Mobile */}
           <div className="flex sm:hidden items-center gap-2">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setFilterSheetOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors shrink-0"
+              className="rounded-xl text-sm font-semibold border-border/70 h-9 gap-1.5"
             >
               {lang === 'ar' ? 'فلاتر' : 'Filters'}
               {activeFilterCount > 0 && (
-                <span className="bg-blue-600 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                <span className="bg-primary text-primary-foreground text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
                   {activeFilterCount}
                 </span>
               )}
-            </button>
-            {/* Contact-for-price toggle (mobile inline) */}
-            <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none ms-auto">
-              <input
-                type="checkbox"
-                checked={showContactForPrice}
-                onChange={e => setShowContactForPrice(e.target.checked)}
-                className="rounded"
-              />
-              {lang === 'ar' ? 'بدون سعر' : 'No-price'}
-            </label>
+            </Button>
+
+            {/* Sort (always visible on mobile) */}
+            <Sel value={sort} onChange={v => setSort(v as SortKey)} placeholder={tr.sortBestDeal} className="flex-1">
+              <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
+              <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
+              <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>
+              <SelectItem value="mileage_asc">{tr.sortMileageAsc}</SelectItem>
+              <SelectItem value="year_desc">{tr.sortNewest}</SelectItem>
+            </Sel>
+
+            {hasFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-9 text-xs px-2 shrink-0">
+                {lang === 'ar' ? 'مسح' : 'Clear'}
+              </Button>
+            )}
           </div>
 
-          {/* Desktop: all filters inline */}
+          {/* Desktop */}
           <div className="hidden sm:flex flex-wrap items-center gap-2">
             <FilterControls />
-            {/* Contact-for-price toggle */}
-            <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none ms-2">
-              <input
-                type="checkbox"
-                checked={showContactForPrice}
-                onChange={e => setShowContactForPrice(e.target.checked)}
-                className="rounded"
-              />
-              {tr.showContactForPrice}
-            </label>
+            {hasFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="text-destructive hover:text-destructive h-9 text-xs rounded-xl ms-1"
+              >
+                {tr.clearFilters}
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Mobile bottom sheet backdrop */}
-      <div
-        className={`fixed inset-0 bg-black/50 z-40 sm:hidden transition-opacity duration-300 ${filterSheetOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => setFilterSheetOpen(false)}
-      />
+      {/* ── Mobile filter Sheet ───────────────────────────────────────────── */}
+      <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-3xl max-h-[80vh] overflow-y-auto"
+          dir={lang === 'ar' ? 'rtl' : 'ltr'}
+        >
+          <SheetHeader className="mb-4">
+            <SheetTitle>{lang === 'ar' ? 'الفلاتر' : 'Filters'}</SheetTitle>
+          </SheetHeader>
 
-      {/* Mobile bottom sheet */}
-      <div className={`fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 sm:hidden transition-transform duration-300 ease-out ${filterSheetOpen ? 'translate-y-0' : 'translate-y-full'}`}>
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <h3 className="text-base font-bold text-gray-900">
-            {lang === 'ar' ? 'الفلاتر' : 'Filters'}
-          </h3>
-          <button
-            onClick={() => setFilterSheetOpen(false)}
-            className="text-gray-400 hover:text-gray-700 text-xl leading-none transition-colors"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-10 h-1 bg-gray-200 rounded-full" />
+          <div className="flex flex-col gap-3 pb-8">
+            <FilterControls />
 
-        <div className="px-5 pb-2 flex flex-col gap-2.5 overflow-y-auto max-h-[65vh]">
-          <FilterControls />
-          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none pt-1">
-            <input
-              type="checkbox"
-              checked={showContactForPrice}
-              onChange={e => setShowContactForPrice(e.target.checked)}
-              className="rounded"
-            />
-            {tr.showContactForPrice}
-          </label>
-        </div>
+            <div className="flex gap-2 pt-2">
+              {hasFilters && (
+                <Button
+                  variant="outline"
+                  className="flex-1 border-destructive text-destructive hover:bg-destructive/5"
+                  onClick={() => { clearFilters(); setFilterSheetOpen(false) }}
+                >
+                  {tr.clearFilters}
+                </Button>
+              )}
+              <Button
+                className="flex-1 bg-primary text-primary-foreground"
+                onClick={() => setFilterSheetOpen(false)}
+              >
+                {lang === 'ar'
+                  ? `عرض ${filtered.length.toLocaleString()} نتيجة`
+                  : `Show ${filtered.length.toLocaleString()} results`}
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
-        <div className="px-5 pt-3 pb-8 border-t border-gray-100 flex gap-2">
-          {hasFilters && (
-            <button
-              onClick={() => { clearFilters(); setFilterSheetOpen(false) }}
-              className="flex-1 py-2.5 text-sm font-semibold text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
-            >
-              {tr.clearFilters}
-            </button>
-          )}
-          <button
-            onClick={() => setFilterSheetOpen(false)}
-            className="flex-1 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors"
-          >
-            {lang === 'ar' ? `عرض ${filtered.length} نتيجة` : `Show ${filtered.length} results`}
-          </button>
-        </div>
-      </div>
-
-      {/* Results */}
+      {/* ── Results ───────────────────────────────────────────────────────── */}
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {isFallback && (
-          <div className="mb-5 flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-3 rounded-xl">
-            <span className="text-base mt-0.5">⚠️</span>
-            <span className="font-medium">{tr.noExactMatch}</span>
-          </div>
-        )}
+        {/* Fallback notice */}
+        <AnimatePresence>
+          {isFallback && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="mb-5 flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-3 rounded-xl"
+            >
+              <span className="text-base mt-0.5">⚠️</span>
+              <span className="font-medium">{tr.noExactMatch}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
+        {/* Results count */}
         <div className="flex items-center gap-3 mb-5">
-          <p className="text-sm font-medium text-gray-500">{tr.listingsFound(filtered.length)}</p>
+          <p className="text-sm font-semibold text-muted-foreground">
+            {tr.listingsFound(filtered.length)}
+          </p>
           {hasFilters && (
-            <button onClick={clearFilters} className="text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-full transition-colors">
-              {tr.clearFilters}
-            </button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="text-xs text-primary h-7 px-2 rounded-full bg-primary/8 hover:bg-primary/15"
+            >
+              {tr.clearFilters} ✕
+            </Button>
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map(listing => (
-            <ListingCard key={listing.id} listing={listing} lang={lang} />
-          ))}
-        </div>
+        {/* Empty state */}
+        {filtered.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-24 text-center"
+          >
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <svg className="w-7 h-7 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0015.803 15.803z"/>
+              </svg>
+            </div>
+            <p className="text-base font-bold text-foreground mb-1">{tr.noListings}</p>
+            <p className="text-sm text-muted-foreground">{tr.noListingsSub}</p>
+            {hasFilters && (
+              <Button variant="outline" size="sm" onClick={clearFilters} className="mt-4 rounded-xl">
+                {tr.clearFilters}
+              </Button>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+          >
+            {filtered.map((listing, i) => (
+              <ListingCard key={listing.id} listing={listing} lang={lang} index={i} />
+            ))}
+          </motion.div>
+        )}
       </main>
     </div>
   )

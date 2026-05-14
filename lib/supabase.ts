@@ -32,6 +32,8 @@ export type Listing = {
   trim:               string | null
   deal_score:         number | null
   deal_score_label:   string | null
+  score_source:       'db_median' | 'ai_valuation' | null
+  score_comparables:  number | null
   low_price_warning:  boolean
   contact_for_price:  boolean
   is_active:          boolean

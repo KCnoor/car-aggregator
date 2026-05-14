@@ -82,6 +82,8 @@ export type Translations = {
   contactForPrice: string
   showContactForPrice: string
   lowPriceWarning: string
+  basedOnCars: (n: number) => string
+  aiAnalysis: string
   priceCaps: Cap[]
   mileageCaps: Cap[]
   toggleLang: string
@@ -136,6 +138,8 @@ export const translations: Record<Lang, Translations> = {
     contactForPrice: 'اتصل للسعر',
     showContactForPrice: 'إظهار الإعلانات بدون سعر',
     lowPriceWarning: 'تحقق قبل الشراء — سعر منخفض بشكل غير عادي',
+    basedOnCars: (n) => `مبني على ${n} سيارة مشابهة`,
+    aiAnalysis: 'تحليل ذكي للسوق',
     priceCaps: [
       { label: 'أقل من 70,000 ريال',  value: '70000' },
       { label: 'أقل من 100,000 ريال', value: '100000' },
@@ -197,6 +201,8 @@ export const translations: Record<Lang, Translations> = {
     contactForPrice: 'Contact for price',
     showContactForPrice: 'Show contact-for-price listings',
     lowPriceWarning: 'Verify before buying — unusually low price',
+    basedOnCars: (n) => `Based on ${n} similar cars`,
+    aiAnalysis: 'Smart market analysis',
     priceCaps: [
       { label: 'Under 70,000 SAR',  value: '70000' },
       { label: 'Under 100,000 SAR', value: '100000' },
