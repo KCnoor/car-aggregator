@@ -90,6 +90,42 @@ const SOURCES = [
     bg: '#FFF1F2',
     border: '#FECACA',
   },
+  {
+    key: 'saudisale',
+    nameAr: 'سيل',
+    nameEn: 'Saudi Sale',
+    logo: '/logos/saudisale.svg',
+    color: '#F5A623',
+    bg: '#FFFBEB',
+    border: '#FCD34D',
+  },
+  {
+    key: 'yallamotor',
+    nameAr: 'يلا موتور',
+    nameEn: 'Yalla Motor',
+    logo: '/logos/yallamotor.svg',
+    color: '#0057B8',
+    bg: '#EFF6FF',
+    border: '#93C5FD',
+  },
+  {
+    key: 'carswitch',
+    nameAr: 'كار سويتش',
+    nameEn: 'CarSwitch',
+    logo: '/logos/carswitch.svg',
+    color: '#1A1A2E',
+    bg: '#F1F5F9',
+    border: '#CBD5E1',
+  },
+  {
+    key: 'carly',
+    nameAr: 'كارلي',
+    nameEn: 'Carly',
+    logo: '/logos/carly.svg',
+    color: '#00B894',
+    bg: '#F0FDF4',
+    border: '#6EE7B7',
+  },
 ]
 
 // ── Container animation ────────────────────────────────────────────────────────
