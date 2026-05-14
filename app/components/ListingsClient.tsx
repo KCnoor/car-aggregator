@@ -11,7 +11,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select'
 import {
   Sheet,
@@ -29,7 +28,7 @@ type AIFilters = {
   minYear?: number; maxYear?: number
 }
 
-// ── Geometric SVG pattern (unchanged) ─────────────────────────────────────────
+// ── Geometric SVG pattern ──────────────────────────────────────────────────────
 const GEO_PATTERN = `url("data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56">' +
   '<path d="M28 3 L53 28 L28 53 L3 28 Z" fill="none" stroke="white" stroke-width="0.7"/>' +
@@ -44,10 +43,66 @@ const GEO_PATTERN = `url("data:image/svg+xml,${encodeURIComponent(
 
 const ALL = '__all__'
 
+// ── Source config ──────────────────────────────────────────────────────────────
+const SOURCES = [
+  {
+    key: 'haraj',
+    nameAr: 'حراج',
+    nameEn: 'Haraj',
+    color: '#F97316',
+    bg: '#FFF7ED',
+    border: '#FDBA74',
+    textColor: '#C2410C',
+  },
+  {
+    key: 'syarah',
+    nameAr: 'سيارة',
+    nameEn: 'Syarah',
+    color: '#2563EB',
+    bg: '#EFF6FF',
+    border: '#93C5FD',
+    textColor: '#1D4ED8',
+  },
+  {
+    key: 'motory',
+    nameAr: 'موتور',
+    nameEn: 'Motory',
+    color: '#7C3AED',
+    bg: '#F5F3FF',
+    border: '#C4B5FD',
+    textColor: '#6D28D9',
+  },
+]
+
 // ── Container animation ────────────────────────────────────────────────────────
 const container = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.04 } },
+}
+
+// ── Wordmark ───────────────────────────────────────────────────────────────────
+function SiyaraAIWordmark({ size = 'lg' }: { size?: 'sm' | 'lg' }) {
+  const sizeClass = size === 'lg'
+    ? 'text-4xl'
+    : 'text-xl'
+  return (
+    <span className={`inline-flex items-baseline gap-1 leading-none ${sizeClass}`}>
+      <span className="font-logo font-bold text-white tracking-wide">
+        سيارة
+      </span>
+      <span
+        className="font-bold tracking-tight"
+        style={{
+          fontFamily: 'var(--font-geist), Geist, sans-serif',
+          fontSize: size === 'lg' ? '0.78em' : '0.82em',
+          color: 'oklch(0.82 0.14 78)',
+          letterSpacing: '0.04em',
+        }}
+      >
+        AI
+      </span>
+    </span>
+  )
 }
 
 export default function ListingsClient({ listings }: { listings: Listing[] }) {
@@ -66,6 +121,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   const [maxPrice,            setMaxPrice]            = useState('')
   const [maxMileage,          setMaxMileage]          = useState('')
   const [sort,                setSort]                = useState<SortKey>('deal_score')
+  const [source,              setSource]              = useState('')
   const [showContactForPrice, setShowContactForPrice] = useState(false)
   const [filterSheetOpen,     setFilterSheetOpen]     = useState(false)
   const [voiceOpen,           setVoiceOpen]           = useState(false)
@@ -176,6 +232,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       if (eMake)  r = r.filter(l => (l.make_en  ?? '').toLowerCase() === eMake!.toLowerCase())
       if (eModel) r = r.filter(l => (l.model_en ?? '').toLowerCase() === eModel!.toLowerCase())
       if (eCity)  r = r.filter(l => (l.city_en  ?? '').toLowerCase() === eCity!.toLowerCase())
+      if (source) r = r.filter(l => l.source === source)
       return r
     }
     const applyNum = (pool: Listing[]) => {
@@ -198,61 +255,97 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       aiFilters.minYear || aiFilters.maxYear || maxPrice || maxMileage
     if (hasNum && cat.length > 0) return { filtered: [...cat].sort(sortFn), isFallback: true }
 
-    const hasAny = eMake || eModel || eCity
+    const hasAny = eMake || eModel || eCity || source
     if (hasAny && base.length > 0) return { filtered: [...base].sort(sortFn), isFallback: true }
 
     return { filtered: [...strict].sort(sortFn), isFallback: false }
-  }, [listings, make, model, city, maxPrice, maxMileage, sort, aiFilters, showContactForPrice, sortFn])
+  }, [listings, make, model, city, maxPrice, maxMileage, sort, source, aiFilters, showContactForPrice, sortFn])
 
-  const hasFilters = make || model || city || maxPrice || maxMileage || Object.keys(aiFilters).length > 0
-  const activeFilterCount = [make, model, city, maxPrice, maxMileage, Object.keys(aiFilters).length > 0 ? '1' : '']
+  const hasFilters = make || model || city || maxPrice || maxMileage || source || Object.keys(aiFilters).length > 0
+  const activeFilterCount = [make, model, city, maxPrice, maxMileage, source,
+    Object.keys(aiFilters).length > 0 ? '1' : '']
     .filter(Boolean).length
 
   function clearFilters() {
-    setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage('')
+    setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage(''); setSource('')
     clearNlSearch()
   }
 
   const pricedCount  = listings.filter(l => !l.contact_for_price).length
   const displayTotal = showContactForPrice ? listings.length : pricedCount
 
-  // ── shadcn Select helper ───────────────────────────────────────────────────
+  // ── Computed display labels for filter selects ─────────────────────────────
+  const sortLabel = {
+    deal_score:  tr.sortBestDeal,
+    price_asc:   tr.sortPriceAsc,
+    price_desc:  tr.sortPriceDesc,
+    year_desc:   tr.sortNewest,
+    mileage_asc: tr.sortMileageAsc,
+  }[sort]
+
+  const cityLabel_ = city
+    ? (cityOptions.find(c => c.en === city)
+        ? cityLabel(city, lang, cityOptions.find(c => c.en === city)?.ar ?? null)
+        : city)
+    : ''
+
+  const priceLabel   = maxPrice   ? tr.priceCaps.find(p => p.value === maxPrice)?.label   ?? maxPrice   : ''
+  const mileageLabel = maxMileage ? tr.mileageCaps.find(p => p.value === maxMileage)?.label ?? maxMileage : ''
+
+  // ── shadcn Select helper (renders correct label, not raw value) ────────────
   const Sel = ({
-    value, onChange, placeholder, children, className = ''
+    value, onChange, placeholder, displayLabel, children, className = ''
   }: {
     value: string
     onChange: (v: string) => void
     placeholder: string
+    displayLabel?: string
     children: React.ReactNode
     className?: string
-  }) => (
-    <Select value={value || ALL} onValueChange={v => onChange(v === ALL ? '' : (v ?? ''))}>
-      <SelectTrigger
-        className={`h-9 text-sm border-border/70 bg-white hover:bg-muted/50 focus:ring-primary/30 rounded-xl min-w-[130px] ${className}`}
-        dir={lang === 'ar' ? 'rtl' : 'ltr'}
-      >
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-        <SelectItem value={ALL}>{placeholder}</SelectItem>
-        {children}
-      </SelectContent>
-    </Select>
-  )
+  }) => {
+    const isActive = Boolean(value)
+    return (
+      <Select value={value || ALL} onValueChange={v => onChange(v === ALL ? '' : (v ?? ''))}>
+        <SelectTrigger
+          className={`h-11 text-sm border-border/70 rounded-xl min-w-[130px] transition-colors ${
+            isActive
+              ? 'bg-primary text-primary-foreground border-primary font-semibold'
+              : 'bg-white hover:bg-muted/50 text-foreground'
+          } ${className}`}
+          dir={lang === 'ar' ? 'rtl' : 'ltr'}
+        >
+          <span className="flex-1 text-start truncate">
+            {isActive && displayLabel ? displayLabel : (
+              <span className={isActive ? 'text-primary-foreground' : 'text-muted-foreground'}>
+                {placeholder}
+              </span>
+            )}
+          </span>
+        </SelectTrigger>
+        <SelectContent dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <SelectItem value={ALL}>{placeholder}</SelectItem>
+          {children}
+        </SelectContent>
+      </Select>
+    )
+  }
 
   const FilterControls = () => (
     <>
-      <Sel value={make} onChange={v => { setMake(v); setModel('') }} placeholder={tr.allMakes}>
+      <Sel value={make} onChange={v => { setMake(v); setModel('') }}
+        placeholder={tr.allMakes} displayLabel={make}>
         {makes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
       </Sel>
 
       {make && (
-        <Sel value={model} onChange={setModel} placeholder={tr.allModels}>
+        <Sel value={model} onChange={setModel}
+          placeholder={tr.allModels} displayLabel={model}>
           {models.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
         </Sel>
       )}
 
-      <Sel value={city} onChange={setCity} placeholder={tr.allCities}>
+      <Sel value={city} onChange={setCity}
+        placeholder={tr.allCities} displayLabel={cityLabel_}>
         {cityOptions.map(c => (
           <SelectItem key={c.en} value={c.en}>
             {lang === 'ar' ? (c.ar ?? c.en) : c.en}
@@ -260,15 +353,18 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
         ))}
       </Sel>
 
-      <Sel value={maxPrice} onChange={setMaxPrice} placeholder={tr.anyPrice}>
+      <Sel value={maxPrice} onChange={setMaxPrice}
+        placeholder={tr.anyPrice} displayLabel={priceLabel}>
         {tr.priceCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
       </Sel>
 
-      <Sel value={maxMileage} onChange={setMaxMileage} placeholder={tr.anyMileage}>
+      <Sel value={maxMileage} onChange={setMaxMileage}
+        placeholder={tr.anyMileage} displayLabel={mileageLabel}>
         {tr.mileageCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
       </Sel>
 
-      <Sel value={sort} onChange={v => setSort(v as SortKey)} placeholder={tr.sortBestDeal}>
+      <Sel value={sort} onChange={v => setSort(v as SortKey)}
+        placeholder={tr.sortBestDeal} displayLabel={sortLabel}>
         <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
         <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
         <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>
@@ -308,14 +404,14 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
 
         <div className="relative max-w-4xl mx-auto">
           {/* Logo row */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="font-logo text-4xl font-bold text-white tracking-wide leading-none">
-                {tr.title}
-              </h1>
-              <p className="text-blue-400/80 text-xs mt-1.5 font-medium">{tr.subtitle}</p>
+              <SiyaraAIWordmark size="lg" />
+              <p className="text-blue-300/70 text-xs mt-2 font-medium" style={{ fontFamily: 'var(--font-tajawal)' }}>
+                {tr.subtitle}
+              </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mt-1">
               <span className="text-blue-300/70 text-xs hidden sm:block font-medium">
                 {tr.listingsIndexed(displayTotal)}
               </span>
@@ -330,14 +426,14 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
             </div>
           </div>
 
-          {/* Hero search form */}
+          {/* Hero search form — 64px tall */}
           <form onSubmit={handleNlSearch}>
-            <div className="flex items-stretch bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 focus-within:border-blue-400/60 transition-colors overflow-hidden">
-              {/* Search button (left in RTL = start) */}
+            <div className="flex items-stretch bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 focus-within:border-blue-400/60 transition-colors overflow-hidden" style={{ minHeight: 64 }}>
+              {/* Search button */}
               <button
                 type="submit"
                 disabled={nlLoading || !nlQuery.trim()}
-                className="shrink-0 px-5 bg-primary hover:bg-primary/90 disabled:opacity-40 text-white text-sm font-bold transition-colors"
+                className="shrink-0 px-6 bg-primary hover:bg-primary/90 disabled:opacity-40 text-white text-sm font-bold transition-colors"
               >
                 {nlLoading ? (
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -355,17 +451,17 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
                 value={nlQuery}
                 onChange={e => setNlQuery(e.target.value)}
                 dir="auto"
-                className="flex-1 bg-transparent text-white text-sm px-4 py-4 focus:outline-none placeholder:text-blue-300/50 min-w-0"
+                className="flex-1 bg-transparent text-white text-sm px-4 focus:outline-none placeholder:text-blue-300/50 min-w-0"
               />
 
-              {/* Mic button (right in RTL) */}
+              {/* Mic button */}
               <button
                 type="button"
                 onClick={() => setVoiceOpen(true)}
-                className="shrink-0 px-4 text-blue-300 hover:text-white transition-colors"
-                aria-label="مستشار كارسا الصوتي"
+                className="shrink-0 px-5 text-blue-300 hover:text-white transition-colors flex items-center"
+                aria-label="مستشار سيارة AI الصوتي"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2H3v2a9 9 0 0 0 8 8.94V23h2v-2.06A9 9 0 0 0 21 12v-2h-2z"/>
                 </svg>
@@ -390,6 +486,61 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
         </div>
       </header>
 
+      {/* ── Source ribbon ────────────────────────────────────────────────── */}
+      <div className="border-b border-border" style={{ background: '#F8F9FA' }}>
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <p className="text-center text-xs font-medium text-muted-foreground mb-3">
+            {lang === 'ar' ? 'نجمع لك أحسن العروض من' : 'We aggregate the best deals from'}
+          </p>
+          <div className="flex items-center justify-center gap-3 sm:gap-6 overflow-x-auto pb-0.5 no-scrollbar">
+            {/* All sources chip */}
+            <button
+              onClick={() => setSource('')}
+              className={`flex-shrink-0 px-4 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+                !source
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-white text-muted-foreground border-border hover:border-border/80'
+              }`}
+            >
+              {lang === 'ar' ? 'الكل' : 'All'}
+            </button>
+
+            {SOURCES.map(s => {
+              const isActive = source === s.key
+              return (
+                <button
+                  key={s.key}
+                  onClick={() => setSource(isActive ? '' : s.key)}
+                  className="flex-shrink-0 transition-all duration-200 focus:outline-none"
+                  style={{
+                    filter: isActive ? 'none' : 'grayscale(80%) opacity(0.65)',
+                  }}
+                  title={lang === 'ar' ? s.nameAr : s.nameEn}
+                >
+                  <div
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border font-bold text-sm transition-all"
+                    style={{
+                      background: isActive ? s.bg : 'white',
+                      borderColor: isActive ? s.border : '#E5E7EB',
+                      color: s.textColor,
+                      minWidth: 90,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {/* Color dot */}
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ background: s.color }}
+                    />
+                    <span dir="auto">{lang === 'ar' ? s.nameAr : s.nameEn}</span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
       {/* ── Sticky filter bar ─────────────────────────────────────────────── */}
       <div className="bg-white/95 backdrop-blur-sm border-b border-border sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-2.5">
@@ -399,7 +550,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
               variant="outline"
               size="sm"
               onClick={() => setFilterSheetOpen(true)}
-              className="rounded-xl text-sm font-semibold border-border/70 h-9 gap-1.5"
+              className="rounded-xl text-sm font-semibold border-border/70 h-11 gap-1.5"
             >
               {lang === 'ar' ? 'فلاتر' : 'Filters'}
               {activeFilterCount > 0 && (
@@ -409,8 +560,9 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
               )}
             </Button>
 
-            {/* Sort (always visible on mobile) */}
-            <Sel value={sort} onChange={v => setSort(v as SortKey)} placeholder={tr.sortBestDeal} className="flex-1">
+            {/* Sort always visible on mobile */}
+            <Sel value={sort} onChange={v => setSort(v as SortKey)}
+              placeholder={tr.sortBestDeal} displayLabel={sortLabel} className="flex-1">
               <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
               <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
               <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>
@@ -419,7 +571,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
             </Sel>
 
             {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-9 text-xs px-2 shrink-0">
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-11 text-xs px-2 shrink-0">
                 {lang === 'ar' ? 'مسح' : 'Clear'}
               </Button>
             )}
@@ -433,7 +585,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="text-destructive hover:text-destructive h-9 text-xs rounded-xl ms-1"
+                className="text-destructive hover:text-destructive h-11 text-xs rounded-xl ms-1"
               >
                 {tr.clearFilters}
               </Button>

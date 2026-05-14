@@ -133,6 +133,15 @@
   font-family: var(--font-reem-kufi), sans-serif;
 }
 
+/* Accent color for wordmark AI text */
+.text-accent-ai {
+  color: oklch(0.62 0.14 60);
+}
+
+/* Hide scrollbar but keep scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* Card hover lift */
 .card-lift {
   transition: box-shadow 0.2s ease, transform 0.2s ease;

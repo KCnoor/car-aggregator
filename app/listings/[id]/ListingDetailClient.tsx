@@ -77,8 +77,9 @@ export default function ListingDetailClient({
               {lang === 'ar' ? 'العودة للقائمة' : 'Back to listings'}
             </span>
           </Link>
-          <span className="font-logo text-xl font-bold text-foreground">
-            {lang === 'ar' ? 'كارسا' : 'CarSa'}
+          <span className="inline-flex items-baseline gap-1 leading-none">
+            <span className="font-logo font-bold text-foreground text-xl tracking-wide">سيارة</span>
+            <span className="font-bold text-base tracking-tight" style={{ fontFamily: 'var(--font-geist), Geist, sans-serif', color: 'oklch(0.62 0.14 60)' }}>AI</span>
           </span>
           <Button
             variant="ghost"

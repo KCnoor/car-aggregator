@@ -91,8 +91,8 @@ export type Translations = {
 
 export const translations: Record<Lang, Translations> = {
   ar: {
-    title: 'كارسا',
-    subtitle: 'سوق السيارات في السعودية',
+    title: 'سيارة AI',
+    subtitle: 'مستشارك الذكي للسيارات في السعودية',
     listingsIndexed: (n) => `${n.toLocaleString()} إعلان`,
     searchPlaceholder: 'ابحث عن الماركة أو الموديل...',
     allMakes: 'كل الماركات',
@@ -154,8 +154,8 @@ export const translations: Record<Lang, Translations> = {
     toggleLang: 'English',
   },
   en: {
-    title: 'CarSa',
-    subtitle: 'Saudi Arabia car listings aggregator',
+    title: 'Sayara AI',
+    subtitle: 'Your smart car advisor in Saudi Arabia',
     listingsIndexed: (n) => `${n.toLocaleString()} listings indexed`,
     searchPlaceholder: 'Search make or model…',
     allMakes: 'All Makes',

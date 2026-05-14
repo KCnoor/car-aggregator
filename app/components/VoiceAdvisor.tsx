@@ -559,7 +559,7 @@ export default function VoiceAdvisor({ onApplyFilters, externalOpen, onExternalO
         onClick={openOverlay}
         className="fixed bottom-6 left-6 z-50 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 active:scale-95 transition-all"
         style={{ boxShadow: '0 0 0 0 rgba(59,130,246,0.5)' }}
-        aria-label="مستشار كارسا الصوتي"
+        aria-label="مستشار سيارة AI الصوتي"
       >
         <style>{`
           @keyframes voice-pulse {
@@ -590,7 +590,7 @@ export default function VoiceAdvisor({ onApplyFilters, externalOpen, onExternalO
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
           <div>
-            <h2 className="text-lg font-bold text-white">مستشار كارسا</h2>
+            <h2 className="text-lg font-bold text-white">مستشار سيارة AI</h2>
             <p className="text-xs text-blue-400">
               {phase === 'recording'    ? 'جاري التسجيل…'   :
                phase === 'transcribing' ? 'فاهم كلامك…'      :

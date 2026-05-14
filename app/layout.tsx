@@ -23,8 +23,8 @@ const reemKufi = Reem_Kufi({
 });
 
 export const metadata: Metadata = {
-  title: "كارسا — أحسن صفقات السيارات",
-  description: "ابحث وقارن بين إعلانات السيارات من أكبر منصات السعودية",
+  title: "سيارة AI — مستشارك الذكي للسيارات في السعودية",
+  description: "قارن وابحث في إعلانات السيارات من حراج، سيارة، موتور وغيرها بذكاء اصطناعي",
 };
 
 export default function RootLayout({
