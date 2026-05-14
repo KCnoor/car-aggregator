@@ -44,6 +44,13 @@ export type Translations = {
   allCities: string
   anyPrice: string
   anyMileage: string
+  fromYear: string
+  toYear: string
+  allBodyTypes: string
+  allTransmissions: string
+  allFuels: string
+  allConditions: string
+  clearAll: string
   sortBestDeal: string
   sortPriceAsc: string
   sortPriceDesc: string
@@ -100,6 +107,13 @@ export const translations: Record<Lang, Translations> = {
     allCities: 'كل المدن',
     anyPrice: 'أي سعر',
     anyMileage: 'أي عداد',
+    fromYear: 'من سنة',
+    toYear: 'حتى سنة',
+    allBodyTypes: 'كل الأنواع',
+    allTransmissions: 'كل ناقلات',
+    allFuels: 'كل الوقود',
+    allConditions: 'الحالة',
+    clearAll: 'مسح الكل',
     sortBestDeal: 'أحسن صفقة أولاً',
     sortPriceAsc: 'السعر: من الأقل',
     sortPriceDesc: 'السعر: من الأعلى',
@@ -163,6 +177,13 @@ export const translations: Record<Lang, Translations> = {
     allCities: 'All Cities',
     anyPrice: 'Any Price',
     anyMileage: 'Any Mileage',
+    fromYear: 'From year',
+    toYear: 'To year',
+    allBodyTypes: 'Body type',
+    allTransmissions: 'Gearbox',
+    allFuels: 'Fuel',
+    allConditions: 'Condition',
+    clearAll: 'Clear all',
     sortBestDeal: 'Best Deal First',
     sortPriceAsc: 'Price: Low → High',
     sortPriceDesc: 'Price: High → Low',

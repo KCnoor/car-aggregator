@@ -12,12 +12,6 @@ import {
   SelectItem,
   SelectTrigger,
 } from '@/components/ui/select'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -27,6 +21,38 @@ type AIFilters = {
   maxPrice?: number; minPrice?: number; maxMileage?: number
   minYear?: number; maxYear?: number
 }
+
+// ── Constants ──────────────────────────────────────────────────────────────────
+const HERO_BG = '#0A1628'
+const AMBER   = '#D4A574'
+const INITIAL = 60
+const PAGE    = 40
+const ALL     = '__all__'
+
+const YEARS = Array.from({ length: 2026 - 2005 + 1 }, (_, i) => String(2026 - i))
+
+const BODY_AR: Record<string, string> = {
+  sedan: 'سيدان', suv: 'SUV', pickup: 'بيك آب',
+  coupe: 'كوبيه', hatchback: 'هاتشباك', minivan: 'ميني فان',
+}
+const BODY_EN: Record<string, string> = {
+  sedan: 'Sedan', suv: 'SUV', pickup: 'Pickup',
+  coupe: 'Coupe', hatchback: 'Hatchback', minivan: 'Minivan',
+}
+const TRANS_AR: Record<string, string> = { automatic: 'أوتوماتيك', manual: 'يدوي' }
+const TRANS_EN: Record<string, string> = { automatic: 'Automatic', manual: 'Manual' }
+const FUEL_AR: Record<string, string>  = {
+  petrol: 'بنزين', diesel: 'ديزل', hybrid: 'هجين',
+  'mild-hybrid': 'هجين خفيف', electric: 'كهربائي',
+}
+const FUEL_EN: Record<string, string>  = {
+  petrol: 'Petrol', diesel: 'Diesel', hybrid: 'Hybrid',
+  'mild-hybrid': 'Mild Hybrid', electric: 'Electric',
+}
+const COND_AR: Record<string, string>  = { used: 'مستعمل', new: 'جديد' }
+const COND_EN: Record<string, string>  = { used: 'Used', new: 'New' }
+
+const VALID_TRANS = ['automatic', 'manual']
 
 // ── Geometric SVG pattern ──────────────────────────────────────────────────────
 const GEO_PATTERN = `url("data:image/svg+xml,${encodeURIComponent(
@@ -41,53 +67,34 @@ const GEO_PATTERN = `url("data:image/svg+xml,${encodeURIComponent(
   '</svg>'
 )}")`
 
-const ALL = '__all__'
-
-const HERO_BG = '#0A1628'
-const AMBER   = '#D4A574'
-
 // ── Source config ──────────────────────────────────────────────────────────────
 const SOURCES = [
-  { key: 'haraj',      nameAr: 'حراج',       nameEn: 'Haraj',       logo: '/source-logos/haraj.svg' },
-  { key: 'syarah',     nameAr: 'سيارة',       nameEn: 'Syarah',      logo: '/source-logos/syarah.svg' },
-  { key: 'motory',     nameAr: 'موتري',       nameEn: 'Motory',      logo: '/source-logos/motory.svg' },
-  { key: 'soum',       nameAr: 'سوم',         nameEn: 'Soum',        logo: '/source-logos/soum.svg' },
-  { key: 'gogomotor',  nameAr: 'قوقو موتور',  nameEn: 'GoGoMotor',   logo: '/source-logos/gogomotor.svg' },
-  { key: 'saudisale',  nameAr: 'سعودي سيل',  nameEn: 'Saudi Sale',  logo: '/source-logos/saudisale.svg' },
-  { key: 'yallamotor', nameAr: 'يلا موتور',  nameEn: 'Yalla Motor', logo: '/source-logos/yallamotor.svg' },
-  { key: 'carly',      nameAr: 'كارلي',       nameEn: 'Carly',       logo: '/source-logos/carly.svg' },
+  { key: 'haraj',      nameAr: 'حراج',      nameEn: 'Haraj',       logo: '/source-logos/haraj.svg' },
+  { key: 'syarah',     nameAr: 'سيارة',      nameEn: 'Syarah',      logo: '/source-logos/syarah.svg' },
+  { key: 'motory',     nameAr: 'موتري',      nameEn: 'Motory',      logo: '/source-logos/motory.svg' },
+  { key: 'soum',       nameAr: 'سوم',        nameEn: 'Soum',        logo: '/source-logos/soum.svg' },
+  { key: 'gogomotor',  nameAr: 'قوقو موتور', nameEn: 'GoGoMotor',   logo: '/source-logos/gogomotor.svg' },
+  { key: 'saudisale',  nameAr: 'سعودي سيل', nameEn: 'Saudi Sale',  logo: '/source-logos/saudisale.svg' },
+  { key: 'yallamotor', nameAr: 'يلا موتور', nameEn: 'Yalla Motor', logo: '/source-logos/yallamotor.svg' },
+  { key: 'carly',      nameAr: 'كارلي',      nameEn: 'Carly',       logo: '/source-logos/carly.svg' },
 ]
 
-// ── Container animation ────────────────────────────────────────────────────────
-const container = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.03 } },
-}
+const container = { hidden: {}, visible: { transition: { staggerChildren: 0.03 } } }
 
 // ── Wordmark ───────────────────────────────────────────────────────────────────
-function SiyaraAIWordmark({ size = 'lg' }: { size?: 'sm' | 'lg' }) {
+function SiyaraAIWordmark() {
   return (
-    <span className={`inline-flex items-baseline gap-1 leading-none ${size === 'lg' ? 'text-4xl' : 'text-xl'}`}>
+    <span className="inline-flex items-baseline gap-1 leading-none text-3xl">
       <span className="font-logo font-bold text-white tracking-wide">سيارة</span>
-      <span
-        className="font-bold tracking-tight"
-        style={{
-          fontFamily: 'var(--font-geist), Geist, sans-serif',
-          fontSize: size === 'lg' ? '0.78em' : '0.82em',
-          color: AMBER,
-          letterSpacing: '0.04em',
-        }}
-      >
-        AI
-      </span>
+      <span className="font-bold tracking-tight" style={{
+        fontFamily: 'var(--font-geist), Geist, sans-serif',
+        fontSize: '0.78em', color: AMBER, letterSpacing: '0.04em',
+      }}>AI</span>
     </span>
   )
 }
 
-// ── INITIAL_DISPLAY / page size ────────────────────────────────────────────────
-const INITIAL = 60
-const PAGE    = 40
-
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function ListingsClient({
   listings,
   totalCount,
@@ -104,16 +111,20 @@ export default function ListingsClient({
   }, [lang])
 
   // ── Filter state ──────────────────────────────────────────────────────────
-  const [make,                setMake]                = useState('')
-  const [model,               setModel]               = useState('')
-  const [city,                setCity]                = useState('')
-  const [maxPrice,            setMaxPrice]            = useState('')
-  const [maxMileage,          setMaxMileage]          = useState('')
-  const [sort,                setSort]                = useState<SortKey>('deal_score')
-  const [source,              setSource]              = useState('')
+  const [make,         setMake]         = useState('')
+  const [model,        setModel]        = useState('')
+  const [yearFrom,     setYearFrom]     = useState('')
+  const [yearTo,       setYearTo]       = useState('')
+  const [maxPrice,     setMaxPrice]     = useState('')
+  const [maxMileage,   setMaxMileage]   = useState('')
+  const [city,         setCity]         = useState('')
+  const [bodyType,     setBodyType]     = useState('')
+  const [transmission, setTransmission] = useState('')
+  const [fuel,         setFuel]         = useState('')
+  const [condition,    setCondition]    = useState('')
+  const [source,       setSource]       = useState('')
   const [showContactForPrice, setShowContactForPrice] = useState(false)
-  const [filterSheetOpen,     setFilterSheetOpen]     = useState(false)
-  const [voiceOpen,           setVoiceOpen]           = useState(false)
+  const [voiceOpen,    setVoiceOpen]    = useState(false)
 
   // AI-search state
   const [nlQuery,   setNlQuery]   = useState('')
@@ -126,7 +137,6 @@ export default function ListingsClient({
   const [displayCount, setDisplayCount] = useState(INITIAL)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
-  // Voice filter callback
   const handleVoiceFilters = useCallback((f: {
     make?: string; model?: string; city?: string
     price_max?: number; price_min?: number; mileage_max?: number
@@ -144,7 +154,6 @@ export default function ListingsClient({
     if (f.mileage_max) setMaxMileage(String(f.mileage_max))
   }, [])
 
-  // ── AI search ─────────────────────────────────────────────────────────────
   async function handleNlSearch(e: React.FormEvent) {
     e.preventDefault()
     if (!nlQuery.trim() || nlLoading) return
@@ -161,9 +170,9 @@ export default function ListingsClient({
       if (aiSort) setSort(aiSort as SortKey)
       setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage('')
       const parts: string[] = []
-      if (filters.make)  parts.push(filters.make)
-      if (filters.model) parts.push(filters.model)
-      if (filters.city)  parts.push(`${tr.nlIn} ${cityLabel(filters.city, lang)}`)
+      if (filters.make)       parts.push(filters.make)
+      if (filters.model)      parts.push(filters.model)
+      if (filters.city)       parts.push(`${tr.nlIn} ${cityLabel(filters.city, lang)}`)
       if (filters.maxPrice)   parts.push(`${tr.nlUnderPrice} ${filters.maxPrice.toLocaleString()} ${tr.sar}`)
       if (filters.maxMileage) parts.push(`${tr.nlUnderMileage} ${filters.maxMileage.toLocaleString()} ${tr.km}`)
       setNlSummary(parts.length ? `${tr.nlShowing} ${parts.join(tr.separator)}` : tr.nlNoFilters)
@@ -179,16 +188,23 @@ export default function ListingsClient({
     nlInputRef.current?.focus()
   }
 
-  // ── Derived lists for selects ──────────────────────────────────────────────
+  // ── Derived lists ──────────────────────────────────────────────────────────
   const makes = useMemo(() =>
     [...new Set(listings.map(l => l.make_en).filter(Boolean))].sort() as string[]
   , [listings])
 
   const models = useMemo(() => {
-    if (!make) return []
-    return [...new Set(
-      listings.filter(l => l.make_en === make).map(l => l.model_en).filter(Boolean)
-    )].sort() as string[]
+    if (make) {
+      return [...new Set(
+        listings.filter(l => l.make_en === make).map(l => l.model_en).filter(Boolean)
+      )].sort() as string[]
+    }
+    // top 30 by frequency across all makes
+    const cnt = new Map<string, number>()
+    for (const l of listings) {
+      if (l.model_en) cnt.set(l.model_en, (cnt.get(l.model_en) ?? 0) + 1)
+    }
+    return [...cnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30).map(([m]) => m)
   }, [listings, make])
 
   const cityOptions = useMemo(() => {
@@ -199,15 +215,29 @@ export default function ListingsClient({
     return [...map.values()].sort((a, b) => a.en.localeCompare(b.en))
   }, [listings])
 
-  // ── Sort function ──────────────────────────────────────────────────────────
+  const bodyTypes = useMemo(() =>
+    [...new Set(listings.map(l => l.body_type_slug).filter(Boolean))].sort() as string[]
+  , [listings])
+
+  const fuelTypes = useMemo(() =>
+    [...new Set(listings.map(l => l.fuel_type_slug).filter(Boolean))].sort() as string[]
+  , [listings])
+
+  const conditions = useMemo(() =>
+    [...new Set(listings.map(l => l.condition).filter(Boolean))].sort() as string[]
+  , [listings])
+
+  // ── Sort ──────────────────────────────────────────────────────────────────
+  const [sort, setSort] = useState<SortKey>('deal_score')
+
   const sortFn = useCallback((a: Listing, b: Listing): number => {
     if (sort === 'deal_score') {
       const aS = a.deal_score ?? (a.contact_for_price ? -2 : -1)
       const bS = b.deal_score ?? (b.contact_for_price ? -2 : -1)
       return bS - aS
     }
-    if (sort === 'price_asc')  return (a.price_sar ?? Infinity) - (b.price_sar ?? Infinity)
-    if (sort === 'price_desc') return (b.price_sar ?? -Infinity) - (a.price_sar ?? -Infinity)
+    if (sort === 'price_asc')   return (a.price_sar ?? Infinity) - (b.price_sar ?? Infinity)
+    if (sort === 'price_desc')  return (b.price_sar ?? -Infinity) - (a.price_sar ?? -Infinity)
     if (sort === 'mileage_asc') return (a.mileage_km ?? Infinity) - (b.mileage_km ?? Infinity)
     return (b.year ?? 0) - (a.year ?? 0)
   }, [sort])
@@ -222,10 +252,14 @@ export default function ListingsClient({
 
     const applyCat = (pool: Listing[]) => {
       let r = pool
-      if (eMake)  r = r.filter(l => (l.make_en  ?? '').toLowerCase() === eMake!.toLowerCase())
-      if (eModel) r = r.filter(l => (l.model_en ?? '').toLowerCase() === eModel!.toLowerCase())
-      if (eCity)  r = r.filter(l => (l.city_en  ?? '').toLowerCase() === eCity!.toLowerCase())
-      if (source) r = r.filter(l => l.source === source)
+      if (eMake)        r = r.filter(l => (l.make_en  ?? '').toLowerCase() === eMake!.toLowerCase())
+      if (eModel)       r = r.filter(l => (l.model_en ?? '').toLowerCase() === eModel!.toLowerCase())
+      if (eCity)        r = r.filter(l => (l.city_en  ?? '').toLowerCase() === eCity!.toLowerCase())
+      if (source)       r = r.filter(l => l.source === source)
+      if (bodyType)     r = r.filter(l => l.body_type_slug === bodyType)
+      if (transmission) r = r.filter(l => l.transmission_slug === transmission)
+      if (fuel)         r = r.filter(l => l.fuel_type_slug === fuel)
+      if (condition)    r = r.filter(l => l.condition === condition)
       return r
     }
     const applyNum = (pool: Listing[]) => {
@@ -233,6 +267,8 @@ export default function ListingsClient({
       if (eMaxPrice)          r = r.filter(l => l.price_sar != null && l.price_sar <= eMaxPrice!)
       if (aiFilters.minPrice) r = r.filter(l => l.price_sar != null && l.price_sar >= aiFilters.minPrice!)
       if (eMaxMileage)        r = r.filter(l => l.mileage_km == null || l.mileage_km <= eMaxMileage!)
+      if (yearFrom)           r = r.filter(l => (l.year ?? 0) >= parseInt(yearFrom))
+      if (yearTo)             r = r.filter(l => (l.year ?? 9999) <= parseInt(yearTo))
       if (aiFilters.minYear)  r = r.filter(l => (l.year ?? 0) >= aiFilters.minYear!)
       if (aiFilters.maxYear)  r = r.filter(l => (l.year ?? 9999) <= aiFilters.maxYear!)
       return r
@@ -245,89 +281,100 @@ export default function ListingsClient({
     if (strict.length > 0) return { filtered: [...strict].sort(sortFn), isFallback: false }
 
     const hasNum = aiFilters.maxPrice || aiFilters.minPrice || aiFilters.maxMileage ||
-      aiFilters.minYear || aiFilters.maxYear || maxPrice || maxMileage
+      aiFilters.minYear || aiFilters.maxYear || maxPrice || maxMileage || yearFrom || yearTo
     if (hasNum && cat.length > 0) return { filtered: [...cat].sort(sortFn), isFallback: true }
 
-    const hasAny = eMake || eModel || eCity || source
+    const hasAny = eMake || eModel || eCity || source || bodyType || transmission || fuel || condition
     if (hasAny && base.length > 0) return { filtered: [...base].sort(sortFn), isFallback: true }
 
     return { filtered: [...strict].sort(sortFn), isFallback: false }
-  }, [listings, make, model, city, maxPrice, maxMileage, sort, source, aiFilters, showContactForPrice, sortFn])
+  }, [listings, make, model, city, maxPrice, maxMileage, sort, source,
+      aiFilters, showContactForPrice, sortFn,
+      yearFrom, yearTo, bodyType, transmission, fuel, condition])
 
-  // Reset display count when filters change
   useEffect(() => { setDisplayCount(INITIAL) }, [filtered])
 
-  // Infinite scroll observer
   useEffect(() => {
     const el = sentinelRef.current
     if (!el) return
     const obs = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting) {
-          setDisplayCount(c => Math.min(c + PAGE, filtered.length))
-        }
-      },
+      entries => { if (entries[0].isIntersecting) setDisplayCount(c => Math.min(c + PAGE, filtered.length)) },
       { rootMargin: '300px' }
     )
     obs.observe(el)
     return () => obs.disconnect()
   }, [filtered.length])
 
-  const hasFilters = make || model || city || maxPrice || maxMileage || source || Object.keys(aiFilters).length > 0
-  const activeFilterCount = [make, model, city, maxPrice, maxMileage, source,
-    Object.keys(aiFilters).length > 0 ? '1' : '']
-    .filter(Boolean).length
+  // ── Active chips ──────────────────────────────────────────────────────────
+  const cityLabel_ = city
+    ? cityLabel(city, lang, cityOptions.find(c => c.en === city)?.ar ?? null)
+    : ''
+  const priceLabel   = maxPrice   ? tr.priceCaps.find(p => p.value === maxPrice)?.label   ?? maxPrice   : ''
+  const mileageLabel = maxMileage ? tr.mileageCaps.find(p => p.value === maxMileage)?.label ?? maxMileage : ''
+  const bodyLabel    = bodyType     ? (lang === 'ar' ? BODY_AR[bodyType]   : BODY_EN[bodyType])   ?? bodyType     : ''
+  const transLabel   = transmission ? (lang === 'ar' ? TRANS_AR[transmission] : TRANS_EN[transmission]) ?? transmission : ''
+  const fuelLabel    = fuel         ? (lang === 'ar' ? FUEL_AR[fuel]       : FUEL_EN[fuel])       ?? fuel         : ''
+  const condLabel    = condition    ? (lang === 'ar' ? COND_AR[condition]  : COND_EN[condition])  ?? condition    : ''
+  const yearChipLabel = yearFrom && yearTo ? `${yearFrom} – ${yearTo}`
+    : yearFrom ? `${lang === 'ar' ? 'من' : 'from'} ${yearFrom}`
+    : yearTo   ? `${lang === 'ar' ? 'حتى' : 'to'} ${yearTo}` : ''
+
+  type Chip = { label: string; clear: () => void }
+  const activeChips: Chip[] = [
+    make         && { label: make,       clear: () => { setMake(''); setModel('') } },
+    model        && { label: model,      clear: () => setModel('') },
+    yearChipLabel && { label: yearChipLabel, clear: () => { setYearFrom(''); setYearTo('') } },
+    priceLabel   && { label: priceLabel, clear: () => setMaxPrice('') },
+    mileageLabel && { label: mileageLabel, clear: () => setMaxMileage('') },
+    cityLabel_   && { label: cityLabel_, clear: () => setCity('') },
+    bodyLabel    && { label: bodyLabel,  clear: () => setBodyType('') },
+    transLabel   && { label: transLabel, clear: () => setTransmission('') },
+    fuelLabel    && { label: fuelLabel,  clear: () => setFuel('') },
+    condLabel    && { label: condLabel,  clear: () => setCondition('') },
+    source       && { label: SOURCES.find(s => s.key === source)?.[lang === 'ar' ? 'nameAr' : 'nameEn'] ?? source, clear: () => setSource('') },
+    Object.keys(aiFilters).length > 0 && { label: lang === 'ar' ? 'بحث ذكي' : 'AI search', clear: clearNlSearch },
+  ].filter(Boolean) as Chip[]
+
+  const hasFilters = activeChips.length > 0
 
   function clearFilters() {
-    setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage(''); setSource('')
+    setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage('')
+    setSource(''); setYearFrom(''); setYearTo('')
+    setBodyType(''); setTransmission(''); setFuel(''); setCondition('')
     clearNlSearch()
   }
 
-  // ── Computed display labels for filter selects ─────────────────────────────
   const sortLabel = {
-    deal_score:  tr.sortBestDeal,
-    price_asc:   tr.sortPriceAsc,
-    price_desc:  tr.sortPriceDesc,
-    year_desc:   tr.sortNewest,
-    mileage_asc: tr.sortMileageAsc,
+    deal_score: tr.sortBestDeal, price_asc: tr.sortPriceAsc,
+    price_desc: tr.sortPriceDesc, year_desc: tr.sortNewest, mileage_asc: tr.sortMileageAsc,
   }[sort]
 
-  const cityLabel_ = city
-    ? (cityOptions.find(c => c.en === city)
-        ? cityLabel(city, lang, cityOptions.find(c => c.en === city)?.ar ?? null)
-        : city)
-    : ''
-
-  const priceLabel   = maxPrice   ? tr.priceCaps.find(p => p.value === maxPrice)?.label   ?? maxPrice   : ''
-  const mileageLabel = maxMileage ? tr.mileageCaps.find(p => p.value === maxMileage)?.label ?? maxMileage : ''
-
-  // ── shadcn Select helper ───────────────────────────────────────────────────
+  // ── Select helper ──────────────────────────────────────────────────────────
   const Sel = ({
-    value, onChange, placeholder, displayLabel, children, className = ''
+    value, onChange, placeholder, activeLabel, children, minW = 108,
   }: {
-    value: string
-    onChange: (v: string) => void
-    placeholder: string
-    displayLabel?: string
-    children: React.ReactNode
-    className?: string
+    value: string; onChange: (v: string) => void
+    placeholder: string; activeLabel?: string
+    children: React.ReactNode; minW?: number
   }) => {
     const isActive = Boolean(value)
     return (
       <Select value={value || ALL} onValueChange={v => onChange(v === ALL ? '' : (v ?? ''))}>
         <SelectTrigger
-          className={`h-8 text-xs border-border/70 rounded-full min-w-[100px] transition-colors ${
-            isActive
-              ? 'bg-primary text-primary-foreground border-primary font-semibold'
-              : 'bg-white hover:bg-muted/50 text-foreground'
-          } ${className}`}
           dir={lang === 'ar' ? 'rtl' : 'ltr'}
+          className={`h-8 text-xs rounded-full border flex-shrink-0 transition-colors ${
+            isActive
+              ? 'font-semibold border-transparent text-[#0A1628]'
+              : 'bg-white border-border/70 text-foreground hover:bg-muted/50'
+          }`}
+          style={{
+            minWidth: minW,
+            background: isActive ? AMBER : undefined,
+          }}
         >
-          <span className="flex-1 text-start truncate">
-            {isActive && displayLabel ? displayLabel : (
-              <span className={isActive ? 'text-primary-foreground' : 'text-muted-foreground'}>
-                {placeholder}
-              </span>
+          <span className="truncate text-start">
+            {isActive && activeLabel ? activeLabel : (
+              <span className={isActive ? '' : 'text-muted-foreground'}>{placeholder}</span>
             )}
           </span>
         </SelectTrigger>
@@ -339,60 +386,6 @@ export default function ListingsClient({
     )
   }
 
-  const FilterControls = () => (
-    <>
-      <Sel value={make} onChange={v => { setMake(v); setModel('') }}
-        placeholder={tr.allMakes} displayLabel={make}>
-        {makes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-      </Sel>
-
-      {make && (
-        <Sel value={model} onChange={setModel}
-          placeholder={tr.allModels} displayLabel={model}>
-          {models.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-        </Sel>
-      )}
-
-      <Sel value={city} onChange={setCity}
-        placeholder={tr.allCities} displayLabel={cityLabel_}>
-        {cityOptions.map(c => (
-          <SelectItem key={c.en} value={c.en}>
-            {lang === 'ar' ? (c.ar ?? c.en) : c.en}
-          </SelectItem>
-        ))}
-      </Sel>
-
-      <Sel value={maxPrice} onChange={setMaxPrice}
-        placeholder={tr.anyPrice} displayLabel={priceLabel}>
-        {tr.priceCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-      </Sel>
-
-      <Sel value={maxMileage} onChange={setMaxMileage}
-        placeholder={tr.anyMileage} displayLabel={mileageLabel}>
-        {tr.mileageCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-      </Sel>
-
-      <Sel value={sort} onChange={v => setSort(v as SortKey)}
-        placeholder={tr.sortBestDeal} displayLabel={sortLabel}>
-        <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
-        <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
-        <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>
-        <SelectItem value="mileage_asc">{tr.sortMileageAsc}</SelectItem>
-        <SelectItem value="year_desc">{tr.sortNewest}</SelectItem>
-      </Sel>
-
-      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none whitespace-nowrap">
-        <input
-          type="checkbox"
-          checked={showContactForPrice}
-          onChange={e => setShowContactForPrice(e.target.checked)}
-          className="rounded border-border"
-        />
-        {lang === 'ar' ? 'بدون سعر' : 'No-price'}
-      </label>
-    </>
-  )
-
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
@@ -403,50 +396,48 @@ export default function ListingsClient({
         onExternalOpenHandled={() => setVoiceOpen(false)}
       />
 
-      {/* ── Hero — deep navy, ~280px desktop ───────────────────────────── */}
-      <header
-        className="relative px-4 pt-5 pb-0 overflow-hidden"
-        style={{ background: HERO_BG }}
-      >
-        <div
-          className="absolute inset-0 opacity-[0.055] pointer-events-none"
-          style={{ backgroundImage: GEO_PATTERN, backgroundRepeat: 'repeat' }}
-        />
+      {/* ═══════════════════════════════════════════════════════════════════
+          HERO  — compact single-band header + source ribbon
+      ═══════════════════════════════════════════════════════════════════ */}
+      <header className="relative overflow-hidden" style={{ background: HERO_BG }}>
+        <div className="absolute inset-0 opacity-[0.055] pointer-events-none"
+          style={{ backgroundImage: GEO_PATTERN, backgroundRepeat: 'repeat' }} />
 
-        <div className="relative max-w-4xl mx-auto">
-          {/* Logo row */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <SiyaraAIWordmark size="lg" />
-              <p className="text-white/40 text-[11px] mt-1 font-medium" style={{ fontFamily: 'var(--font-tajawal)' }}>
-                {tr.subtitle}
-              </p>
-            </div>
-            <div className="flex items-center gap-2.5 mt-0.5">
-              <span className="text-xs hidden sm:block font-medium" style={{ color: AMBER + 'bb' }}>
-                {tr.listingsIndexed(totalCount)}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
-                className="text-xs font-semibold bg-white/10 hover:bg-white/20 border-white/20 text-white rounded-full h-7 px-3"
-              >
-                {tr.toggleLang}
-              </Button>
-            </div>
+        {/* ── Top bar: logo on one side, lang toggle on other ── */}
+        <div className="relative max-w-screen-xl mx-auto px-4 pt-4 pb-0 flex items-center justify-between">
+          {/* RTL: first child = right side */}
+          <div>
+            <SiyaraAIWordmark />
+            <p className="text-[10px] mt-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>
+              {tr.subtitle}
+            </p>
           </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] hidden sm:block font-medium" style={{ color: AMBER + '99' }}>
+              {filtered.length.toLocaleString()} {lang === 'ar' ? 'إعلان' : 'listings'}
+            </span>
+            <button
+              onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
+              className="text-xs font-semibold rounded-full h-7 px-3 transition-colors border"
+              style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.18)', color: 'white' }}
+            >
+              {tr.toggleLang}
+            </button>
+          </div>
+        </div>
 
-          {/* Search form */}
+        {/* ── Search bar ── */}
+        <div className="relative max-w-screen-xl mx-auto px-4 pt-3 pb-0">
           <form onSubmit={handleNlSearch}>
             <div
-              className="flex items-stretch bg-white/10 backdrop-blur-sm rounded-xl border border-white/15 focus-within:border-white/35 transition-colors overflow-hidden"
-              style={{ minHeight: 52 }}
+              className="flex items-stretch overflow-hidden rounded-xl border focus-within:border-white/30 transition-colors"
+              style={{ height: 56, background: 'rgba(255,255,255,0.09)', borderColor: 'rgba(255,255,255,0.14)' }}
             >
+              {/* بحث button — leading side in RTL (right) */}
               <button
                 type="submit"
                 disabled={nlLoading || !nlQuery.trim()}
-                className="shrink-0 px-5 text-white text-xs font-bold transition-colors disabled:opacity-40"
+                className="shrink-0 px-5 text-sm font-bold transition-opacity disabled:opacity-40"
                 style={{ background: AMBER, color: HERO_BG }}
               >
                 {nlLoading ? (
@@ -456,6 +447,8 @@ export default function ListingsClient({
                   </svg>
                 ) : tr.nlSearch}
               </button>
+
+              {/* Text input */}
               <input
                 ref={nlInputRef}
                 type="text"
@@ -463,48 +456,60 @@ export default function ListingsClient({
                 value={nlQuery}
                 onChange={e => setNlQuery(e.target.value)}
                 dir="auto"
-                className="flex-1 bg-transparent text-white text-sm px-4 focus:outline-none placeholder:text-white/30 min-w-0"
+                className="flex-1 bg-transparent text-white text-sm px-3 focus:outline-none placeholder:text-white/28 min-w-0"
               />
+
+              {/* Mic — trailing side in RTL (left), amber circle with pulse */}
               <button
                 type="button"
                 onClick={() => setVoiceOpen(true)}
-                className="shrink-0 px-4 text-white/50 hover:text-white transition-colors flex items-center"
-                aria-label="مستشار سيارة AI الصوتي"
+                aria-label={lang === 'ar' ? 'مستشار سيارة AI الصوتي' : 'Voice search'}
+                className="shrink-0 w-14 flex items-center justify-center"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2H3v2a9 9 0 0 0 8 8.94V23h2v-2.06A9 9 0 0 0 21 12v-2h-2z"/>
-                </svg>
+                <span className="relative flex items-center justify-center">
+                  <span className="absolute w-9 h-9 rounded-full animate-ping opacity-15"
+                    style={{ background: AMBER }} />
+                  <span className="relative w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:opacity-90"
+                    style={{ background: AMBER + '28', border: `1.5px solid ${AMBER}70` }}>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill={AMBER}>
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2H3v2a9 9 0 0 0 8 8.94V23h2v-2.06A9 9 0 0 0 21 12v-2h-2z"/>
+                    </svg>
+                  </span>
+                </span>
               </button>
             </div>
           </form>
 
           {/* AI summary */}
-          <div className="mt-2 min-h-[18px]">
+          <div className="mt-1.5 min-h-[16px] pb-0">
             {nlSummary ? (
-              <div className="flex items-center gap-2 text-sm" dir="auto">
+              <div className="flex items-center gap-2" dir="auto">
                 <span style={{ color: AMBER }}>✦</span>
-                <span className="text-white/60 text-xs">{nlSummary}</span>
-                <button onClick={clearNlSearch} className="text-xs underline transition-colors" style={{ color: AMBER }}>
+                <span className="text-white/55 text-[11px]">{nlSummary}</span>
+                <button onClick={clearNlSearch} className="text-[11px] underline" style={{ color: AMBER }}>
                   {tr.nlClear}
                 </button>
               </div>
             ) : (
-              <p className="text-center text-xs text-white/25">{tr.nlPowered}</p>
+              <p className="text-center text-[10px] text-white/22">{tr.nlPowered}</p>
             )}
           </div>
         </div>
 
-        {/* ── Source ribbon — inside hero on navy bg ──────────────────── */}
-        <div className="relative max-w-4xl mx-auto pt-5 pb-3">
-          <div className="flex items-center justify-start gap-2 overflow-x-auto no-scrollbar">
-            {/* All sources chip */}
+        {/* ── Source ribbon — slightly lighter navy strip ── */}
+        <div
+          className="mt-3 border-t"
+          style={{ background: 'rgba(255,255,255,0.035)', borderColor: 'rgba(255,255,255,0.07)' }}
+        >
+          <div className="max-w-screen-xl mx-auto px-4 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
+            {/* All pill */}
             <button
               onClick={() => setSource('')}
-              className="flex-shrink-0 h-8 px-4 rounded-full border text-xs font-semibold transition-all whitespace-nowrap"
+              className="flex-shrink-0 h-7 px-3.5 rounded-full border text-[11px] font-semibold transition-all whitespace-nowrap"
               style={!source
                 ? { background: AMBER, color: HERO_BG, borderColor: AMBER }
-                : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.65)', borderColor: 'rgba(255,255,255,0.15)' }
+                : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.14)' }
               }
             >
               {lang === 'ar' ? 'الكل' : 'All'}
@@ -516,26 +521,25 @@ export default function ListingsClient({
                 <button
                   key={s.key}
                   onClick={() => setSource(isActive ? '' : s.key)}
-                  className="flex-shrink-0 focus:outline-none focus-visible:ring-2 rounded-xl transition-all duration-200"
-                  style={{ opacity: isActive ? 1 : 0.72 }}
+                  className="flex-shrink-0 focus:outline-none rounded-lg transition-all duration-200"
+                  style={{ opacity: isActive ? 1 : 0.68 }}
                   title={lang === 'ar' ? s.nameAr : s.nameEn}
                   aria-pressed={isActive}
                 >
                   <div
-                    className="flex items-center justify-center rounded-xl border-2 transition-all duration-200"
+                    className="flex items-center justify-center rounded-lg border-2 transition-all duration-200"
                     style={{
                       background: 'white',
                       borderColor: isActive ? AMBER : 'transparent',
-                      boxShadow: isActive ? `0 0 0 1px ${AMBER}, 0 4px 16px rgba(212,165,116,0.25)` : 'none',
-                      width: 140,
-                      height: 80,
+                      boxShadow: isActive ? `0 0 0 1px ${AMBER}` : 'none',
+                      width: 100,
+                      height: 60,
                     }}
                   >
                     <img
-                      src={s.logo}
-                      alt={s.nameEn}
-                      className="h-8 w-auto object-contain"
-                      style={{ maxWidth: 110 }}
+                      src={s.logo} alt={s.nameEn}
+                      className="h-6 w-auto object-contain"
+                      style={{ maxWidth: 78 }}
                       referrerPolicy="no-referrer"
                       draggable={false}
                     />
@@ -547,95 +551,149 @@ export default function ListingsClient({
         </div>
       </header>
 
-      {/* ── Sticky filter bar ─────────────────────────────────────────────── */}
-      <div className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-2">
-          {/* Mobile */}
-          <div className="flex sm:hidden items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFilterSheetOpen(true)}
-              className="rounded-full text-xs font-semibold border-border/70 h-8 gap-1.5"
-            >
-              {lang === 'ar' ? 'فلاتر' : 'Filters'}
-              {activeFilterCount > 0 && (
-                <span className="bg-primary text-primary-foreground text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
+      {/* ═══════════════════════════════════════════════════════════════════
+          FILTER BAR — sticky, 10 facets + sort + active chips
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div className="bg-background/96 backdrop-blur-sm border-b border-border sticky top-0 z-20 shadow-sm">
+        <div className="max-w-screen-xl mx-auto px-3">
 
-            <Sel value={sort} onChange={v => setSort(v as SortKey)}
-              placeholder={tr.sortBestDeal} displayLabel={sortLabel} className="flex-1">
-              <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
-              <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
-              <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>
-              <SelectItem value="mileage_asc">{tr.sortMileageAsc}</SelectItem>
-              <SelectItem value="year_desc">{tr.sortNewest}</SelectItem>
+          {/* ── Filter row ── */}
+          <div className="flex items-center gap-1.5 py-2 overflow-x-auto no-scrollbar">
+
+            {/* ── Facets (RTL: right → left on screen) ── */}
+            <Sel value={make} onChange={v => { setMake(v); setModel('') }}
+              placeholder={tr.allMakes} activeLabel={make}>
+              {makes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
             </Sel>
 
-            {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8 text-xs px-2 shrink-0">
-                {lang === 'ar' ? 'مسح' : 'Clear'}
-              </Button>
-            )}
+            <Sel value={model} onChange={setModel}
+              placeholder={tr.allModels} activeLabel={model}>
+              {models.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            </Sel>
+
+            {/* Year From */}
+            <Sel value={yearFrom} onChange={setYearFrom}
+              placeholder={tr.fromYear} activeLabel={yearFrom} minW={90}>
+              {YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </Sel>
+
+            {/* Year To */}
+            <Sel value={yearTo} onChange={setYearTo}
+              placeholder={tr.toYear} activeLabel={yearTo} minW={90}>
+              {YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </Sel>
+
+            <Sel value={maxPrice} onChange={setMaxPrice}
+              placeholder={tr.anyPrice} activeLabel={priceLabel}>
+              {tr.priceCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            </Sel>
+
+            <Sel value={maxMileage} onChange={setMaxMileage}
+              placeholder={tr.anyMileage} activeLabel={mileageLabel}>
+              {tr.mileageCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            </Sel>
+
+            <Sel value={city} onChange={setCity}
+              placeholder={tr.allCities} activeLabel={cityLabel_}>
+              {cityOptions.map(c => (
+                <SelectItem key={c.en} value={c.en}>
+                  {lang === 'ar' ? (c.ar ?? c.en) : c.en}
+                </SelectItem>
+              ))}
+            </Sel>
+
+            <Sel value={bodyType} onChange={setBodyType}
+              placeholder={tr.allBodyTypes} activeLabel={bodyLabel} minW={96}>
+              {bodyTypes.map(b => (
+                <SelectItem key={b} value={b}>
+                  {lang === 'ar' ? BODY_AR[b] ?? b : BODY_EN[b] ?? b}
+                </SelectItem>
+              ))}
+            </Sel>
+
+            <Sel value={transmission} onChange={setTransmission}
+              placeholder={tr.allTransmissions} activeLabel={transLabel} minW={96}>
+              {VALID_TRANS.map(t => (
+                <SelectItem key={t} value={t}>
+                  {lang === 'ar' ? TRANS_AR[t] : TRANS_EN[t]}
+                </SelectItem>
+              ))}
+            </Sel>
+
+            <Sel value={fuel} onChange={setFuel}
+              placeholder={tr.allFuels} activeLabel={fuelLabel} minW={88}>
+              {fuelTypes.map(f => (
+                <SelectItem key={f} value={f}>
+                  {lang === 'ar' ? FUEL_AR[f] ?? f : FUEL_EN[f] ?? f}
+                </SelectItem>
+              ))}
+            </Sel>
+
+            <Sel value={condition} onChange={setCondition}
+              placeholder={tr.allConditions} activeLabel={condLabel} minW={80}>
+              {conditions.map(c => (
+                <SelectItem key={c} value={c}>
+                  {lang === 'ar' ? COND_AR[c] ?? c : COND_EN[c] ?? c}
+                </SelectItem>
+              ))}
+            </Sel>
+
+            {/* ── Sort + count — pushed to the left (RTL = ms-auto) ── */}
+            <div className="flex-shrink-0 ms-auto flex items-center gap-2 ps-2 border-s border-border">
+              <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
+                {filtered.length.toLocaleString()}
+                <span className="font-normal ms-0.5">{lang === 'ar' ? ' نتيجة' : ' results'}</span>
+              </span>
+              <Sel value={sort} onChange={v => setSort(v as SortKey)}
+                placeholder={tr.sortBestDeal} activeLabel={sortLabel} minW={140}>
+                <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
+                <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
+                <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>
+                <SelectItem value="mileage_asc">{tr.sortMileageAsc}</SelectItem>
+                <SelectItem value="year_desc">{tr.sortNewest}</SelectItem>
+              </Sel>
+            </div>
           </div>
 
-          {/* Desktop */}
-          <div className="hidden sm:flex flex-wrap items-center gap-1.5">
-            <FilterControls />
+          {/* ── Active filter chips ── */}
+          <AnimatePresence>
             {hasFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="text-destructive hover:text-destructive h-8 text-xs rounded-full ms-1"
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="overflow-hidden"
               >
-                {tr.clearFilters}
-              </Button>
+                <div className="flex items-center gap-1.5 pb-2 overflow-x-auto no-scrollbar flex-wrap">
+                  {activeChips.map(chip => (
+                    <button
+                      key={chip.label}
+                      onClick={chip.clear}
+                      className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-medium transition-opacity hover:opacity-70 whitespace-nowrap flex-shrink-0"
+                      style={{ background: AMBER + '20', color: '#92400E', border: `1px solid ${AMBER}55` }}
+                    >
+                      {chip.label}
+                      <span className="text-[10px] opacity-60">×</span>
+                    </button>
+                  ))}
+                  <button
+                    onClick={clearFilters}
+                    className="text-[11px] text-muted-foreground underline ms-1 whitespace-nowrap flex-shrink-0"
+                  >
+                    {tr.clearAll}
+                  </button>
+                </div>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* ── Mobile filter Sheet ───────────────────────────────────────────── */}
-      <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-        <SheetContent
-          side="bottom"
-          className="rounded-t-3xl max-h-[80vh] overflow-y-auto"
-          dir={lang === 'ar' ? 'rtl' : 'ltr'}
-        >
-          <SheetHeader className="mb-4">
-            <SheetTitle>{lang === 'ar' ? 'الفلاتر' : 'Filters'}</SheetTitle>
-          </SheetHeader>
-          <div className="flex flex-col gap-3 pb-8">
-            <FilterControls />
-            <div className="flex gap-2 pt-2">
-              {hasFilters && (
-                <Button
-                  variant="outline"
-                  className="flex-1 border-destructive text-destructive hover:bg-destructive/5"
-                  onClick={() => { clearFilters(); setFilterSheetOpen(false) }}
-                >
-                  {tr.clearFilters}
-                </Button>
-              )}
-              <Button
-                className="flex-1 bg-primary text-primary-foreground"
-                onClick={() => setFilterSheetOpen(false)}
-              >
-                {lang === 'ar'
-                  ? `عرض ${filtered.length.toLocaleString()} نتيجة`
-                  : `Show ${filtered.length.toLocaleString()} results`}
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* ── Results ───────────────────────────────────────────────────────── */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      {/* ═══════════════════════════════════════════════════════════════════
+          RESULTS
+      ═══════════════════════════════════════════════════════════════════ */}
+      <main className="max-w-screen-xl mx-auto px-4 py-6">
         <AnimatePresence>
           {isFallback && (
             <motion.div
@@ -648,24 +706,6 @@ export default function ListingsClient({
           )}
         </AnimatePresence>
 
-        {/* Results count */}
-        <div className="flex items-center gap-3 mb-5">
-          <p className="text-sm font-semibold text-muted-foreground">
-            {tr.listingsFound(filtered.length)}
-          </p>
-          {hasFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="text-xs text-primary h-7 px-2 rounded-full bg-primary/8 hover:bg-primary/15"
-            >
-              {tr.clearFilters} ✕
-            </Button>
-          )}
-        </div>
-
-        {/* Empty state */}
         {filtered.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
@@ -680,7 +720,7 @@ export default function ListingsClient({
             <p className="text-sm text-muted-foreground">{tr.noListingsSub}</p>
             {hasFilters && (
               <Button variant="outline" size="sm" onClick={clearFilters} className="mt-4 rounded-xl">
-                {tr.clearFilters}
+                {tr.clearAll}
               </Button>
             )}
           </motion.div>
@@ -698,13 +738,12 @@ export default function ListingsClient({
             </motion.div>
 
             {/* Infinite scroll sentinel */}
-            <div ref={sentinelRef} className="h-16 flex items-center justify-center mt-4">
+            <div ref={sentinelRef} className="h-12 flex items-center justify-center mt-4">
               {displayCount < filtered.length && (
                 <span className="text-xs text-muted-foreground">
                   {lang === 'ar'
                     ? `${displayCount.toLocaleString()} من ${filtered.length.toLocaleString()}`
-                    : `${displayCount.toLocaleString()} of ${filtered.length.toLocaleString()}`
-                  }
+                    : `${displayCount.toLocaleString()} of ${filtered.length.toLocaleString()}`}
                 </span>
               )}
             </div>
