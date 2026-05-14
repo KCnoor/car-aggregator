@@ -9,7 +9,7 @@ Extract HARD FILTERS (explicit constraints only) and a SORT PREFERENCE (for subj
 HARD FILTERS — only set when explicitly stated by the user:
 - make: car brand only if named (Toyota, Nissan, Hyundai, BMW, Mercedes, Kia, Honda, Ford, GMC)
 - model: specific model only if named (Camry, Patrol, Corolla, Sonata, etc.)
-- city: one of "Riyadh", "Jeddah", "Dammam" — only if explicitly mentioned
+- city: English city name (Riyadh, Jeddah, Dammam, Khobar, Mecca, Medina, Abha, Taif, Tabuk, Qassim, Hail) — only if explicitly mentioned
 - maxPrice: integer SAR — only if the user states a specific number or amount
 - minPrice: integer SAR — only if explicitly stated
 - maxMileage: integer km — only if the user gives a specific number
@@ -37,7 +37,9 @@ Examples:
 "ممشى قليل تويوتا" → {"make":"Toyota","sort":"mileage_asc"}
 "كامري 2022 جدة أقل من 90 ألف" → {"make":"Toyota","model":"Camry","minYear":2022,"maxYear":2022,"city":"Jeddah","maxPrice":90000}
 "cheap Patrol under 200k" → {"make":"Nissan","model":"Patrol","maxPrice":200000,"sort":"price_asc"}
-"نظيفة في الدمام" → {"city":"Dammam","sort":"deal_score"}`
+"نظيفة في الدمام" → {"city":"Dammam","sort":"deal_score"}
+"سيارة في مكة" → {"city":"Mecca"}
+"في جدة" → {"city":"Jeddah"}`
 
 type AIFilters = {
   make?: string

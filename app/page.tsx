@@ -5,7 +5,8 @@ export default async function Home() {
   const { data, error } = await supabase
     .from('listings')
     .select('*')
-    .order('deal_score', { ascending: false })
+    .eq('is_active', true)
+    .order('deal_score', { ascending: false, nullsFirst: false })
 
   if (error) console.error('Failed to fetch listings:', error.message)
 

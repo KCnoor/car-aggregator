@@ -8,17 +8,16 @@ import ListingCard from './ListingCard'
 type SortKey = 'deal_score' | 'price_asc' | 'price_desc' | 'year_desc' | 'mileage_asc'
 
 type AIFilters = {
-  make?: string
-  model?: string
-  city?: string
-  maxPrice?: number
-  minPrice?: number
+  make?:       string
+  model?:      string
+  city?:       string
+  maxPrice?:   number
+  minPrice?:   number
   maxMileage?: number
-  minYear?: number
-  maxYear?: number
+  minYear?:    number
+  maxYear?:    number
 }
 
-// Saudi-inspired geometric watermark pattern (nested diamonds + cardinal dots)
 const GEO_PATTERN = `url("data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56">' +
   '<path d="M28 3 L53 28 L28 53 L3 28 Z" fill="none" stroke="white" stroke-width="0.7"/>' +
@@ -36,19 +35,20 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   const tr = translations[lang]
 
   useEffect(() => {
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
+    document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr'
     document.documentElement.lang = lang
   }, [lang])
 
-  const [make, setMake]           = useState('')
-  const [model, setModel]         = useState('')
-  const [city, setCity]           = useState('')
-  const [maxPrice, setMaxPrice]   = useState('')
-  const [maxMileage, setMaxMileage] = useState('')
-  const [sort, setSort]           = useState<SortKey>('deal_score')
-  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [make,                setMake]                = useState('')
+  const [model,               setModel]               = useState('')
+  const [city,                setCity]                = useState('')
+  const [maxPrice,            setMaxPrice]            = useState('')
+  const [maxMileage,          setMaxMileage]          = useState('')
+  const [sort,                setSort]                = useState<SortKey>('deal_score')
+  const [showContactForPrice, setShowContactForPrice] = useState(false)
+  const [filterSheetOpen,     setFilterSheetOpen]     = useState(false)
 
-  const [nlQuery, setNlQuery]     = useState('')
+  const [nlQuery,   setNlQuery]   = useState('')
   const [nlLoading, setNlLoading] = useState(false)
   const [nlSummary, setNlSummary] = useState('')
   const [aiFilters, setAiFilters] = useState<AIFilters>({})
@@ -61,18 +61,18 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     setNlSummary('')
     try {
       const res = await fetch('/api/search', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: nlQuery }),
+        body:    JSON.stringify({ query: nlQuery }),
       })
       const { filters, sort: aiSort } = await res.json() as { filters: AIFilters; sort: string | null }
       setAiFilters(filters)
       if (aiSort) setSort(aiSort as SortKey)
       setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage('')
       const parts: string[] = []
-      if (filters.make) parts.push(filters.make)
+      if (filters.make)  parts.push(filters.make)
       if (filters.model) parts.push(filters.model)
-      if (filters.city) parts.push(`${tr.nlIn} ${cityLabel(filters.city, lang)}`)
+      if (filters.city)  parts.push(`${tr.nlIn} ${cityLabel(filters.city, lang)}`)
       if (filters.minYear && filters.maxYear && filters.minYear === filters.maxYear) {
         parts.push(`${tr.nlYear} ${filters.minYear}`)
       } else if (filters.minYear) {
@@ -95,64 +95,94 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     nlInputRef.current?.focus()
   }
 
-  const makes  = useMemo(() => [...new Set(listings.map(l => l.make))].sort(), [listings])
+  // Build unique filter option lists from real data
+  const makes = useMemo(() =>
+    [...new Set(listings.map(l => l.make_en).filter(Boolean))].sort() as string[],
+    [listings]
+  )
   const models = useMemo(() => {
     if (!make) return []
-    return [...new Set(listings.filter(l => l.make === make).map(l => l.model))].sort()
+    return [...new Set(
+      listings.filter(l => l.make_en === make).map(l => l.model_en).filter(Boolean)
+    )].sort() as string[]
   }, [listings, make])
-  const cities = useMemo(() => [...new Set(listings.map(l => l.city))].sort(), [listings])
+
+  // city list with both en+ar for display
+  const cityOptions = useMemo(() => {
+    const map = new Map<string, { en: string; ar: string | null }>()
+    for (const l of listings) {
+      if (l.city_en && !map.has(l.city_en)) {
+        map.set(l.city_en, { en: l.city_en, ar: l.city_ar ?? null })
+      }
+    }
+    return [...map.values()].sort((a, b) => a.en.localeCompare(b.en))
+  }, [listings])
+
+  const sortFn = (a: Listing, b: Listing): number => {
+    if (sort === 'deal_score') {
+      // Scored listings first (by score), then pending, then contact-for-price
+      const aScore = a.deal_score ?? (a.contact_for_price ? -2 : -1)
+      const bScore = b.deal_score ?? (b.contact_for_price ? -2 : -1)
+      return bScore - aScore
+    }
+    if (sort === 'price_asc') {
+      const ap = a.price_sar ?? Infinity
+      const bp = b.price_sar ?? Infinity
+      return ap - bp
+    }
+    if (sort === 'price_desc') {
+      const ap = a.price_sar ?? -Infinity
+      const bp = b.price_sar ?? -Infinity
+      return bp - ap
+    }
+    if (sort === 'mileage_asc') return (a.mileage_km ?? Infinity) - (b.mileage_km ?? Infinity)
+    return (b.year ?? 0) - (a.year ?? 0)
+  }
 
   const { filtered, isFallback } = useMemo(() => {
-    const sortFn = (a: Listing, b: Listing) => {
-      if (sort === 'deal_score')  return (b.deal_score ?? 0) - (a.deal_score ?? 0)
-      if (sort === 'price_asc')   return a.price - b.price
-      if (sort === 'price_desc')  return b.price - a.price
-      if (sort === 'mileage_asc') return (a.mileage ?? Infinity) - (b.mileage ?? Infinity)
-      return b.year - a.year
-    }
-
-    const effectiveMake  = aiFilters.make  ?? (make  || undefined)
-    const effectiveModel = aiFilters.model ?? (model || undefined)
-    const effectiveCity  = aiFilters.city  ?? (city  || undefined)
+    const effectiveMake       = aiFilters.make  ?? (make  || undefined)
+    const effectiveModel      = aiFilters.model ?? (model || undefined)
+    const effectiveCity       = aiFilters.city  ?? (city  || undefined)
     const effectiveMaxPrice   = aiFilters.maxPrice   ?? (maxPrice   ? parseInt(maxPrice)   : undefined)
     const effectiveMaxMileage = aiFilters.maxMileage ?? (maxMileage ? parseInt(maxMileage) : undefined)
 
     const applyCategorical = (pool: Listing[]) => {
       let r = pool
-      if (effectiveMake)  r = r.filter(l => l.make.toLowerCase()  === effectiveMake!.toLowerCase())
-      if (effectiveModel) r = r.filter(l => l.model.toLowerCase() === effectiveModel!.toLowerCase())
-      if (effectiveCity)  r = r.filter(l => l.city === effectiveCity)
+      if (effectiveMake)  r = r.filter(l => (l.make_en  ?? '').toLowerCase() === effectiveMake!.toLowerCase())
+      if (effectiveModel) r = r.filter(l => (l.model_en ?? '').toLowerCase() === effectiveModel!.toLowerCase())
+      if (effectiveCity)  r = r.filter(l => (l.city_en  ?? '').toLowerCase() === effectiveCity!.toLowerCase())
       return r
     }
     const applyNumeric = (pool: Listing[]) => {
       let r = pool
-      if (effectiveMaxPrice)   r = r.filter(l => l.price <= effectiveMaxPrice!)
-      if (aiFilters.minPrice)  r = r.filter(l => l.price >= aiFilters.minPrice!)
-      if (effectiveMaxMileage) r = r.filter(l => l.mileage == null || l.mileage <= effectiveMaxMileage!)
-      if (aiFilters.minYear)   r = r.filter(l => l.year >= aiFilters.minYear!)
-      if (aiFilters.maxYear)   r = r.filter(l => l.year <= aiFilters.maxYear!)
+      if (effectiveMaxPrice)   r = r.filter(l => l.price_sar != null && l.price_sar <= effectiveMaxPrice!)
+      if (aiFilters.minPrice)  r = r.filter(l => l.price_sar != null && l.price_sar >= aiFilters.minPrice!)
+      if (effectiveMaxMileage) r = r.filter(l => l.mileage_km == null || l.mileage_km <= effectiveMaxMileage!)
+      if (aiFilters.minYear)   r = r.filter(l => (l.year ?? 0) >= aiFilters.minYear!)
+      if (aiFilters.maxYear)   r = r.filter(l => (l.year ?? 9999) <= aiFilters.maxYear!)
       return r
     }
 
-    const categorical = applyCategorical(listings)
+    // Base pool: hide contact-for-price unless toggle is on
+    let base = showContactForPrice ? listings : listings.filter(l => !l.contact_for_price)
+
+    const categorical = applyCategorical(base)
     const strict      = applyNumeric(categorical)
 
     if (strict.length > 0) return { filtered: [...strict].sort(sortFn), isFallback: false }
 
-    // Relax numeric constraints, keep categorical
     const hasNumeric = aiFilters.maxPrice || aiFilters.minPrice || aiFilters.maxMileage || aiFilters.minYear || aiFilters.maxYear || maxPrice || maxMileage
     if (hasNumeric && categorical.length > 0) {
       return { filtered: [...categorical].sort(sortFn), isFallback: true }
     }
 
-    // Relax everything — show all listings sorted by deal score as closest
     const hasAnyFilter = effectiveMake || effectiveModel || effectiveCity
-    if (hasAnyFilter && listings.length > 0) {
-      return { filtered: [...listings].sort((a, b) => (b.deal_score ?? 0) - (a.deal_score ?? 0)), isFallback: true }
+    if (hasAnyFilter && base.length > 0) {
+      return { filtered: [...base].sort(sortFn), isFallback: true }
     }
 
     return { filtered: [...strict].sort(sortFn), isFallback: false }
-  }, [listings, make, model, city, maxPrice, maxMileage, sort, aiFilters])
+  }, [listings, make, model, city, maxPrice, maxMileage, sort, aiFilters, showContactForPrice])
 
   const hasFilters = make || model || city || maxPrice || maxMileage || Object.keys(aiFilters).length > 0
 
@@ -182,7 +212,11 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       )}
       <select value={city} onChange={e => setCity(e.target.value)} className={selectCls}>
         <option value="">{tr.allCities}</option>
-        {cities.map(c => <option key={c} value={c}>{cityLabel(c, lang)}</option>)}
+        {cityOptions.map(c => (
+          <option key={c.en} value={c.en}>
+            {lang === 'ar' ? (c.ar ?? c.en) : c.en}
+          </option>
+        ))}
       </select>
       <select value={maxPrice} onChange={e => setMaxPrice(e.target.value)} className={selectCls}>
         <option value="">{tr.anyPrice}</option>
@@ -202,26 +236,27 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     </>
   )
 
+  const pricedCount  = listings.filter(l => !l.contact_for_price).length
+  const displayTotal = showContactForPrice ? listings.length : pricedCount
+
   return (
     <div className="min-h-screen bg-slate-50">
 
       {/* Hero header */}
       <header className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 px-4 pt-5 pb-8 overflow-hidden">
-        {/* Geometric watermark */}
         <div
           className="absolute inset-0 opacity-[0.055] pointer-events-none"
           style={{ backgroundImage: GEO_PATTERN, backgroundRepeat: 'repeat' }}
         />
 
         <div className="relative max-w-4xl mx-auto">
-          {/* Top bar */}
           <div className="flex items-center justify-between mb-7">
             <div>
               <h1 className="font-logo text-3xl font-bold text-white tracking-wide">{tr.title}</h1>
               <p className="text-blue-400 text-xs mt-0.5">{tr.subtitle}</p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-blue-400 text-xs hidden sm:block">{tr.listingsIndexed(listings.length)}</span>
+              <span className="text-blue-400 text-xs hidden sm:block">{tr.listingsIndexed(displayTotal)}</span>
               <button
                 onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
                 className="text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg px-3 py-1.5 transition-colors"
@@ -281,11 +316,31 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
                 </span>
               )}
             </button>
+            {/* Contact-for-price toggle (mobile inline) */}
+            <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none ms-auto">
+              <input
+                type="checkbox"
+                checked={showContactForPrice}
+                onChange={e => setShowContactForPrice(e.target.checked)}
+                className="rounded"
+              />
+              {lang === 'ar' ? 'بدون سعر' : 'No-price'}
+            </label>
           </div>
 
           {/* Desktop: all filters inline */}
-          <div className="hidden sm:flex flex-wrap gap-2">
+          <div className="hidden sm:flex flex-wrap items-center gap-2">
             <FilterControls />
+            {/* Contact-for-price toggle */}
+            <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none ms-2">
+              <input
+                type="checkbox"
+                checked={showContactForPrice}
+                onChange={e => setShowContactForPrice(e.target.checked)}
+                className="rounded"
+              />
+              {tr.showContactForPrice}
+            </label>
           </div>
         </div>
       </div>
@@ -309,11 +364,19 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
             ✕
           </button>
         </div>
-        {/* drag handle */}
         <div className="absolute top-3 left-1/2 -translate-x-1/2 w-10 h-1 bg-gray-200 rounded-full" />
 
         <div className="px-5 pb-2 flex flex-col gap-2.5 overflow-y-auto max-h-[65vh]">
           <FilterControls />
+          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none pt-1">
+            <input
+              type="checkbox"
+              checked={showContactForPrice}
+              onChange={e => setShowContactForPrice(e.target.checked)}
+              className="rounded"
+            />
+            {tr.showContactForPrice}
+          </label>
         </div>
 
         <div className="px-5 pt-3 pb-8 border-t border-gray-100 flex gap-2">
