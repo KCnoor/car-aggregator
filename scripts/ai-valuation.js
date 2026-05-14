@@ -42,10 +42,53 @@ const FORCE_ALL        = process.argv.includes('--all')
 if (!SERVICE_ROLE_KEY) { console.error('Missing SUPABASE_SERVICE_ROLE_KEY'); process.exit(1) }
 if (!ANTHROPIC_KEY)    { console.error('Missing ANTHROPIC_API_KEY'); process.exit(1) }
 
-const Anthropic = require('@anthropic-ai/sdk')
+const https = require('https')
 const { createClient } = require('@supabase/supabase-js')
 
-const ai = new Anthropic.default({ apiKey: ANTHROPIC_KEY })
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
+
+async function callClaude(prompt, retries = 3) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const result = await new Promise((resolve, reject) => {
+        const body = JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 250,
+          messages: [{ role: 'user', content: prompt }],
+        })
+        const req = https.request({
+          hostname: 'api.anthropic.com',
+          path: '/v1/messages',
+          method: 'POST',
+          rejectUnauthorized: false,
+          timeout: 30000,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': ANTHROPIC_KEY,
+            'anthropic-version': '2023-06-01',
+            'Content-Length': Buffer.byteLength(body),
+          },
+        }, (res) => {
+          let data = ''
+          res.on('data', c => data += c)
+          res.on('end', () => { try { resolve(JSON.parse(data)) } catch (e) { reject(new Error(`JSON parse failed (status ${res.statusCode}): ${data.slice(0, 100)}`)) } })
+        })
+        req.on('timeout', () => { req.destroy(new Error('Request timed out')) })
+        req.on('error', reject)
+        req.write(body)
+        req.end()
+      })
+      return result
+    } catch (e) {
+      if (attempt < retries - 1) {
+        await sleep(2000 * (attempt + 1))
+      } else {
+        throw e
+      }
+    }
+  }
+}
+
 const sb = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 
 // ── Cache ─────────────────────────────────────────────────────────────────────
@@ -149,13 +192,9 @@ async function callHaiku(listing) {
     `أرجع JSON فقط (بدون markdown أو شرح إضافي):\n` +
     `{"estimated_fair_price_sar":<عدد صحيح>,"confidence":"low|medium|high","reasoning_ar":"<جملة واحدة>"}`
 
-  const msg = await ai.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 200,
-    messages: [{ role: 'user', content: prompt }],
-  })
+  const msg = await callClaude(prompt)
 
-  const text = (msg.content[0]?.text ?? '')
+  const text = (msg.content?.[0]?.text ?? '')
     .replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
   return JSON.parse(text)
 }
@@ -203,8 +242,6 @@ async function processListing(listing) {
       saveCache()
     } catch (e) {
       process.stderr.write(`[ai] Error ${listing.id}: ${String(e.message).slice(0, 100)}\n`)
-      cache[key] = null
-      saveCache()
       return null
     }
   }

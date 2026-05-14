@@ -72,6 +72,24 @@ const SOURCES = [
     bg: '#F5F3FF',
     border: '#C4B5FD',
   },
+  {
+    key: 'soum',
+    nameAr: 'سوم',
+    nameEn: 'Soum',
+    logo: '/logos/soum.svg',
+    color: '#16A34A',
+    bg: '#F0FDF4',
+    border: '#86EFAC',
+  },
+  {
+    key: 'gogomotor',
+    nameAr: 'قوقو موتور',
+    nameEn: 'GoGoMotor',
+    logo: '/logos/gogomotor.svg',
+    color: '#DC2626',
+    bg: '#FFF1F2',
+    border: '#FECACA',
+  },
 ]
 
 // ── Container animation ────────────────────────────────────────────────────────

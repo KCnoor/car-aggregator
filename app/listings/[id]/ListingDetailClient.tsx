@@ -19,9 +19,11 @@ import {
 import ListingCard, { cardVariants } from '@/app/components/ListingCard'
 
 const SOURCES: Record<string, { name: string; cls: string }> = {
-  syarah: { name: 'Syarah', cls: 'bg-blue-600 text-white border-0' },
-  haraj:  { name: 'Haraj',  cls: 'bg-orange-500 text-white border-0' },
-  motory: { name: 'Motory', cls: 'bg-violet-600 text-white border-0' },
+  syarah:    { name: 'Syarah',     cls: 'bg-blue-600 text-white border-0' },
+  haraj:     { name: 'Haraj',      cls: 'bg-orange-500 text-white border-0' },
+  motory:    { name: 'Motory',     cls: 'bg-violet-600 text-white border-0' },
+  soum:      { name: 'Soum',       cls: 'bg-green-600 text-white border-0' },
+  gogomotor: { name: 'GoGoMotor',  cls: 'bg-red-600 text-white border-0' },
 }
 
 function dealConfig(score: number | null) {
