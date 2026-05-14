@@ -53,7 +53,11 @@ export default function ListingCard({
   const model = lang === 'ar' ? (listing.model_ar ?? listing.model_en) : listing.model_en
   const city  = cityLabel(listing.city_en, lang, listing.city_ar)
 
-  const photo   = listing.photo_urls?.[0] ?? null
+  const rawPhoto = listing.photo_urls?.[0] ?? null
+  const PROXIED_HOSTS = ['img.gogomotor.com', 'cdn.soum.sa', 'images.soum.sa']
+  const photo = rawPhoto && PROXIED_HOSTS.some(h => rawPhoto.includes(h))
+    ? `/api/img-proxy?url=${encodeURIComponent(rawPhoto)}`
+    : rawPhoto
   const src     = SOURCES[listing.source] ?? { name: listing.source, cls: 'bg-slate-600 text-white border-0' }
   const deal    = dealConfig(listing.deal_score)
   const hasScore = !listing.contact_for_price && listing.deal_score !== null

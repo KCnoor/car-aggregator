@@ -1,5 +1,14 @@
 <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="80" height="80" rx="14" fill="#DC2626"/>
-  <text x="40" y="44" font-family="'Arial Black', 'Arial Bold', Arial, sans-serif" font-size="13" font-weight="900" font-style="italic" fill="white" text-anchor="middle">GoGo</text>
-  <text x="40" y="60" font-family="'Arial Black', 'Arial Bold', Arial, sans-serif" font-size="13" font-weight="900" font-style="italic" fill="white" text-anchor="middle">Motor</text>
+  <rect width="80" height="80" rx="14" fill="#F8F8F8"/>
+  <!-- Two purple circles (wheels) -->
+  <circle cx="22" cy="38" r="11" fill="none" stroke="#5B2D8E" stroke-width="4"/>
+  <circle cx="22" cy="38" r="4" fill="#5B2D8E"/>
+  <circle cx="58" cy="38" r="11" fill="none" stroke="#5B2D8E" stroke-width="4"/>
+  <circle cx="58" cy="38" r="4" fill="#5B2D8E"/>
+  <!-- Connecting bar -->
+  <rect x="33" y="35" width="14" height="6" rx="3" fill="#5B2D8E"/>
+  <!-- gogo text -->
+  <text x="40" y="24" font-family="'Arial Black', 'Arial Bold', Arial, sans-serif" font-size="13" font-weight="900" fill="#5B2D8E" text-anchor="middle">gogo</text>
+  <!-- motor text -->
+  <text x="40" y="65" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#333333" text-anchor="middle">motor</text>
 </svg>
