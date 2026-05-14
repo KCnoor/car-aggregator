@@ -50,9 +50,9 @@ const SOURCES = [
     nameAr: 'حراج',
     nameEn: 'Haraj',
     logo: '/logos/haraj.svg',
-    color: '#D11313',
-    bg: '#FEF2F2',
-    border: '#FECACA',
+    color: '#1A7DC4',
+    bg: '#EFF6FF',
+    border: '#93C5FD',
   },
   {
     key: 'syarah',
