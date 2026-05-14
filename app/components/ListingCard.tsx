@@ -59,9 +59,10 @@ export default function ListingCard({
 
   const rawPhoto = listing.photo_urls?.[0] ?? null
   const PROXIED_HOSTS = ['img.gogomotor.com', 'cdn.soum.sa', 'images.soum.sa']
-  const photo = rawPhoto && PROXIED_HOSTS.some(h => rawPhoto.includes(h))
-    ? `/api/img-proxy?url=${encodeURIComponent(rawPhoto)}`
-    : rawPhoto
+  const needsProxy = rawPhoto && (() => {
+    try { return PROXIED_HOSTS.includes(new URL(rawPhoto).hostname) } catch { return false }
+  })()
+  const photo = needsProxy ? `/api/img-proxy?url=${encodeURIComponent(rawPhoto!)}` : rawPhoto
   const src     = SOURCES[listing.source] ?? { name: listing.source, cls: 'bg-slate-600 text-white border-0' }
   const deal    = dealConfig(listing.deal_score)
   const hasScore = !listing.contact_for_price && listing.deal_score !== null

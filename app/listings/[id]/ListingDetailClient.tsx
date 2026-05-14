@@ -65,8 +65,10 @@ export default function ListingDetailClient({
   const city  = cityLabel(listing.city_en, lang, listing.city_ar)
 
   const PROXIED_HOSTS = ['img.gogomotor.com', 'cdn.soum.sa', 'images.soum.sa']
-  const proxyUrl = (u: string) =>
-    PROXIED_HOSTS.some(h => u.includes(h)) ? `/api/img-proxy?url=${encodeURIComponent(u)}` : u
+  const proxyUrl = (u: string) => {
+    try { return PROXIED_HOSTS.includes(new URL(u).hostname) ? `/api/img-proxy?url=${encodeURIComponent(u)}` : u }
+    catch { return u }
+  }
   const photos = (listing.photo_urls?.filter(Boolean) ?? []).map(proxyUrl)
   const src    = SOURCES[listing.source] ?? { name: listing.source, cls: 'bg-slate-600 text-white border-0' }
   const deal   = dealConfig(listing.deal_score)
