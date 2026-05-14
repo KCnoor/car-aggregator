@@ -111,6 +111,7 @@ export default function ListingDetailClient({
                             alt={`${make} ${model} — صورة ${i + 1}`}
                             className="w-full h-full object-cover"
                             loading={i === 0 ? 'eager' : 'lazy'}
+                            referrerPolicy="no-referrer"
                           />
                         </div>
                       </CarouselItem>

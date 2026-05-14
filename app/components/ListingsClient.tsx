@@ -49,28 +49,28 @@ const SOURCES = [
     key: 'haraj',
     nameAr: 'حراج',
     nameEn: 'Haraj',
-    color: '#F97316',
-    bg: '#FFF7ED',
-    border: '#FDBA74',
-    textColor: '#C2410C',
+    logo: '/logos/haraj.svg',
+    color: '#D11313',
+    bg: '#FEF2F2',
+    border: '#FECACA',
   },
   {
     key: 'syarah',
     nameAr: 'سيارة',
     nameEn: 'Syarah',
+    logo: '/logos/syarah.svg',
     color: '#2563EB',
     bg: '#EFF6FF',
     border: '#93C5FD',
-    textColor: '#1D4ED8',
   },
   {
     key: 'motory',
     nameAr: 'موتور',
     nameEn: 'Motory',
-    color: '#7C3AED',
+    logo: '/logos/motory.svg',
+    color: '#171D35',
     bg: '#F5F3FF',
     border: '#C4B5FD',
-    textColor: '#6D28D9',
   },
 ]
 
@@ -511,28 +511,30 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
                 <button
                   key={s.key}
                   onClick={() => setSource(isActive ? '' : s.key)}
-                  className="flex-shrink-0 transition-all duration-200 focus:outline-none"
+                  className="flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-xl transition-all duration-200"
                   style={{
-                    filter: isActive ? 'none' : 'grayscale(80%) opacity(0.65)',
+                    filter: isActive ? 'none' : 'grayscale(70%) opacity(0.6)',
                   }}
                   title={lang === 'ar' ? s.nameAr : s.nameEn}
+                  aria-pressed={isActive}
                 >
                   <div
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl border font-bold text-sm transition-all"
+                    className="flex items-center justify-center px-5 py-2.5 rounded-xl border transition-all duration-200"
                     style={{
                       background: isActive ? s.bg : 'white',
                       borderColor: isActive ? s.border : '#E5E7EB',
-                      color: s.textColor,
-                      minWidth: 90,
-                      justifyContent: 'center',
+                      boxShadow: isActive ? `0 0 0 1px ${s.border}` : 'none',
+                      minWidth: 100,
+                      minHeight: 44,
                     }}
                   >
-                    {/* Color dot */}
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ background: s.color }}
+                    <img
+                      src={s.logo}
+                      alt={s.nameEn}
+                      className="h-7 w-auto object-contain"
+                      referrerPolicy="no-referrer"
+                      draggable={false}
                     />
-                    <span dir="auto">{lang === 'ar' ? s.nameAr : s.nameEn}</span>
                   </div>
                 </button>
               )
