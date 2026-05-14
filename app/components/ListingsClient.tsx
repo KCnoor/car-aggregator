@@ -43,104 +43,38 @@ const GEO_PATTERN = `url("data:image/svg+xml,${encodeURIComponent(
 
 const ALL = '__all__'
 
+const HERO_BG = '#0A1628'
+const AMBER   = '#D4A574'
+
 // ── Source config ──────────────────────────────────────────────────────────────
 const SOURCES = [
-  {
-    key: 'haraj',
-    nameAr: 'حراج',
-    nameEn: 'Haraj',
-    logo: '/source-logos/haraj.svg',
-    color: '#1A7DC4',
-    bg: '#EFF6FF',
-    border: '#93C5FD',
-  },
-  {
-    key: 'syarah',
-    nameAr: 'سيارة',
-    nameEn: 'Syarah',
-    logo: '/source-logos/syarah.svg',
-    color: '#2563EB',
-    bg: '#EFF6FF',
-    border: '#93C5FD',
-  },
-  {
-    key: 'motory',
-    nameAr: 'موتري',
-    nameEn: 'Motory',
-    logo: '/source-logos/motory.svg',
-    color: '#EC1D32',
-    bg: '#171D35',
-    border: '#2d3748',
-  },
-  {
-    key: 'soum',
-    nameAr: 'سوم',
-    nameEn: 'Soum',
-    logo: '/source-logos/soum.svg',
-    color: '#30CDCC',
-    bg: '#F0FFFE',
-    border: '#30CDCC',
-  },
-  {
-    key: 'gogomotor',
-    nameAr: 'قوقو موتور',
-    nameEn: 'GoGoMotor',
-    logo: '/source-logos/gogomotor.svg',
-    color: '#4B164B',
-    bg: '#FDF4FF',
-    border: '#E9D5FF',
-  },
-  {
-    key: 'saudisale',
-    nameAr: 'سعودي سيل',
-    nameEn: 'Saudi Sale',
-    logo: '/source-logos/saudisale.svg',
-    color: '#D3FF01',
-    bg: '#F9FFE0',
-    border: '#D3FF01',
-  },
-  {
-    key: 'yallamotor',
-    nameAr: 'يلا موتور',
-    nameEn: 'Yalla Motor',
-    logo: '/source-logos/yallamotor.svg',
-    color: '#124D98',
-    bg: '#EFF6FF',
-    border: '#93C5FD',
-  },
-  {
-    key: 'carly',
-    nameAr: 'كارلي',
-    nameEn: 'Carly',
-    logo: '/source-logos/carly.svg',
-    color: '#00B894',
-    bg: '#F0FDF4',
-    border: '#6EE7B7',
-  },
+  { key: 'haraj',      nameAr: 'حراج',       nameEn: 'Haraj',       logo: '/source-logos/haraj.svg' },
+  { key: 'syarah',     nameAr: 'سيارة',       nameEn: 'Syarah',      logo: '/source-logos/syarah.svg' },
+  { key: 'motory',     nameAr: 'موتري',       nameEn: 'Motory',      logo: '/source-logos/motory.svg' },
+  { key: 'soum',       nameAr: 'سوم',         nameEn: 'Soum',        logo: '/source-logos/soum.svg' },
+  { key: 'gogomotor',  nameAr: 'قوقو موتور',  nameEn: 'GoGoMotor',   logo: '/source-logos/gogomotor.svg' },
+  { key: 'saudisale',  nameAr: 'سعودي سيل',  nameEn: 'Saudi Sale',  logo: '/source-logos/saudisale.svg' },
+  { key: 'yallamotor', nameAr: 'يلا موتور',  nameEn: 'Yalla Motor', logo: '/source-logos/yallamotor.svg' },
+  { key: 'carly',      nameAr: 'كارلي',       nameEn: 'Carly',       logo: '/source-logos/carly.svg' },
 ]
 
 // ── Container animation ────────────────────────────────────────────────────────
 const container = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.04 } },
+  visible: { transition: { staggerChildren: 0.03 } },
 }
 
 // ── Wordmark ───────────────────────────────────────────────────────────────────
 function SiyaraAIWordmark({ size = 'lg' }: { size?: 'sm' | 'lg' }) {
-  const sizeClass = size === 'lg'
-    ? 'text-4xl'
-    : 'text-xl'
   return (
-    <span className={`inline-flex items-baseline gap-1 leading-none ${sizeClass}`}>
-      <span className="font-logo font-bold text-white tracking-wide">
-        سيارة
-      </span>
+    <span className={`inline-flex items-baseline gap-1 leading-none ${size === 'lg' ? 'text-4xl' : 'text-xl'}`}>
+      <span className="font-logo font-bold text-white tracking-wide">سيارة</span>
       <span
         className="font-bold tracking-tight"
         style={{
           fontFamily: 'var(--font-geist), Geist, sans-serif',
           fontSize: size === 'lg' ? '0.78em' : '0.82em',
-          color: 'oklch(0.82 0.14 78)',
+          color: AMBER,
           letterSpacing: '0.04em',
         }}
       >
@@ -150,8 +84,18 @@ function SiyaraAIWordmark({ size = 'lg' }: { size?: 'sm' | 'lg' }) {
   )
 }
 
-export default function ListingsClient({ listings }: { listings: Listing[] }) {
-  const [lang, setLang]   = useState<Lang>('ar')
+// ── INITIAL_DISPLAY / page size ────────────────────────────────────────────────
+const INITIAL = 60
+const PAGE    = 40
+
+export default function ListingsClient({
+  listings,
+  totalCount,
+}: {
+  listings: Listing[]
+  totalCount: number
+}) {
+  const [lang, setLang] = useState<Lang>('ar')
   const tr = translations[lang]
 
   useEffect(() => {
@@ -177,6 +121,10 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   const [nlSummary, setNlSummary] = useState('')
   const [aiFilters, setAiFilters] = useState<AIFilters>({})
   const nlInputRef = useRef<HTMLInputElement>(null)
+
+  // Infinite scroll
+  const [displayCount, setDisplayCount] = useState(INITIAL)
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   // Voice filter callback
   const handleVoiceFilters = useCallback((f: {
@@ -216,7 +164,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
       if (filters.make)  parts.push(filters.make)
       if (filters.model) parts.push(filters.model)
       if (filters.city)  parts.push(`${tr.nlIn} ${cityLabel(filters.city, lang)}`)
-      if (filters.maxPrice) parts.push(`${tr.nlUnderPrice} ${filters.maxPrice.toLocaleString()} ${tr.sar}`)
+      if (filters.maxPrice)   parts.push(`${tr.nlUnderPrice} ${filters.maxPrice.toLocaleString()} ${tr.sar}`)
       if (filters.maxMileage) parts.push(`${tr.nlUnderMileage} ${filters.maxMileage.toLocaleString()} ${tr.km}`)
       setNlSummary(parts.length ? `${tr.nlShowing} ${parts.join(tr.separator)}` : tr.nlNoFilters)
     } catch {
@@ -306,6 +254,25 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     return { filtered: [...strict].sort(sortFn), isFallback: false }
   }, [listings, make, model, city, maxPrice, maxMileage, sort, source, aiFilters, showContactForPrice, sortFn])
 
+  // Reset display count when filters change
+  useEffect(() => { setDisplayCount(INITIAL) }, [filtered])
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          setDisplayCount(c => Math.min(c + PAGE, filtered.length))
+        }
+      },
+      { rootMargin: '300px' }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [filtered.length])
+
   const hasFilters = make || model || city || maxPrice || maxMileage || source || Object.keys(aiFilters).length > 0
   const activeFilterCount = [make, model, city, maxPrice, maxMileage, source,
     Object.keys(aiFilters).length > 0 ? '1' : '']
@@ -315,9 +282,6 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     setMake(''); setModel(''); setCity(''); setMaxPrice(''); setMaxMileage(''); setSource('')
     clearNlSearch()
   }
-
-  const pricedCount  = listings.filter(l => !l.contact_for_price).length
-  const displayTotal = showContactForPrice ? listings.length : pricedCount
 
   // ── Computed display labels for filter selects ─────────────────────────────
   const sortLabel = {
@@ -337,7 +301,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   const priceLabel   = maxPrice   ? tr.priceCaps.find(p => p.value === maxPrice)?.label   ?? maxPrice   : ''
   const mileageLabel = maxMileage ? tr.mileageCaps.find(p => p.value === maxMileage)?.label ?? maxMileage : ''
 
-  // ── shadcn Select helper (renders correct label, not raw value) ────────────
+  // ── shadcn Select helper ───────────────────────────────────────────────────
   const Sel = ({
     value, onChange, placeholder, displayLabel, children, className = ''
   }: {
@@ -352,7 +316,7 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
     return (
       <Select value={value || ALL} onValueChange={v => onChange(v === ALL ? '' : (v ?? ''))}>
         <SelectTrigger
-          className={`h-11 text-sm border-border/70 rounded-xl min-w-[130px] transition-colors ${
+          className={`h-8 text-xs border-border/70 rounded-full min-w-[100px] transition-colors ${
             isActive
               ? 'bg-primary text-primary-foreground border-primary font-semibold'
               : 'bg-white hover:bg-muted/50 text-foreground'
@@ -433,15 +397,17 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
   return (
     <div className="min-h-screen bg-background">
 
-      {/* Voice Advisor */}
       <VoiceAdvisor
         onApplyFilters={handleVoiceFilters}
         externalOpen={voiceOpen}
         onExternalOpenHandled={() => setVoiceOpen(false)}
       />
 
-      {/* ── Hero header ──────────────────────────────────────────────────── */}
-      <header className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 px-4 pt-6 pb-10 overflow-hidden">
+      {/* ── Hero — deep navy, ~280px desktop ───────────────────────────── */}
+      <header
+        className="relative px-4 pt-5 pb-0 overflow-hidden"
+        style={{ background: HERO_BG }}
+      >
         <div
           className="absolute inset-0 opacity-[0.055] pointer-events-none"
           style={{ backgroundImage: GEO_PATTERN, backgroundRepeat: 'repeat' }}
@@ -449,36 +415,39 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
 
         <div className="relative max-w-4xl mx-auto">
           {/* Logo row */}
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <SiyaraAIWordmark size="lg" />
-              <p className="text-blue-300/70 text-xs mt-2 font-medium" style={{ fontFamily: 'var(--font-tajawal)' }}>
+              <p className="text-white/40 text-[11px] mt-1 font-medium" style={{ fontFamily: 'var(--font-tajawal)' }}>
                 {tr.subtitle}
               </p>
             </div>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="text-blue-300/70 text-xs hidden sm:block font-medium">
-                {tr.listingsIndexed(displayTotal)}
+            <div className="flex items-center gap-2.5 mt-0.5">
+              <span className="text-xs hidden sm:block font-medium" style={{ color: AMBER + 'bb' }}>
+                {tr.listingsIndexed(totalCount)}
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
-                className="text-xs font-semibold bg-white/10 hover:bg-white/20 border-white/20 text-white rounded-xl h-8 px-3"
+                className="text-xs font-semibold bg-white/10 hover:bg-white/20 border-white/20 text-white rounded-full h-7 px-3"
               >
                 {tr.toggleLang}
               </Button>
             </div>
           </div>
 
-          {/* Hero search form — 64px tall */}
+          {/* Search form */}
           <form onSubmit={handleNlSearch}>
-            <div className="flex items-stretch bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 focus-within:border-blue-400/60 transition-colors overflow-hidden" style={{ minHeight: 64 }}>
-              {/* Search button */}
+            <div
+              className="flex items-stretch bg-white/10 backdrop-blur-sm rounded-xl border border-white/15 focus-within:border-white/35 transition-colors overflow-hidden"
+              style={{ minHeight: 52 }}
+            >
               <button
                 type="submit"
                 disabled={nlLoading || !nlQuery.trim()}
-                className="shrink-0 px-6 bg-primary hover:bg-primary/90 disabled:opacity-40 text-white text-sm font-bold transition-colors"
+                className="shrink-0 px-5 text-white text-xs font-bold transition-colors disabled:opacity-40"
+                style={{ background: AMBER, color: HERO_BG }}
               >
                 {nlLoading ? (
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -487,8 +456,6 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
                   </svg>
                 ) : tr.nlSearch}
               </button>
-
-              {/* Input */}
               <input
                 ref={nlInputRef}
                 type="text"
@@ -496,17 +463,15 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
                 value={nlQuery}
                 onChange={e => setNlQuery(e.target.value)}
                 dir="auto"
-                className="flex-1 bg-transparent text-white text-sm px-4 focus:outline-none placeholder:text-blue-300/50 min-w-0"
+                className="flex-1 bg-transparent text-white text-sm px-4 focus:outline-none placeholder:text-white/30 min-w-0"
               />
-
-              {/* Mic button */}
               <button
                 type="button"
                 onClick={() => setVoiceOpen(true)}
-                className="shrink-0 px-5 text-blue-300 hover:text-white transition-colors flex items-center"
+                className="shrink-0 px-4 text-white/50 hover:text-white transition-colors flex items-center"
                 aria-label="مستشار سيارة AI الصوتي"
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2H3v2a9 9 0 0 0 8 8.94V23h2v-2.06A9 9 0 0 0 21 12v-2h-2z"/>
                 </svg>
@@ -514,38 +479,33 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
             </div>
           </form>
 
-          {/* AI summary / powered by */}
-          <div className="mt-3 min-h-[20px]">
+          {/* AI summary */}
+          <div className="mt-2 min-h-[18px]">
             {nlSummary ? (
               <div className="flex items-center gap-2 text-sm" dir="auto">
-                <span className="text-blue-400">✦</span>
-                <span className="text-blue-200 text-xs">{nlSummary}</span>
-                <button onClick={clearNlSearch} className="text-blue-400 hover:text-white text-xs underline transition-colors">
+                <span style={{ color: AMBER }}>✦</span>
+                <span className="text-white/60 text-xs">{nlSummary}</span>
+                <button onClick={clearNlSearch} className="text-xs underline transition-colors" style={{ color: AMBER }}>
                   {tr.nlClear}
                 </button>
               </div>
             ) : (
-              <p className="text-center text-xs text-blue-400/50">{tr.nlPowered}</p>
+              <p className="text-center text-xs text-white/25">{tr.nlPowered}</p>
             )}
           </div>
         </div>
-      </header>
 
-      {/* ── Source ribbon ────────────────────────────────────────────────── */}
-      <div className="border-b border-border" style={{ background: '#F8F9FA' }}>
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <p className="text-center text-xs font-medium text-muted-foreground mb-3">
-            {lang === 'ar' ? 'نجمع لك أحسن العروض من' : 'We aggregate the best deals from'}
-          </p>
-          <div className="flex items-center justify-center gap-3 sm:gap-6 overflow-x-auto pb-0.5 no-scrollbar">
+        {/* ── Source ribbon — inside hero on navy bg ──────────────────── */}
+        <div className="relative max-w-4xl mx-auto pt-5 pb-3">
+          <div className="flex items-center justify-start gap-2 overflow-x-auto no-scrollbar">
             {/* All sources chip */}
             <button
               onClick={() => setSource('')}
-              className={`flex-shrink-0 px-4 py-1.5 rounded-full border text-xs font-semibold transition-all ${
-                !source
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-white text-muted-foreground border-border hover:border-border/80'
-              }`}
+              className="flex-shrink-0 h-8 px-4 rounded-full border text-xs font-semibold transition-all whitespace-nowrap"
+              style={!source
+                ? { background: AMBER, color: HERO_BG, borderColor: AMBER }
+                : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.65)', borderColor: 'rgba(255,255,255,0.15)' }
+              }
             >
               {lang === 'ar' ? 'الكل' : 'All'}
             </button>
@@ -556,28 +516,26 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
                 <button
                   key={s.key}
                   onClick={() => setSource(isActive ? '' : s.key)}
-                  className="flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-xl transition-all duration-200"
-                  style={{
-                    filter: isActive ? 'none' : 'grayscale(60%) opacity(0.55)',
-                    transform: isActive ? 'scale(1.04)' : 'scale(1)',
-                  }}
+                  className="flex-shrink-0 focus:outline-none focus-visible:ring-2 rounded-xl transition-all duration-200"
+                  style={{ opacity: isActive ? 1 : 0.72 }}
                   title={lang === 'ar' ? s.nameAr : s.nameEn}
                   aria-pressed={isActive}
                 >
                   <div
-                    className="flex items-center justify-center px-5 py-2.5 rounded-xl border transition-all duration-200"
+                    className="flex items-center justify-center rounded-xl border-2 transition-all duration-200"
                     style={{
-                      background: s.bg,
-                      borderColor: isActive ? s.border : 'transparent',
-                      boxShadow: isActive ? `0 0 0 2px ${s.border}, 0 2px 8px ${s.border}40` : 'none',
-                      minWidth: 100,
-                      minHeight: 44,
+                      background: 'white',
+                      borderColor: isActive ? AMBER : 'transparent',
+                      boxShadow: isActive ? `0 0 0 1px ${AMBER}, 0 4px 16px rgba(212,165,116,0.25)` : 'none',
+                      width: 140,
+                      height: 80,
                     }}
                   >
                     <img
                       src={s.logo}
                       alt={s.nameEn}
-                      className="h-7 w-auto object-contain"
+                      className="h-8 w-auto object-contain"
+                      style={{ maxWidth: 110 }}
                       referrerPolicy="no-referrer"
                       draggable={false}
                     />
@@ -587,28 +545,27 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
             })}
           </div>
         </div>
-      </div>
+      </header>
 
       {/* ── Sticky filter bar ─────────────────────────────────────────────── */}
-      <div className="bg-white/95 backdrop-blur-sm border-b border-border sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-2.5">
+      <div className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-2">
           {/* Mobile */}
           <div className="flex sm:hidden items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setFilterSheetOpen(true)}
-              className="rounded-xl text-sm font-semibold border-border/70 h-11 gap-1.5"
+              className="rounded-full text-xs font-semibold border-border/70 h-8 gap-1.5"
             >
               {lang === 'ar' ? 'فلاتر' : 'Filters'}
               {activeFilterCount > 0 && (
-                <span className="bg-primary text-primary-foreground text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                <span className="bg-primary text-primary-foreground text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
                   {activeFilterCount}
                 </span>
               )}
             </Button>
 
-            {/* Sort always visible on mobile */}
             <Sel value={sort} onChange={v => setSort(v as SortKey)}
               placeholder={tr.sortBestDeal} displayLabel={sortLabel} className="flex-1">
               <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
@@ -619,21 +576,21 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
             </Sel>
 
             {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-11 text-xs px-2 shrink-0">
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8 text-xs px-2 shrink-0">
                 {lang === 'ar' ? 'مسح' : 'Clear'}
               </Button>
             )}
           </div>
 
           {/* Desktop */}
-          <div className="hidden sm:flex flex-wrap items-center gap-2">
+          <div className="hidden sm:flex flex-wrap items-center gap-1.5">
             <FilterControls />
             {hasFilters && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="text-destructive hover:text-destructive h-11 text-xs rounded-xl ms-1"
+                className="text-destructive hover:text-destructive h-8 text-xs rounded-full ms-1"
               >
                 {tr.clearFilters}
               </Button>
@@ -652,10 +609,8 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
           <SheetHeader className="mb-4">
             <SheetTitle>{lang === 'ar' ? 'الفلاتر' : 'Filters'}</SheetTitle>
           </SheetHeader>
-
           <div className="flex flex-col gap-3 pb-8">
             <FilterControls />
-
             <div className="flex gap-2 pt-2">
               {hasFilters && (
                 <Button
@@ -681,7 +636,6 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
 
       {/* ── Results ───────────────────────────────────────────────────────── */}
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Fallback notice */}
         <AnimatePresence>
           {isFallback && (
             <motion.div
@@ -731,16 +685,30 @@ export default function ListingsClient({ listings }: { listings: Listing[] }) {
             )}
           </motion.div>
         ) : (
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-          >
-            {filtered.map((listing, i) => (
-              <ListingCard key={listing.id} listing={listing} lang={lang} index={i} />
-            ))}
-          </motion.div>
+          <>
+            <motion.div
+              variants={container}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+            >
+              {filtered.slice(0, displayCount).map((listing, i) => (
+                <ListingCard key={listing.id} listing={listing} lang={lang} index={i} />
+              ))}
+            </motion.div>
+
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelRef} className="h-16 flex items-center justify-center mt-4">
+              {displayCount < filtered.length && (
+                <span className="text-xs text-muted-foreground">
+                  {lang === 'ar'
+                    ? `${displayCount.toLocaleString()} من ${filtered.length.toLocaleString()}`
+                    : `${displayCount.toLocaleString()} of ${filtered.length.toLocaleString()}`
+                  }
+                </span>
+              )}
+            </div>
+          </>
         )}
       </main>
     </div>

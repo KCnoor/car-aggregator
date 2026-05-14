@@ -135,10 +135,11 @@ export default function ListingCard({
               </Badge>
             </div>
 
-            {/* Low-price warning stripe */}
+            {/* Low-price warning pill — subtle flag, bottom-left corner */}
             {listing.low_price_warning && (
-              <div className="absolute bottom-0 inset-x-0 bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-bold text-center py-1">
-                ⚠️ {tr.lowPriceWarning}
+              <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold leading-none"
+                style={{ background: '#FEF3C7', color: '#92400E' }}>
+                ⚠ {tr.lowPriceWarning.split('—')[0].trim()}
               </div>
             )}
           </div>
