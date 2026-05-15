@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# DB backup snapshots — large, machine-local, contain PII. Archives (.tar.gz) ARE tracked.
+backups/*.json
+
 # vercel
 .vercel
 
