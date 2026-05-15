@@ -22,9 +22,13 @@ const argv = process.argv.slice(2)
 const arg  = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null }
 const flag = (n) => argv.includes(n)
 
-const LIMIT       = arg('--limit')        ? parseInt(arg('--limit'), 10) : null
-const HEADED      = flag('--headed')
-const INCREMENTAL = flag('--incremental')
+const LIMIT          = arg('--limit')        ? parseInt(arg('--limit'), 10) : null
+const HEADED         = flag('--headed')
+const INCREMENTAL    = flag('--incremental')
+const SKIP_DISCOVERY = flag('--skip-discovery')
+
+// URL cache so we don't repeat the slow Phase 1 traversal between runs.
+const URL_CACHE_FILE = path.join(__dirname, '_cache', 'syarah-urls.json')
 
 // ── Discovery seed ──────────────────────────────────────────────────────────
 // 26 makes from the legacy scraper, plus a sweep of common model paths to
@@ -135,65 +139,49 @@ function extractCityFromText (text) {
   return null
 }
 
-// ── Phase 1: URL discovery ─────────────────────────────────────────────────
+// ── Phase 1: URL discovery via per-make pagination ─────────────────────────
+// Syarah serves 12-16 listings per page on /autos/{make}?page=N. Iterate
+// until two consecutive pages add zero new IDs. This is far more thorough
+// (and faster) than crawling every model sub-page.
+const PER_MAKE_MAX_PAGES = 100
+const PER_MAKE_STALL_THRESHOLD = 2
+
 async function collectUrls (browser, { limit }) {
   const ctx = await browser.newContext({
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     locale: 'en-US', ignoreHTTPSErrors: true,
   })
   const page = await ctx.newPage()
+  const seenById = new Map()
 
-  const seenById = new Map()                  // id → url
-  const modelLinks = new Set()                // /autos/{make}/{model}
-
-  // (a) Crawl every make landing page; collect listing URLs and model sub-pages.
   for (const make of BROWSE_MAKES) {
-    if (limit && seenById.size >= limit * 3) break  // stop discovery early for canary
-    const url = `https://syarah.com/autos/${make}`
-    try {
-      log(`browse /autos/${make} (have ${seenById.size})`)
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
-      await sleep(1500 + Math.random() * 1000)
-
-      const { listings, models } = await page.evaluate(() => {
-        const all = [...document.querySelectorAll('a[href]')].map(a => a.href)
-        const listings = [...new Set(all.filter(h => /syarah\.com\/cardetail\//.test(h)).map(h => h.split('#')[0]))]
-        const models   = [...new Set(all.filter(h => /syarah\.com\/autos\/[^/]+\/[^/?#]+$/.test(h)))]
-        return { listings, models }
-      })
-
-      for (const u of listings) {
-        const m = u.match(/-(\d+)$/)
-        if (m && !seenById.has(m[1])) seenById.set(m[1], u)
-      }
-      for (const m of models) modelLinks.add(m)
-      log(`  /autos/${make}: +${listings.length} listings, +${models.length} model pages (total uniq listings ${seenById.size})`)
-    } catch (e) {
-      log(`  ERROR /autos/${make}: ${e.message?.slice(0, 80)}`)
-    }
-    await rndDelay()
-  }
-
-  // (b) Visit each discovered model sub-page for extra listings.
-  for (const url of modelLinks) {
     if (limit && seenById.size >= limit * 3) break
-    try {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
-      await sleep(1200 + Math.random() * 800)
-      const listings = await page.evaluate(() =>
-        [...new Set([...document.querySelectorAll('a[href]')].map(a => a.href)
-          .filter(h => /syarah\.com\/cardetail\//.test(h)).map(h => h.split('#')[0]))]
-      )
-      let added = 0
-      for (const u of listings) {
-        const m = u.match(/-(\d+)$/)
-        if (m && !seenById.has(m[1])) { seenById.set(m[1], u); added++ }
+    let stall = 0
+    for (let pg = 1; pg <= PER_MAKE_MAX_PAGES && stall < PER_MAKE_STALL_THRESHOLD; pg++) {
+      const url = pg === 1 ? `https://syarah.com/autos/${make}` : `https://syarah.com/autos/${make}?page=${pg}`
+      try {
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
+        await sleep(3500 + Math.random() * 1500)   // give Vue/React time to render the grid
+        const listings = await page.evaluate(() =>
+          [...new Set([...document.querySelectorAll('a[href*="/cardetail/"]')]
+            .map(a => a.href.split('#')[0]))]
+        )
+        const before = seenById.size
+        for (const u of listings) {
+          const m = u.match(/-(\d+)$/)
+          if (m && !seenById.has(m[1])) seenById.set(m[1], u)
+        }
+        const added = seenById.size - before
+        if (added === 0) stall++; else stall = 0
+        if (pg === 1 || added > 0 || stall === PER_MAKE_STALL_THRESHOLD) {
+          log(`  /autos/${make}?page=${pg}: +${added} (make total: ${[...seenById.keys()].length}; uniq overall: ${seenById.size})`)
+        }
+      } catch (e) {
+        log(`  ERROR /autos/${make}?page=${pg}: ${e.message?.slice(0, 80)}`)
+        stall++
       }
-      if (added > 0) log(`  ${url.replace('https://syarah.com', '')}: +${added} (total ${seenById.size})`)
-    } catch (e) {
-      log(`  ERROR ${url.slice(-40)}: ${e.message?.slice(0, 60)}`)
+      await rndDelay()
     }
-    await rndDelay()
   }
 
   await ctx.close()
@@ -216,7 +204,79 @@ function parseMakeModelFromUrl (url) {
   return { make_en: parts[0], model_en: parts.slice(1).join('-') }
 }
 
+// Try to wait for the Car JSON-LD block to appear. Returns true if found,
+// false on timeout. Syarah hydrates this client-side; the 1.2s wait we used
+// originally was too short.
+async function waitForCarLd (page, timeoutMs = 12000) {
+  try {
+    await page.waitForFunction(() => {
+      return [...document.querySelectorAll('script[type="application/ld+json"]')]
+        .some(s => { try { return JSON.parse(s.textContent)['@type'] === 'Car' } catch { return false } })
+    }, { timeout: timeoutMs })
+    return true
+  } catch {
+    return false
+  }
+}
+
+// HTML fallback parser — runs in the page context. Returns the same shape as
+// the JSON-LD extractor but reading from the DOM. Used when the Car LD block
+// fails to appear within the timeout (some listings hydrate late or use a
+// different template).
+async function extractFromHTML (page) {
+  return await page.evaluate(() => {
+    const text = document.body?.innerText ?? ''
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+
+    // Title: h1 (Arabic)
+    const h1 = document.querySelector('h1')?.textContent?.trim() ?? null
+
+    // Price: look for "XX,XXX ريال" pattern (Arabic for SAR)
+    let price = null
+    const priceMatch = text.match(/(\d{2,3}[,\d]{2,})\s*ريال/)
+    if (priceMatch) price = parseInt(priceMatch[1].replace(/,/g, '')) || null
+    // Some Syarah pages display tax-inclusive prices with explicit label
+    if (!price) {
+      const altMatch = text.match(/سعر[\s\S]{0,30}?(\d{2,3}[,\d]{2,})/)
+      if (altMatch) price = parseInt(altMatch[1].replace(/,/g, '')) || null
+    }
+
+    // Spec table: pairs of "label\nvalue"
+    const specs = {}
+    const KEYS = [
+      'الماركة','الموديل','سنة الصنع','الممشى','اللون الخارجي','اللون الداخلي',
+      'سعة المحرك','نوع الوقود','الجير','عدد المقاعد','عدد الغمارات','عدد السليندرات',
+      'نظام الدفع','الشكل','الفئة','المدينة','الحالة',
+    ]
+    for (let i = 0; i < lines.length; i++) {
+      const ln = lines[i]
+      if (KEYS.includes(ln) && lines[i + 1] && !KEYS.includes(lines[i + 1])) {
+        specs[ln] = lines[i + 1]
+      }
+    }
+
+    // Photos: Syarah CDN
+    const photos = [...new Set([...document.querySelectorAll('img[src*="cdn.syarah.com"]')]
+      .map(img => img.src.replace(/\/0x\d+\//, '/0x480/')))].slice(0, 30)
+
+    // Description (sometimes inside a section labelled with these tokens)
+    let description = null
+    const descLabels = ['وصف السيارة', 'تفاصيل الإعلان', 'ملاحظات']
+    for (let i = 0; i < lines.length; i++) {
+      if (descLabels.includes(lines[i]) && lines[i + 1]) {
+        description = lines.slice(i + 1, i + 4).join(' ').slice(0, 1200)
+        break
+      }
+    }
+
+    return { h1, price, specs, photos, description, bodyExcerpt: text.slice(0, 4000) }
+  }).catch(() => null)
+}
+
 async function extractListing (page, url) {
+  // First wait for the Car JSON-LD block to appear (up to 12s).
+  const ldOk = await waitForCarLd(page, 12000)
+
   const raw = await page.evaluate(() => {
     const ldScripts = [...document.querySelectorAll('script[type="application/ld+json"]')]
     const ldObjects = ldScripts.map(s => { try { return JSON.parse(s.textContent) } catch { return null } }).filter(Boolean)
@@ -232,12 +292,52 @@ async function extractListing (page, url) {
     }
   })
 
-  const ld = raw.carLd
-  if (!ld) return null
-
   const m = url.match(/-(\d+)$/)
   const id = m?.[1] ?? raw.adNo
   if (!id) return null
+
+  const ld = raw.carLd
+  // HTML fallback when JSON-LD Car block never hydrates or is missing.
+  if (!ld) {
+    const html = await extractFromHTML(page)
+    if (!html || !html.price) return null
+    const urlSlug = parseMakeModelFromUrl(url)
+    return {
+      structured_data: {
+        source_id: String(id),
+        source_url: url.split('#')[0],
+        title: html.h1,
+        make_en: urlSlug.make_en,
+        make_ar: html.specs['الماركة'] ?? null,
+        model_en: urlSlug.model_en,
+        model_ar: html.specs['الموديل'] ?? null,
+        trim: html.specs['الفئة'] ?? null,
+        year: html.specs['سنة الصنع'] ? parseInt(html.specs['سنة الصنع']) : null,
+        condition: /used|مستعمل/i.test(html.specs['الحالة'] ?? '') ? 'used'
+          : /new|جديد/i.test(html.specs['الحالة'] ?? '') ? 'new' : 'used',
+        price_sar: html.price,
+        mileage_km: html.specs['الممشى'] ? parseMileage(html.specs['الممشى']) : null,
+        city_en: extractCityFromText(html.bodyExcerpt),
+        city_ar: html.specs['المدينة'] ?? null,
+        color_en: null,
+        color_ar: html.specs['اللون الخارجي'] ?? null,
+        color_interior_ar: html.specs['اللون الداخلي'] ?? null,
+        fuel_type: normFuel(html.specs['نوع الوقود']),
+        transmission: normTransmission(html.specs['الجير']),
+        drive_type: null,
+        body_type: detectBodyType(`${html.h1 ?? ''} ${html.bodyExcerpt}`, urlSlug.model_en),
+        engine_size_l: html.specs['سعة المحرك']
+          ? parseFloat(String(html.specs['سعة المحرك']).replace(/[^0-9.]/g, '')) || null
+          : null,
+        doors: html.specs['عدد الغمارات'] ? parseInt(html.specs['عدد الغمارات']) || null : null,
+        seats: html.specs['عدد المقاعد'] ? parseInt(html.specs['عدد المقاعد']) || null : null,
+        seller_type: 'dealer',
+        photos: html.photos,
+        description_ar: html.description,
+        _parser: 'html_fallback',
+      },
+    }
+  }
 
   const price       = parseInteger(ld?.offers?.price) ?? parseInteger(raw.priceHtml)
   const mileage     = parseMileage(ld?.mileageFromOdometer)
@@ -323,7 +423,18 @@ async function extractListing (page, url) {
     log(`  ${skipSet.size} recent rows will be skipped`)
   }
 
-  const urls = await collectUrls(browser, { limit: LIMIT })
+  let urls
+  if (SKIP_DISCOVERY && fs.existsSync(URL_CACHE_FILE)) {
+    urls = JSON.parse(fs.readFileSync(URL_CACHE_FILE, 'utf8'))
+    log(`loaded ${urls.length} URLs from cache (--skip-discovery)`)
+  } else {
+    urls = await collectUrls(browser, { limit: LIMIT })
+    try {
+      fs.mkdirSync(path.dirname(URL_CACHE_FILE), { recursive: true })
+      fs.writeFileSync(URL_CACHE_FILE, JSON.stringify(urls, null, 2))
+      log(`cached ${urls.length} URLs to ${URL_CACHE_FILE}`)
+    } catch (e) { log(`cache write failed: ${e.message}`) }
+  }
   const targetUrls = LIMIT ? urls.slice(0, LIMIT * 2) : urls   // discovery overshoot, scrape until LIMIT successful
 
   await context.close()
