@@ -61,27 +61,47 @@ function rawToListingRow (raw) {
   const sd = raw.structured_data ?? {}
   const tier = tiers.sourceToTier(raw.source)
 
+  // Resolve via dictionary first (handles Arabic-only fields). Fall back to
+  // raw value with toSlug for English-only fields.
+  const resolveCategory = (category, en, ar) => {
+    if (en) {
+      const hit = norm.translate(category, en)
+      if (hit) return { slug: hit.slug, en: hit.en, ar: hit.ar ?? ar ?? null }
+      return { slug: norm.toSlug(en), en, ar: ar ?? null }
+    }
+    if (ar) {
+      const hit = norm.translate(category, ar)
+      if (hit) return { slug: hit.slug, en: hit.en, ar }
+      return { slug: null, en: null, ar }
+    }
+    return { slug: null, en: null, ar: null }
+  }
+  const makeR  = resolveCategory('makes',  sd.make_en,  sd.make_ar)
+  const modelR = resolveCategory('models', sd.model_en, sd.model_ar)
+  const cityR  = resolveCategory('cities', sd.city_en,  sd.city_ar)
+  const colorR = resolveCategory('colors', sd.color_en, sd.color_ar)
+
   // structured_data is expected to follow the schema scrapers write — fields
   // are nullable. We do not invent data; missing fields stay null.
   const row = {
     source:                raw.source,
     source_url:            raw.source_url ?? sd.source_url ?? null,
     source_id:             raw.source_id  ?? sd.source_id  ?? null,
-    make_slug:             norm.toSlug(sd.make_en ?? sd.make_ar) ?? null,
-    make_en:               sd.make_en  ?? null,
-    make_ar:               sd.make_ar  ?? null,
-    model_slug:            norm.toSlug(sd.model_en ?? sd.model_ar) ?? null,
-    model_en:              sd.model_en ?? null,
-    model_ar:              sd.model_ar ?? null,
+    make_slug:             makeR.slug,
+    make_en:               makeR.en,
+    make_ar:               makeR.ar,
+    model_slug:            modelR.slug,
+    model_en:              modelR.en,
+    model_ar:              modelR.ar,
     year:                  sd.year     ?? null,
     price_sar:             sd.price_sar ?? null,
     mileage_km:            sd.mileage_km ?? null,
-    city_slug:             norm.toSlug(sd.city_en ?? sd.city_ar) ?? null,
-    city_en:               sd.city_en  ?? null,
-    city_ar:               sd.city_ar  ?? null,
-    color_slug:            norm.toSlug(sd.color_en ?? sd.color_ar) ?? null,
-    color_en:              sd.color_en ?? null,
-    color_ar:              sd.color_ar ?? null,
+    city_slug:             cityR.slug,
+    city_en:               cityR.en,
+    city_ar:               cityR.ar,
+    color_slug:            colorR.slug,
+    color_en:              colorR.en,
+    color_ar:              colorR.ar,
     fuel_type_slug:        norm.fuelSlug(sd.fuel_type) ?? null,
     transmission_slug:     norm.transSlug(sd.transmission) ?? null,
     body_type_slug:        norm.toSlug(sd.body_type) ?? null,
