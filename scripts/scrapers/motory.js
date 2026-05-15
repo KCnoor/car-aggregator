@@ -33,6 +33,18 @@ const log = (...a) => process.stderr.write(`[motory] ${a.join(' ')}\n`)
 const BASE = 'https://ksa.motory.com'
 const LISTINGS_AR_PATH = encodeURIComponent('حراج-السيارات')
 
+// Motory's main pagination caps around page 76 (~1,500 listings). Per-make
+// routes have their own pagination — together they cover the full ~6,000.
+const BROWSE_MAKES_AR = [
+  'تويوتا', 'كيا', 'هيونداي', 'نيسان', 'لكزس',
+  'فورد', 'هوندا', 'ميتسوبيشي', 'جيلي', 'هافال',
+  'إم-جي', 'جينيسيس', 'انفينيتي', 'مازدا', 'دودج',
+  'جيب', 'شانجان', 'مرسيدس', 'بي-إم-دبليو', 'أودي',
+  'بي-واي-دي', 'فولفو', 'بورش', 'رينو', 'شيري',
+  'سوزوكي', 'فولكسفاجن', 'بيجو', 'لاند روفر', 'جي-إم-سي',
+  'شيفروليه', 'كاديلاك', 'بنتلي', 'فيراري', 'لامبورجيني',
+]
+
 const USER_AGENTS = [
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
@@ -67,35 +79,58 @@ function cityArFromUrl (url) {
 }
 
 // ── Phase 1: URL discovery via pagination ──────────────────────────────────
+async function harvestUrlPage (browser, url) {
+  const ctx = await browser.newContext({ userAgent: nextUA(), locale: 'ar-SA', ignoreHTTPSErrors: true })
+  const page = await ctx.newPage()
+  try {
+    const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
+    if ((resp?.status() ?? 0) >= 400) return { hrefs: [], status: resp?.status() }
+    await sleep(PHASE1_DELAY)
+    const hrefs = await page.evaluate(() =>
+      [...document.querySelectorAll('a[href]')].map(a => a.href).filter(h => /\/\d{4}\/\d{4,}\/?$/.test(h))
+    )
+    return { hrefs, status: resp?.status() ?? 0 }
+  } catch (e) {
+    return { hrefs: [], error: e.message?.slice(0, 80) }
+  } finally {
+    await ctx.close()
+  }
+}
+
 async function collectUrls (browser) {
   const seen = new Map()
-  // Strategy A: paginate the master listing page.
-  for (let pg = 1; pg <= MAX_PAGES; pg++) {
-    if (LIMIT && seen.size >= LIMIT * 2) break
-    const url = pg === 1
-      ? `${BASE}/ar/${LISTINGS_AR_PATH}/`
-      : `${BASE}/ar/${LISTINGS_AR_PATH}/?page=${pg}`
-    const ctx  = await browser.newContext({ userAgent: nextUA(), locale: 'ar-SA', ignoreHTTPSErrors: true })
-    const page = await ctx.newPage()
-    try {
-      const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
-      if ((resp?.status() ?? 0) >= 400) { log(`page ${pg} HTTP ${resp.status()}`); await ctx.close(); break }
-      await sleep(PHASE1_DELAY)
-      const hrefs = await page.evaluate(() =>
-        [...document.querySelectorAll('a[href]')].map(a => a.href).filter(h => /\/\d{4}\/\d{4,}\/?$/.test(h))
-      )
+
+  async function sweepRoute (label, urlFn) {
+    let stall = 0
+    for (let pg = 1; pg <= MAX_PAGES; pg++) {
+      if (LIMIT && seen.size >= LIMIT * 2) return
+      if (stall >= 2) return
+      const url = urlFn(pg)
+      const { hrefs, status, error } = await harvestUrlPage(browser, url)
+      if (status && status >= 400) { log(`${label} p${pg} HTTP ${status}`); return }
       let added = 0
       for (const h of hrefs) {
         const id = listingId(h)
         if (id && !seen.has(id)) { seen.set(id, h.split('#')[0]); added++ }
       }
-      log(`page ${pg}: +${added} new (total ${seen.size})`)
-      if (added === 0 && pg > 1) { await ctx.close(); break }   // pagination exhausted
-    } catch (e) {
-      log(`page ${pg} error: ${e.message?.slice(0, 80)}`)
+      if (pg === 1 || added > 0 || stall === 0) log(`${label} p${pg}: +${added} (total ${seen.size})`)
+      if (added === 0) stall++; else stall = 0
+      if (error) log(`${label} p${pg} err: ${error}`)
+      await sleep(1200 + Math.random() * 500)
     }
-    await ctx.close()
-    await sleep(1500 + Math.random() * 500)
+  }
+
+  // 1. Main listing route (caps ~76 pages).
+  await sweepRoute('main', (pg) => pg === 1
+    ? `${BASE}/ar/${LISTINGS_AR_PATH}/`
+    : `${BASE}/ar/${LISTINGS_AR_PATH}/?page=${pg}`)
+  // 2. Per-make routes — recover the long tail.
+  for (const makeAr of BROWSE_MAKES_AR) {
+    if (LIMIT && seen.size >= LIMIT * 2) break
+    await sweepRoute(`make[${makeAr}]`, (pg) => {
+      const base = `${BASE}/ar/${LISTINGS_AR_PATH}/${encodeURIComponent(makeAr)}/`
+      return pg === 1 ? base : `${base}?page=${pg}`
+    })
   }
   log(`URL discovery done: ${seen.size} unique`)
   return [...seen.values()]
