@@ -58,6 +58,7 @@ const bl       = require('../lib/scoring/baseline')
 const redflags = require('../lib/scoring/redflags')
 const tiers    = require('../lib/scoring/tiers')
 const { Valuator } = require('../lib/scoring/ai-valuation')
+const { COUNTRY_SCOPE_SENTINEL, SCOPE_CITY, SCOPE_COUNTRY } = require('../lib/scoring/constants')
 
 const SUPABASE_URL     = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -87,8 +88,6 @@ const AI_CONCURRENCY     = 5
 const CHECKPOINT_EVERY   = 100
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
-function baselineKey (l) { return `${l.make_slug}|${l.model_slug}|${l.year}|${l.city_slug}` }
-
 async function prompt (q) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   return new Promise(resolve => rl.question(q, ans => { rl.close(); resolve(ans) }))
@@ -100,11 +99,14 @@ async function loadBaselines () {
   for (;;) {
     const { data, error } = await sb
       .from('price_baselines')
-      .select('make_slug, model_slug, year, city_slug, sample_size, median_price, weighted_median_price, p25, p75, std_dev')
+      .select('make_slug, model_slug, year, city_slug, scope, sample_size, median_price, weighted_median_price, p25, p75, std_dev')
       .range(offset, offset + PAGE - 1)
     if (error) { console.error('baselines read:', error.message); process.exit(1) }
     if (!data || data.length === 0) break
-    for (const r of data) map.set(`${r.make_slug}|${r.model_slug}|${r.year}|${r.city_slug}`, r)
+    for (const r of data) {
+      const scope = r.scope ?? SCOPE_CITY
+      map.set(`${r.make_slug}|${r.model_slug}|${r.year}|${r.city_slug}|${scope}`, r)
+    }
     if (data.length < PAGE) break
     offset += data.length
   }
@@ -154,23 +156,31 @@ async function fetchListings () {
 
   if (listings.length === 0) { console.log('Nothing to do.'); return }
 
-  // Partition by available baseline.
-  const bucket = { baseline: [], needsAi: [] }
+  // Partition by available baseline (with city → country fallback).
+  const bucket = { city: [], country: [], needsAi: [] }
+  const baselineHitsByListing = new Map()
   for (const l of listings) {
     if (!l.source_quality_tier) l.source_quality_tier = tiers.sourceToTier(l.source)
-    const b = baselines.get(baselineKey(l))
-    if (b && b.sample_size >= 5) bucket.baseline.push(l)
-    else bucket.needsAi.push(l)
+    const hit = bl.lookupBaselineWithFallback(baselines, l, 5)
+    if (hit) {
+      baselineHitsByListing.set(l.id, hit)
+      if (hit.scope === SCOPE_CITY) bucket.city.push(l)
+      else                          bucket.country.push(l)
+    } else {
+      bucket.needsAi.push(l)
+    }
   }
-  console.log(`  baseline path: ${bucket.baseline.length}  |  ai path: ${bucket.needsAi.length}`)
+  console.log(`  city baseline:    ${bucket.city.length}`)
+  console.log(`  country baseline: ${bucket.country.length}`)
+  console.log(`  ai path:          ${bucket.needsAi.length}`)
 
   // ── Phase 1: baseline path (fast, no API calls) ─────────────────────────
   const updates = []
   let costPaused = false
 
-  for (const l of bucket.baseline) {
-    const baseline = baselines.get(baselineKey(l))
-    const result = bl.scoreAgainstBaseline(l, baseline)
+  for (const l of [...bucket.city, ...bucket.country]) {
+    const hit = baselineHitsByListing.get(l.id)
+    const result = bl.scoreAgainstBaseline(l, hit.baseline, hit.scope)
     if (!result) continue
     updates.push(buildUpdate(l, result))
   }
@@ -266,6 +276,7 @@ function buildUpdate (listing, result) {
     deal_score_v2:         finalScore,
     score_source_v2:       result.score_source,
     score_tier_v2:         bl.scoreTier(finalScore),
+    baseline_scope:        result.baseline_scope ?? null,
     red_flags:             flags,
     red_flag_penalty:      penalty,
     low_source_confidence: lowConfidence,
@@ -275,12 +286,14 @@ function buildUpdate (listing, result) {
 function printDistribution (updates) {
   const buckets = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   const sources = { baseline_statistical: 0, ai_valuation: 0 }
+  const scopes  = { city: 0, country: 0, none: 0 }
   let redFlagged = 0, lowConf = 0
   for (const u of updates) {
     const s = u.deal_score_v2
     const idx = Math.min(10, Math.floor(s))
     buckets[idx]++
     sources[u.score_source_v2] = (sources[u.score_source_v2] ?? 0) + 1
+    scopes[u.baseline_scope ?? 'none']++
     if ((u.red_flags ?? []).length > 0) redFlagged++
     if (u.low_source_confidence)        lowConf++
   }
@@ -296,6 +309,8 @@ function printDistribution (updates) {
   console.log(`  Red-flagged: ${redFlagged}  |  low_source_confidence: ${lowConf}`)
   console.log('\n══ Score source breakdown ══')
   for (const [k, v] of Object.entries(sources)) console.log(`  ${k.padEnd(22)} ${v}`)
+  console.log('\n══ Baseline scope breakdown ══')
+  for (const [k, v] of Object.entries(scopes)) console.log(`  ${k.padEnd(10)} ${v}`)
 }
 
 function printCostReport (v, totalAi) {

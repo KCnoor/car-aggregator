@@ -34,6 +34,7 @@ try {
 const { createClient } = require('@supabase/supabase-js')
 const bl    = require('../lib/scoring/baseline')
 const tiers = require('../lib/scoring/tiers')
+const { COUNTRY_SCOPE_SENTINEL, SCOPE_CITY, SCOPE_COUNTRY } = require('../lib/scoring/constants')
 
 const SUPABASE_URL     = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -56,7 +57,8 @@ const UPSERT_BATCH = 500
   console.log(`Layer 3: compute_baselines (min_samples=${MIN_SAMPLES})\n`)
   const t0 = Date.now()
 
-  // 1. Read all active priced listings with make/model/year/city.
+  // 1. Read all active priced listings keyed by (make, model, year). City is
+  //    optional — used for the city-scope bucket only.
   let offset = 0
   const all = []
   for (;;) {
@@ -69,7 +71,6 @@ const UPSERT_BATCH = 500
       .not('make_slug', 'is', null)
       .not('model_slug', 'is', null)
       .not('year', 'is', null)
-      .not('city_slug', 'is', null)
       .order('id', { ascending: true })
       .range(offset, offset + PAGE - 1)
     if (error) { console.error('read:', error.message); process.exit(1) }
@@ -82,34 +83,68 @@ const UPSERT_BATCH = 500
   process.stdout.write('\n')
   console.log(`  total priced+keyed listings: ${all.length}`)
 
-  // 2. Bucket by (make, model, year, city).
-  const buckets = new Map()
   for (const r of all) {
     if (!r.source_quality_tier) r.source_quality_tier = tiers.sourceToTier(r.source)
-    const key = `${r.make_slug}|${r.model_slug}|${r.year}|${r.city_slug}`
-    if (!buckets.has(key)) buckets.set(key, [])
-    buckets.get(key).push(r)
   }
-  console.log(`  unique (make, model, year, city) groups: ${buckets.size}`)
 
-  // 3. Compute baseline rows.
+  // 2a. City buckets: (make, model, year, city) — only rows that have a city.
+  const cityBuckets = new Map()
+  for (const r of all) {
+    if (!r.city_slug) continue
+    const key = `${r.make_slug}|${r.model_slug}|${r.year}|${r.city_slug}`
+    if (!cityBuckets.has(key)) cityBuckets.set(key, [])
+    cityBuckets.get(key).push(r)
+  }
+
+  // 2b. Country buckets: (make, model, year) — ALL rows.
+  const countryBuckets = new Map()
+  for (const r of all) {
+    const key = `${r.make_slug}|${r.model_slug}|${r.year}`
+    if (!countryBuckets.has(key)) countryBuckets.set(key, [])
+    countryBuckets.get(key).push(r)
+  }
+  console.log(`  unique city groups:    ${cityBuckets.size}`)
+  console.log(`  unique country groups: ${countryBuckets.size}`)
+
+  // 3. Compute baseline rows for both scopes.
   const rows = []
-  let qualified = 0
-  for (const [key, groupListings] of buckets) {
+  let cityQualified = 0, countryQualified = 0
+
+  for (const [key, groupListings] of cityBuckets) {
     const baseline = bl.computeBaseline(groupListings, { minSamples: MIN_SAMPLES })
     if (!baseline) continue
-    qualified++
+    cityQualified++
     const [make_slug, model_slug, yearStr, city_slug] = key.split('|')
     rows.push({
       make_slug,
       model_slug,
       year: parseInt(yearStr, 10),
       city_slug,
+      scope: SCOPE_CITY,
       ...baseline,
       last_computed: new Date().toISOString(),
     })
   }
-  console.log(`  groups with >= ${MIN_SAMPLES} samples: ${qualified}`)
+
+  for (const [key, groupListings] of countryBuckets) {
+    const baseline = bl.computeBaseline(groupListings, { minSamples: MIN_SAMPLES })
+    if (!baseline) continue
+    countryQualified++
+    const [make_slug, model_slug, yearStr] = key.split('|')
+    rows.push({
+      make_slug,
+      model_slug,
+      year: parseInt(yearStr, 10),
+      city_slug: COUNTRY_SCOPE_SENTINEL,
+      scope: SCOPE_COUNTRY,
+      ...baseline,
+      last_computed: new Date().toISOString(),
+    })
+  }
+
+  const qualified = cityQualified + countryQualified
+  console.log(`  city baselines:    ${cityQualified}`)
+  console.log(`  country baselines: ${countryQualified}`)
 
   // 4. Replace price_baselines table (delete + insert in batches).
   // Use DELETE WHERE TRUE — simplest. Re-insert is fast.
@@ -126,18 +161,22 @@ const UPSERT_BATCH = 500
   }
   process.stdout.write('\n')
 
-  // 5. Distribution report.
+  // 5. Distribution report (across both scopes).
   const samplesDist = { '5-9': 0, '10-19': 0, '20-49': 0, '50+': 0 }
   const byMake = new Map()
+  const scopeBreakdown = { city: 0, country: 0 }
   for (const r of rows) {
     if (r.sample_size < 10)      samplesDist['5-9']++
     else if (r.sample_size < 20) samplesDist['10-19']++
     else if (r.sample_size < 50) samplesDist['20-49']++
     else                          samplesDist['50+']++
     byMake.set(r.make_slug, (byMake.get(r.make_slug) ?? 0) + 1)
+    scopeBreakdown[r.scope]++
   }
 
   console.log(`\nDone in ${((Date.now() - t0) / 1000).toFixed(1)}s`)
+  console.log('\nscope breakdown:')
+  for (const [k, v] of Object.entries(scopeBreakdown)) console.log(`  ${k.padEnd(10)} ${v}`)
   console.log('\nbaseline sample-size distribution:')
   for (const [k, v] of Object.entries(samplesDist)) console.log(`  ${k.padEnd(8)} ${v}`)
 
@@ -145,6 +184,5 @@ const UPSERT_BATCH = 500
   const topMakes = [...byMake.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
   for (const [m, c] of topMakes) console.log(`  ${m.padEnd(15)} ${c}`)
 
-  // Total active listings vs total baseline-covered
-  console.log(`\nbaselines: ${qualified} groups | ${all.length} total active priced listings`)
+  console.log(`\ntotal baselines: ${qualified} | ${all.length} total active priced listings`)
 })().catch(e => { console.error(e); process.exit(1) })
