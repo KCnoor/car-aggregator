@@ -36,6 +36,9 @@ yarn-error.log*
 # DB backup snapshots — large, machine-local, contain PII. Archives (.tar.gz) ARE tracked.
 backups/*.json
 
+# Scrape run logs — large, ephemeral, machine-local.
+logs/
+
 # vercel
 .vercel
 
