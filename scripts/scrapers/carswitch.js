@@ -71,43 +71,67 @@ function priceLabel (text) {
   return null
 }
 
-// ── Phase 1: paginate search → collect listing URLs ────────────────────────
+// CarSwitch detail URLs use SINGULAR `used-car`:
+//   /{city}/used-car/{make}/{model}/{year}/{id}
+// Discovery: enumerate per-make pages (each shows ~24 cards), plus per-city
+// and the global /search route. Pagination may not exist (small marketplace).
+const MAKES = [
+  'toyota','hyundai','kia','nissan','gmc','chevrolet','ford','lexus','honda',
+  'mitsubishi','bmw','mercedes-benz','jeep','land-rover','audi','dodge',
+  'cadillac','infiniti','genesis','mazda','haval','mg','geely','renault',
+  'volkswagen','porsche','peugeot','suzuki','subaru','volvo','jetour',
+  'changan','byd','dongfeng','ram','isuzu','jaguar','mini','lincoln',
+]
+const CITIES = ['saudi','riyadh','jeddah','dammam','al-khobar','mecca','medina','tabuk']
+
+async function harvestPage (page, url) {
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
+    await sleep(4500)
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)).catch(() => {})
+    await sleep(1500)
+    return await page.evaluate(() =>
+      [...new Set([...document.querySelectorAll('a[href*="/used-car/"]')]
+        .map(a => a.href)
+        // Detail URLs: /{city}/used-car/{make}/{model}/{year}/{id}
+        .filter(h => /\/used-car\/[\w-]+\/[\w-]+\/\d{4}\/\d+/i.test(h)))]
+    )
+  } catch (e) {
+    return []
+  }
+}
+
 async function collectUrls (browser) {
   const ctx = await browser.newContext({
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     locale: 'en-US', ignoreHTTPSErrors: true,
   })
   const page = await ctx.newPage()
-  const urls = new Map()    // id → url
-  let consecutiveEmpty = 0
-  for (let pageNum = 1; pageNum <= MAX_PAGES && consecutiveEmpty < 2; pageNum++) {
-    const url = pageNum === 1 ? SEARCH_BASE : `${SEARCH_BASE}?page=${pageNum}`
-    try {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
-      await sleep(3000)
-      const items = await page.evaluate(() =>
-        [...new Set([...document.querySelectorAll('a[href*="/used-cars/"]')]
-          .map(a => a.href)
-          // Detail URLs typically have /used-cars/{make}/{model}/{slug-id}
-          .filter(h => /\/used-cars\/[a-z0-9-]+\/[a-z0-9-]+\//i.test(h) && !h.includes('/search')))]
-      )
-      const prev = urls.size
+  const urls = new Map()
+
+  async function sweep (label, routes) {
+    for (const url of routes) {
+      if (LIMIT && urls.size >= LIMIT * 2) return
+      const items = await harvestPage(page, url)
+      let added = 0
       for (const u of items) {
-        // Extract numeric/alpha id from URL path
-        const m = u.match(/-(\d+)\/?$/) || u.match(/\/([a-z0-9]+)\/?$/)
-        const id = m ? m[1] : u.split('/').filter(Boolean).pop()
-        if (id && !urls.has(id)) urls.set(id, u.split('?')[0])
+        const m = u.match(/\/(\d+)\/?$/)
+        if (!m) continue
+        const id = m[1]
+        if (!urls.has(id)) { urls.set(id, u.split('?')[0]); added++ }
       }
-      const added = urls.size - prev
-      log(`page ${pageNum}: +${added} new (total ${urls.size})`)
-      if (added === 0) consecutiveEmpty++; else consecutiveEmpty = 0
-    } catch (e) {
-      log(`page ${pageNum} error: ${e.message?.slice(0, 80)}`)
-      consecutiveEmpty++
+      log(`${label} ${url.replace('https://ksa.carswitch.com/en', '')}: +${added} (total ${urls.size})`)
+      await rndDelay()
     }
-    if (LIMIT && urls.size >= LIMIT * 2) break
-    await rndDelay()
   }
+
+  // 1. Global search + per-city search routes.
+  const searchRoutes = CITIES.map(c => `https://ksa.carswitch.com/en/${c}/used-cars/search`)
+  await sweep('search', searchRoutes)
+  // 2. Per-make routes (the /saudi/used-cars/{make} pages show the make's full inventory).
+  const makeRoutes = MAKES.map(m => `https://ksa.carswitch.com/en/saudi/used-cars/${m}`)
+  await sweep('make', makeRoutes)
+
   await ctx.close()
   return [...urls.entries()].map(([id, url]) => ({ id, url }))
 }
