@@ -138,8 +138,25 @@ async function extractListing (page, url, id) {
       }
       return null
     }
-    const photos = [...new Set([...document.querySelectorAll('img[src]')].map(i => i.src)
-      .filter(s => /digitalcar|cdn|cloudfront|amazonaws|s3/i.test(s) && /\.(jpe?g|png|webp)/i.test(s)))].slice(0, 20)
+    // DigitalCar's real car photos live at dcar-prod.s3.amazonaws.com/imgUploads/<ts>.webp.
+    // The seller-profile images at .../users/<id>/images/... were leaking through the
+    // old generic 'digitalcar|cdn|amazonaws' filter and overwriting the car photos.
+    // Strategy: read raw HTML (not just img[src]) so we catch URLs that next/image
+    // wraps and so we catch both <img src=…&url=ENCODED> and bare S3 hrefs.
+    const photos = (() => {
+      const seen = new Set()
+      const out = []
+      const html = document.documentElement?.outerHTML ?? ''
+      const re = /https?:\/\/[^"'\\<> ]*dcar-prod\.s3\.amazonaws\.com\/imgUploads\/[^"'\\<> ?&]+\.(?:jpe?g|png|webp)/gi
+      let m
+      while ((m = re.exec(html)) !== null) {
+        if (seen.has(m[0])) continue
+        seen.add(m[0])
+        out.push(m[0])
+        if (out.length >= 20) break
+      }
+      return out
+    })()
     return {
       carLd, title: titleBlock, price, photos,
       titleParts,
@@ -174,7 +191,11 @@ async function extractListing (page, url, id) {
   const year = ld?.vehicleModelDate ? parseInt(ld.vehicleModelDate) : (data.year ?? yearFromUrl)
   const mileage = ld?.mileageFromOdometer?.value ? Math.round(parseFloat(ld.mileageFromOdometer.value))
     : (data.mileageRaw ? parseInt(data.mileageRaw.replace(/[^0-9]/g, '')) || null : null)
-  const photos = (Array.isArray(ld?.image) ? ld.image : (ld?.image ? [ld.image] : null)) ?? data.photos
+  // JSON-LD `image` on DigitalCar points at a single optimized variant; the
+  // HTML scrape captures the full gallery. Prefer the gallery when present.
+  const photos = (data.photos && data.photos.length)
+    ? data.photos
+    : ((Array.isArray(ld?.image) ? ld.image : (ld?.image ? [ld.image] : null)) ?? [])
 
   // DigitalCar lists primarily new dealer inventory. Mark accordingly.
   const condition = mileage && mileage > 1000 ? 'used' : 'new'

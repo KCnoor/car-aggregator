@@ -98,11 +98,31 @@ export default function ListingCard({
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <svg className="w-10 h-10 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M3 9l2-4h14l2 4M3 9v9a1 1 0 001 1h1a1 1 0 001-1v-1h12v1a1 1 0 001 1h1a1 1 0 001-1V9M3 9h18" />
-                </svg>
+              // Intentional placeholder: when a source ships JS-rendered photos
+              // we can't easily proxy (Dubizzle), or when an individual listing
+              // is genuinely photo-less, render a styled tile with the car's
+              // identity instead of a broken-icon placeholder.
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(135deg, #1a2942 0%, #2d4566 50%, #1a2942 100%)',
+                }}
+              >
+                <div className="flex flex-col items-center text-center px-4">
+                  <svg
+                    className="w-9 h-9 mb-2 opacity-60"
+                    style={{ color: '#D4A574' }}
+                    fill="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path d="M19 17h2v-6l-3-5h-1V4H4v2H3v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h2c0 1.66 1.34 3 3 3s3-1.34 3-3zM6 6h10v3H4.81L6 6.5V6zm2 12.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm8 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+                  </svg>
+                  <span className="text-white text-sm font-bold leading-tight" dir="ltr">
+                    {listing.year ?? ''} {make}
+                  </span>
+                  <span className="text-white/70 text-xs font-medium mt-0.5" dir="ltr">
+                    {model}
+                  </span>
+                </div>
               </div>
             )}
 

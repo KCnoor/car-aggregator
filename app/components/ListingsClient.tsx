@@ -84,6 +84,69 @@ const SOURCES = [
 
 const container = { hidden: {}, visible: { transition: { staggerChildren: 0.03 } } }
 
+// ── Live counter ──────────────────────────────────────────────────────────────
+// Subtle fluctuation around the real count: every ~9s during an active cycle
+// we step ±1, capped to ±3 from the real value. The cycle runs for 30s, then
+// the counter rests on the real value for 60s before the next cycle. The
+// fluctuation signals "system is alive" without ever showing a number far
+// from reality — max delta is ±3 listings.
+function LiveCounter ({ value, className, style }: {
+  value: number; className?: string; style?: React.CSSProperties
+}) {
+  const [display, setDisplay] = useState(value)
+
+  // Reset whenever the underlying value changes (e.g. page refresh).
+  useEffect(() => { setDisplay(value) }, [value])
+
+  useEffect(() => {
+    let cancelled = false
+    let activeTimer: ReturnType<typeof setTimeout> | null = null
+    let restTimer: ReturnType<typeof setTimeout> | null = null
+
+    function runCycle () {
+      if (cancelled) return
+      const startedAt = Date.now()
+      const cycleMs = 30_000
+
+      function tick () {
+        if (cancelled) return
+        if (Date.now() - startedAt >= cycleMs) {
+          // End of cycle — snap back to truth, rest 60s, then loop.
+          setDisplay(value)
+          restTimer = setTimeout(runCycle, 60_000)
+          return
+        }
+        setDisplay(prev => {
+          const delta = prev - value           // current offset from truth
+          // Step is biased back toward zero if we're already off.
+          const step = delta >= 3 ? -1
+                      : delta <= -3 ? +1
+                      : Math.random() < 0.5 ? -1 : +1
+          return prev + step
+        })
+        activeTimer = setTimeout(tick, 8000 + Math.random() * 2000)
+      }
+      activeTimer = setTimeout(tick, 8000 + Math.random() * 2000)
+    }
+
+    // First cycle starts after the initial 60s rest (gives the user a moment
+    // to see the real number before anything moves).
+    restTimer = setTimeout(runCycle, 60_000)
+
+    return () => {
+      cancelled = true
+      if (activeTimer) clearTimeout(activeTimer)
+      if (restTimer)   clearTimeout(restTimer)
+    }
+  }, [value])
+
+  return (
+    <span className={className} style={style} aria-live="off">
+      {display.toLocaleString()}
+    </span>
+  )
+}
+
 // ── Wordmark ───────────────────────────────────────────────────────────────────
 function SiyaraAIWordmark() {
   return (
@@ -98,16 +161,24 @@ function SiyaraAIWordmark() {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
+// Minimum active-listing count for a source to appear in the ribbon.
+// Below this, the source looks under-curated / broken and is hidden until
+// the scraper catches up. Same threshold for every source so we don't
+// special-case anything.
+const RIBBON_MIN_LISTINGS = 5
+
 export default function ListingsClient({
   listings,
   totalCount,
   newDealsCount = 0,
   newDealsSinceIso,
+  sourceCounts = {},
 }: {
   listings: Listing[]
   totalCount: number
   newDealsCount?: number
   newDealsSinceIso?: string
+  sourceCounts?: Record<string, number>
 }) {
   const [lang, setLang] = useState<Lang>('ar')
   const tr = translations[lang]
@@ -425,31 +496,6 @@ export default function ListingsClient({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] hidden sm:flex items-center gap-1.5 font-medium" style={{ color: AMBER + '99' }}>
-              <span>
-                {totalCount.toLocaleString()} {lang === 'ar' ? 'إعلان نشط' : 'active listings'}
-              </span>
-              {newDealsCount > 0 && (
-                <>
-                  <span style={{ color: AMBER + '55' }}>•</span>
-                  <button
-                    onClick={() => setNewDealsOnly(v => !v)}
-                    className="rounded-full px-2 py-0.5 transition-colors"
-                    style={{
-                      background: newDealsOnly ? AMBER : 'rgba(212,165,116,0.15)',
-                      color:      newDealsOnly ? '#0A1628' : AMBER,
-                      fontWeight: 600,
-                    }}
-                    title={lang === 'ar'
-                      ? (newDealsOnly ? 'إظهار كل الإعلانات' : 'إظهار آخر 24 ساعة فقط')
-                      : (newDealsOnly ? 'Show all listings' : 'Show last 24 hours only')}
-                    aria-pressed={newDealsOnly}
-                  >
-                    {newDealsCount.toLocaleString()} {lang === 'ar' ? 'صفقة جديدة اليوم' : 'new deals today'}
-                  </button>
-                </>
-              )}
-            </span>
             <button
               onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
               className="text-xs font-semibold rounded-full h-7 px-3 transition-colors border"
@@ -457,6 +503,57 @@ export default function ListingsClient({
             >
               {tr.toggleLang}
             </button>
+          </div>
+        </div>
+
+        {/* ── Prominent active-listings stat box ── */}
+        <div className="relative max-w-screen-xl mx-auto px-4 pt-3">
+          <div
+            className="rounded-2xl px-5 py-3.5 flex items-center gap-4 border"
+            style={{
+              background: 'linear-gradient(135deg, rgba(212,165,116,0.14) 0%, rgba(212,165,116,0.06) 100%)',
+              borderColor: 'rgba(212,165,116,0.28)',
+            }}
+          >
+            <div className="flex flex-col leading-none">
+              <LiveCounter
+                value={totalCount}
+                className="font-black tracking-tight tabular-nums"
+                style={{
+                  color: AMBER,
+                  fontSize: 'clamp(2rem, 6vw, 2.75rem)',
+                  fontFamily: 'var(--font-geist), Geist, sans-serif',
+                  letterSpacing: '-0.02em',
+                }}
+              />
+              <span className="mt-1.5 text-[13px] font-semibold tracking-wide" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                {lang === 'ar' ? 'إعلان نشط' : 'active listings'}
+              </span>
+            </div>
+
+            {newDealsCount > 0 && (
+              <button
+                onClick={() => setNewDealsOnly(v => !v)}
+                className="ms-auto rounded-xl px-3.5 py-2 flex items-center gap-1.5 transition-all border"
+                style={{
+                  background: newDealsOnly ? AMBER : 'rgba(212,165,116,0.12)',
+                  color:      newDealsOnly ? HERO_BG : AMBER,
+                  borderColor: newDealsOnly ? AMBER : 'rgba(212,165,116,0.32)',
+                }}
+                title={lang === 'ar'
+                  ? (newDealsOnly ? 'إظهار كل الإعلانات' : 'إظهار آخر 24 ساعة فقط')
+                  : (newDealsOnly ? 'Show all listings' : 'Show last 24 hours only')}
+                aria-pressed={newDealsOnly}
+              >
+                <span aria-hidden style={{ fontSize: 14 }}>↗</span>
+                <span className="text-[13px] font-bold tabular-nums">
+                  {newDealsCount.toLocaleString()}
+                </span>
+                <span className="text-[11px] font-semibold whitespace-nowrap opacity-90">
+                  {lang === 'ar' ? 'صفقة جديدة اليوم' : 'new deals today'}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -549,7 +646,7 @@ export default function ListingsClient({
               {lang === 'ar' ? 'الكل' : 'All'}
             </button>
 
-            {SOURCES.map(s => {
+            {SOURCES.filter(s => (sourceCounts[s.key] ?? Infinity) >= RIBBON_MIN_LISTINGS).map(s => {
               const isActive = source === s.key
               return (
                 <button
