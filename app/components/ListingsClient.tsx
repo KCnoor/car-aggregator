@@ -99,7 +99,13 @@ const container = { hidden: {}, visible: { transition: { staggerChildren: 0.03 }
 // Below this, the source looks under-curated / broken and is hidden until
 // the scraper catches up. Same threshold for every source so we don't
 // special-case anything.
-const RIBBON_MIN_LISTINGS = 5
+// Threshold (active rows) below which a source is hidden from the ribbon —
+// the ribbon is the credibility statement, and a brand with too-few
+// listings makes it look weak. The source's listings still appear in search
+// results; only the visual ribbon entry is suppressed until the source is
+// meaningful. DigitalCar sits ~100 today (parser is partially broken) so it
+// won't show until the scraper catches up past 500.
+const MIN_LISTINGS_FOR_RIBBON = 500
 
 type CanonicalMake = {
   canonical_make_slug: string
@@ -295,6 +301,14 @@ export default function ListingsClient({
 
   // ── Sort ──────────────────────────────────────────────────────────────────
   const [sort, setSort] = useState<SortKey>('deal_score')
+
+  // ── "كل الفلاتر" drawer ──────────────────────────────────────────────────
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  // Count of secondary filters currently set — shown as a coral pill on the
+  // drawer button so users can see at a glance that there are hidden
+  // constraints affecting their results.
+  const drawerActiveCount = [bodyType, transmission, fuel, condition, source, maxMileage]
+    .filter(Boolean).length
 
   const sortFn = useCallback((a: Listing, b: Listing): number => {
     if (sort === 'deal_score') {
@@ -567,7 +581,7 @@ export default function ListingsClient({
               {lang === 'ar' ? 'الكل' : 'All'}
             </button>
 
-            {SOURCES.filter(s => (sourceCounts[s.key] ?? Infinity) >= RIBBON_MIN_LISTINGS).map(s => {
+            {SOURCES.filter(s => (sourceCounts[s.key] ?? Infinity) >= MIN_LISTINGS_FOR_RIBBON).map(s => {
               const isActive = source === s.key
               return (
                 <button
@@ -624,12 +638,28 @@ export default function ListingsClient({
       >
         <div className="max-w-screen-xl mx-auto px-3">
 
-          {/* ── Filter rows ──
-              Row 1: primary filters (make / model / price / year).
-              Row 2: secondary filters (city / body / fuel / trans / condition).
-              Sort + result count anchor to the left of row 1 on desktop, drop
-              under row 2 on mobile so the rows stay one-line on small screens. */}
+          {/* ── Primary filter row (always visible) ──
+              Per the latest spec: المدينة → السعر → الموديل → السنة (in
+              RTL reading order). Body / fuel / transmission / condition /
+              source / mileage moved into the side drawer. */}
           <div className="flex items-center gap-1.5 py-2 overflow-x-auto no-scrollbar">
+            <Sel value={city} onChange={setCity}
+              placeholder={tr.allCities} activeLabel={cityLabel_}>
+              {cityOptions.map(c => (
+                <SelectItem key={c.en} value={c.en}>
+                  {lang === 'ar' ? (c.ar ?? c.en) : c.en}
+                </SelectItem>
+              ))}
+            </Sel>
+
+            <Sel value={maxPrice} onChange={setMaxPrice}
+              placeholder={tr.anyPrice} activeLabel={priceLabel}>
+              {tr.priceCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            </Sel>
+
+            {/* Make is part of "Model" experience here — picking a model
+                only makes sense if the make is set, so we keep them
+                adjacent. Make is the smaller selector. */}
             <Sel value={make} onChange={v => { setMake(v); setModel('') }}
               placeholder={tr.allMakes}
               activeLabel={makes.find(m => m.value === make)?.label ?? make}>
@@ -642,11 +672,6 @@ export default function ListingsClient({
               {models.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </Sel>
 
-            <Sel value={maxPrice} onChange={setMaxPrice}
-              placeholder={tr.anyPrice} activeLabel={priceLabel}>
-              {tr.priceCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            </Sel>
-
             <Sel value={yearFrom} onChange={setYearFrom}
               placeholder={tr.fromYear} activeLabel={yearFrom} minW={92}>
               {YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
@@ -657,81 +682,49 @@ export default function ListingsClient({
               {YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
             </Sel>
 
-            {/* Sort + count — pushed to the left (RTL = ms-auto). */}
-            <div className="hidden sm:flex flex-shrink-0 ms-auto items-center gap-2 ps-2 border-s border-border">
-              <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
+            {/* "All filters" drawer trigger */}
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              className="flex-shrink-0 h-8 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--hairline)',
+                color: 'var(--text-primary)',
+                padding: '0 14px',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="4" y1="6"  x2="20" y2="6" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="18" x2="20" y2="18" />
+              </svg>
+              {lang === 'ar' ? 'كل الفلاتر' : 'All filters'}
+              {drawerActiveCount > 0 && (
+                <span
+                  className="ms-1 inline-flex items-center justify-center rounded-full"
+                  style={{
+                    background: 'var(--accent-primary)',
+                    color: '#FFFFFF',
+                    width: 18, height: 18, fontSize: 10, fontWeight: 800,
+                  }}
+                >
+                  {drawerActiveCount}
+                </span>
+              )}
+            </button>
+
+            {/* Sort + count anchor to the left (RTL = ms-auto). */}
+            <div className="flex flex-shrink-0 ms-auto items-center gap-2 ps-2 border-s border-border">
+              <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap hidden sm:inline">
                 {filtered.length.toLocaleString()}
                 <span className="font-normal ms-0.5">{lang === 'ar' ? ' نتيجة' : ' results'}</span>
               </span>
-              <Sel value={sort} onChange={v => setSort(v as SortKey)}
-                placeholder={tr.sortBestDeal} activeLabel={sortLabel} minW={140}>
-                <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
-                <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
-                <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>
-                <SelectItem value="mileage_asc">{tr.sortMileageAsc}</SelectItem>
-                <SelectItem value="year_desc">{tr.sortNewest}</SelectItem>
-              </Sel>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 pb-2 overflow-x-auto no-scrollbar border-t border-border/40 pt-2">
-            <Sel value={city} onChange={setCity}
-              placeholder={tr.allCities} activeLabel={cityLabel_}>
-              {cityOptions.map(c => (
-                <SelectItem key={c.en} value={c.en}>
-                  {lang === 'ar' ? (c.ar ?? c.en) : c.en}
-                </SelectItem>
-              ))}
-            </Sel>
-
-            <Sel value={bodyType} onChange={setBodyType}
-              placeholder={tr.allBodyTypes} activeLabel={bodyLabel} minW={96}>
-              {bodyTypes.map(b => (
-                <SelectItem key={b} value={b}>
-                  {lang === 'ar' ? BODY_AR[b] ?? b : BODY_EN[b] ?? b}
-                </SelectItem>
-              ))}
-            </Sel>
-
-            <Sel value={fuel} onChange={setFuel}
-              placeholder={tr.allFuels} activeLabel={fuelLabel} minW={88}>
-              {fuelTypes.map(f => (
-                <SelectItem key={f} value={f}>
-                  {lang === 'ar' ? FUEL_AR[f] ?? f : FUEL_EN[f] ?? f}
-                </SelectItem>
-              ))}
-            </Sel>
-
-            <Sel value={transmission} onChange={setTransmission}
-              placeholder={tr.allTransmissions} activeLabel={transLabel} minW={96}>
-              {VALID_TRANS.map(t => (
-                <SelectItem key={t} value={t}>
-                  {lang === 'ar' ? TRANS_AR[t] : TRANS_EN[t]}
-                </SelectItem>
-              ))}
-            </Sel>
-
-            <Sel value={condition} onChange={setCondition}
-              placeholder={tr.allConditions} activeLabel={condLabel} minW={80}>
-              {conditions.map(c => (
-                <SelectItem key={c} value={c}>
-                  {lang === 'ar' ? COND_AR[c] ?? c : COND_EN[c] ?? c}
-                </SelectItem>
-              ))}
-            </Sel>
-
-            <Sel value={maxMileage} onChange={setMaxMileage}
-              placeholder={tr.anyMileage} activeLabel={mileageLabel}>
-              {tr.mileageCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            </Sel>
-
-            {/* Mobile: sort + count live under row 2. */}
-            <div className="sm:hidden flex-shrink-0 ms-auto flex items-center gap-2 ps-2 border-s border-border">
-              <span className="text-[11px] font-semibold text-muted-foreground whitespace-nowrap">
+              <span className="text-[11px] font-semibold text-muted-foreground whitespace-nowrap sm:hidden">
                 {filtered.length.toLocaleString()}
               </span>
               <Sel value={sort} onChange={v => setSort(v as SortKey)}
-                placeholder={tr.sortBestDeal} activeLabel={sortLabel} minW={120}>
+                placeholder={tr.sortBestDeal} activeLabel={sortLabel} minW={140}>
                 <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
                 <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
                 <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>
@@ -757,7 +750,11 @@ export default function ListingsClient({
                       key={chip.label}
                       onClick={chip.clear}
                       className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-medium transition-opacity hover:opacity-70 whitespace-nowrap flex-shrink-0"
-                      style={{ background: AMBER + '20', color: '#92400E', border: `1px solid ${AMBER}55` }}
+                      style={{
+                        background: 'rgba(255,107,74,0.10)',
+                        color: 'var(--accent-primary)',
+                        border: '1px solid rgba(255,107,74,0.35)',
+                      }}
                     >
                       {chip.label}
                       <span className="text-[10px] opacity-60">×</span>
@@ -836,6 +833,174 @@ export default function ListingsClient({
           </>
         )}
       </main>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          "كل الفلاتر" DRAWER — secondary filters (body / fuel / transmission
+          / condition / source / mileage). Slides in from the right (RTL
+          leading edge). Backdrop click + ESC close.
+      ═══════════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {filtersOpen && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            onClick={() => setFiltersOpen(false)}
+            className="fixed inset-0 z-50"
+            style={{ background: 'rgba(15,23,42,0.45)' }}
+          >
+            <motion.aside
+              dir="rtl"
+              onClick={e => e.stopPropagation()}
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              transition={{ type: 'tween', duration: 0.22, ease: 'easeOut' }}
+              className="absolute top-0 right-0 h-full w-full sm:w-[360px] flex flex-col"
+              style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow-md)' }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={lang === 'ar' ? 'كل الفلاتر' : 'All filters'}
+            >
+              {/* Header */}
+              <div
+                className="flex items-center justify-between px-4 py-3 border-b"
+                style={{ borderColor: 'var(--hairline)' }}
+              >
+                <h2 className="font-extrabold text-base" style={{ color: 'var(--text-primary)' }}>
+                  {lang === 'ar' ? 'كل الفلاتر' : 'All filters'}
+                </h2>
+                <button
+                  onClick={() => setFiltersOpen(false)}
+                  aria-label={lang === 'ar' ? 'إغلاق' : 'Close'}
+                  className="rounded-full w-8 h-8 inline-flex items-center justify-center hover:bg-slate-100 transition-colors"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="6" y1="6" x2="18" y2="18" /><line x1="6" y1="18" x2="18" y2="6" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+                <DrawerRow
+                  label={lang === 'ar' ? 'النوع' : 'Body type'}
+                  control={
+                    <Sel value={bodyType} onChange={setBodyType}
+                      placeholder={tr.allBodyTypes} activeLabel={bodyLabel}>
+                      {bodyTypes.map(b => (
+                        <SelectItem key={b} value={b}>
+                          {lang === 'ar' ? BODY_AR[b] ?? b : BODY_EN[b] ?? b}
+                        </SelectItem>
+                      ))}
+                    </Sel>
+                  }
+                />
+                <DrawerRow
+                  label={lang === 'ar' ? 'الوقود' : 'Fuel'}
+                  control={
+                    <Sel value={fuel} onChange={setFuel}
+                      placeholder={tr.allFuels} activeLabel={fuelLabel}>
+                      {fuelTypes.map(f => (
+                        <SelectItem key={f} value={f}>
+                          {lang === 'ar' ? FUEL_AR[f] ?? f : FUEL_EN[f] ?? f}
+                        </SelectItem>
+                      ))}
+                    </Sel>
+                  }
+                />
+                <DrawerRow
+                  label={lang === 'ar' ? 'الناقل' : 'Transmission'}
+                  control={
+                    <Sel value={transmission} onChange={setTransmission}
+                      placeholder={tr.allTransmissions} activeLabel={transLabel}>
+                      {VALID_TRANS.map(t => (
+                        <SelectItem key={t} value={t}>
+                          {lang === 'ar' ? TRANS_AR[t] : TRANS_EN[t]}
+                        </SelectItem>
+                      ))}
+                    </Sel>
+                  }
+                />
+                <DrawerRow
+                  label={lang === 'ar' ? 'الحالة' : 'Condition'}
+                  control={
+                    <Sel value={condition} onChange={setCondition}
+                      placeholder={tr.allConditions} activeLabel={condLabel}>
+                      {conditions.map(c => (
+                        <SelectItem key={c} value={c}>
+                          {lang === 'ar' ? COND_AR[c] ?? c : COND_EN[c] ?? c}
+                        </SelectItem>
+                      ))}
+                    </Sel>
+                  }
+                />
+                <DrawerRow
+                  label={lang === 'ar' ? 'المصدر' : 'Source'}
+                  control={
+                    <Sel value={source} onChange={setSource}
+                      placeholder={lang === 'ar' ? 'كل المصادر' : 'All sources'}
+                      activeLabel={SOURCES.find(s => s.key === source)?.[lang === 'ar' ? 'nameAr' : 'nameEn'] ?? source}>
+                      {SOURCES.map(s => (
+                        <SelectItem key={s.key} value={s.key}>
+                          {lang === 'ar' ? s.nameAr : s.nameEn}
+                        </SelectItem>
+                      ))}
+                    </Sel>
+                  }
+                />
+                <DrawerRow
+                  label={lang === 'ar' ? 'العدّاد (الممشى)' : 'Mileage cap'}
+                  control={
+                    <Sel value={maxMileage} onChange={setMaxMileage}
+                      placeholder={tr.anyMileage} activeLabel={mileageLabel}>
+                      {tr.mileageCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </Sel>
+                  }
+                />
+              </div>
+
+              {/* Footer */}
+              <div
+                className="px-4 py-3 flex items-center gap-2 border-t"
+                style={{ borderColor: 'var(--hairline)' }}
+              >
+                <button
+                  onClick={() => {
+                    setBodyType(''); setFuel(''); setTransmission('')
+                    setCondition(''); setSource(''); setMaxMileage('')
+                  }}
+                  className="text-sm font-semibold px-3 py-2 transition-colors hover:opacity-80"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  {lang === 'ar' ? 'مسح' : 'Clear'}
+                </button>
+                <button
+                  onClick={() => setFiltersOpen(false)}
+                  className="ms-auto rounded-xl px-5 py-2 text-sm font-extrabold transition-opacity hover:opacity-90"
+                  style={{ background: 'var(--accent-primary)', color: '#FFFFFF' }}
+                >
+                  {lang === 'ar' ? 'تطبيق' : 'Apply'}
+                </button>
+              </div>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// Tiny presentational helper used inside the filter drawer. Keeping it
+// local because it's only meaningful in this layout.
+function DrawerRow ({ label, control }: { label: string; control: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        className="text-[12px] font-semibold"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        {label}
+      </label>
+      <div className="flex">{control}</div>
     </div>
   )
 }

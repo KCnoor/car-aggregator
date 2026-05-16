@@ -25,6 +25,22 @@ const reemKufi = Reem_Kufi({
 export const metadata: Metadata = {
   title: "سيارة AI — مستشارك الذكي للسيارات في السعودية",
   description: "قارن وابحث في إعلانات السيارات من حراج، سيارة، موتور وغيرها بذكاء اصطناعي",
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-512.png',  sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    title: 'سيارة AI',
+    description: 'مستشارك الذكي للسيارات في السعودية — تجميع، تحليل، قرار.',
+    images: ['/og-image.png'],
+    locale: 'ar_SA',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

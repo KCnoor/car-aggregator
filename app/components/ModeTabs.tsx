@@ -11,7 +11,6 @@ import type { ReactNode } from 'react'
 // tab has an accent-color dot in the bottom-left corner when inactive so
 // the four modes stay visually distinct at a glance.
 
-const CORAL = 'var(--accent-primary)'
 const SLATE_800 = 'var(--text-primary)'
 const SLATE_500 = 'var(--text-secondary)'
 
@@ -82,17 +81,22 @@ export default function ModeTabs () {
             onClick={() => go(m.href)}
             aria-pressed={isActive}
             aria-current={isActive ? 'page' : undefined}
-            whileHover={isActive ? undefined : { scale: 1.03 }}
+            // Restraint: hover lift only when there's something to gain;
+            // active card stays put so it doesn't outshout the others.
+            whileHover={isActive ? undefined : { y: -1 }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
             className="relative shrink-0 snap-start text-center rounded-[20px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B4A]/40 transition-shadow"
             style={{
               width: 'var(--tab-w, 200px)',
               height: 'var(--tab-h, 64px)',
-              background: isActive ? CORAL : 'var(--bg-card)',
+              // Active background is coral at 90% (CORAL_SOFT) to soften the
+              // wall-of-color feel; shadow is the softer var(--shadow-soft)
+              // not the heavier coral-glow var(--shadow-active).
+              background: isActive ? 'rgba(255,107,74,0.90)' : 'var(--bg-card)',
               border: '1px solid',
               borderColor: isActive ? 'transparent' : 'var(--hairline)',
-              boxShadow: isActive ? 'var(--shadow-active)' : 'var(--shadow-soft)',
+              boxShadow: 'var(--shadow-soft)',
             }}
           >
             <style>{`

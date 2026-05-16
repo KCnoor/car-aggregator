@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import ModeTabs from './ModeTabs'
 import { useLang } from './LangContext'
+import { Logo } from './Brand'
 
 // Sticky persistent header. Two horizontal "cuts":
 //   CUT 1 — Brand strip (64px). Logo right (RTL), tagline next to logo,
@@ -19,41 +20,9 @@ import { useLang } from './LangContext'
 // AnimatePresence transition.
 
 const CORAL = 'var(--accent-primary)'
-const CORAL_HOVER = 'var(--accent-primary-hover)'
 const SLATE_800 = 'var(--text-primary)'
 const SLATE_500 = 'var(--text-secondary)'
 const SUCCESS  = 'var(--success)'
-const GOLD = '#D8A66C'
-
-function LogoWordmark () {
-  return (
-    <span className="inline-flex items-baseline gap-1 leading-none">
-      <span
-        className="font-bold tracking-wide"
-        style={{
-          fontFamily: 'var(--font-reem-kufi), var(--font-tajawal), sans-serif',
-          color: SLATE_800,
-          fontSize: 32,
-          lineHeight: 1,
-        }}
-      >
-        سيارة
-      </span>
-      <span
-        className="font-bold tracking-tight"
-        style={{
-          fontFamily: 'var(--font-geist), Geist, sans-serif',
-          color: GOLD,
-          fontSize: 22,
-          letterSpacing: '0.04em',
-          lineHeight: 1,
-        }}
-      >
-        AI
-      </span>
-    </span>
-  )
-}
 
 // Animated coral pulse dot + expanding glow ring.
 function PulseDot () {
@@ -187,25 +156,20 @@ export default function StickyHeader ({
           total header height. Two cuts → 64 + 88 = 152px desktop, 64 + 88
           mobile (tabs same height, brand strip same height). */}
       <style>{`
-        :root { --hdr-h: 152px; }
+        :root { --hdr-h: 160px; }
       `}</style>
 
       {/* ── CUT 1 — Brand strip ──────────────────────────────────────── */}
       <div
         className="flex items-center"
-        style={{ height: 64, paddingInlineEnd: 32, paddingInlineStart: 16 }}
+        style={{ height: 72, paddingInlineEnd: 32, paddingInlineStart: 16 }}
       >
         <div className="max-w-screen-xl w-full mx-auto flex items-center gap-4">
-          {/* Right (RTL first): logo + tagline */}
-          <a href="/browse" className="shrink-0 select-none" aria-label="سيارة AI">
-            <LogoWordmark />
+          {/* Right (RTL first): brand lockup — mark + wordmark + tagline */}
+          <a href="/browse" className="shrink-0" aria-label="سيارة AI">
+            <span className="hidden sm:inline-block"><Logo size="lg" /></span>
+            <span className="inline-block sm:hidden"><Logo size="sm" showTagline={false} /></span>
           </a>
-          <span
-            className="hidden sm:inline-block truncate"
-            style={{ color: '#475569', fontSize: 14, fontStyle: 'italic' }}
-          >
-            مستشارك الذكي للسيارات في السعودية
-          </span>
 
           {/* Left: live counter + lang toggle */}
           <div className="ms-auto flex items-center gap-3 shrink-0">
@@ -240,9 +204,6 @@ export default function StickyHeader ({
         </div>
       </div>
 
-      {/* Suppress the unused-var warning for CORAL_HOVER (kept for future
-          interaction polish — not stripping it yet). */}
-      <span hidden style={{ background: CORAL_HOVER }} aria-hidden />
     </header>
   )
 }

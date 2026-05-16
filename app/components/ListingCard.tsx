@@ -23,15 +23,19 @@ const SOURCES: Record<string, { name: string; cls: string }> = {
 }
 
 // ── Deal score helpers ────────────────────────────────────────────────────────
-function dealConfig(score: number | null): {
-  label: string; bg: string; text: string; ring: string
-} {
-  if (score === null) return { label: '—', bg: 'bg-muted/80', text: 'text-muted-foreground', ring: '' }
-  if (score >= 9) return { label: 'صفقة ممتازة', bg: 'bg-deal-great',     text: 'text-white', ring: 'ring-1 ring-white/20' }
-  if (score >= 7) return { label: 'صفقة جيدة',  bg: 'bg-deal-good',      text: 'text-white', ring: 'ring-1 ring-white/20' }
-  if (score >= 5) return { label: 'سعر عادل',   bg: 'bg-deal-fair',      text: 'text-white', ring: 'ring-1 ring-white/20' }
-  if (score >= 3) return { label: 'سعر مرتفع',  bg: 'bg-deal-expensive', text: 'text-white', ring: 'ring-1 ring-white/20' }
-  return           { label: 'سعر مبالغ',        bg: 'bg-deal-overpriced',text: 'text-white', ring: 'ring-1 ring-white/20' }
+// 4-tier rule (raw number lives on the detail page only):
+//   9.0+    صفقة ممتازة  emerald  #10B981
+//   8.0–8.9 صفقة جيدة   bright   #34D399
+//   7.0–7.9 سعر عادل   slate    #64748B
+//   6.0–6.9 سعر سوقي   slate-400 #94A3B8
+//   <6.0    no badge
+function dealConfig (score: number | null): { label: string; bg: string } | null {
+  if (score == null) return null
+  if (score >= 9.0) return { label: 'صفقة ممتازة', bg: '#10B981' }
+  if (score >= 8.0) return { label: 'صفقة جيدة',  bg: '#34D399' }
+  if (score >= 7.0) return { label: 'سعر عادل',   bg: '#64748B' }
+  if (score >= 6.0) return { label: 'سعر سوقي',   bg: '#94A3B8' }
+  return null
 }
 
 // ── Card animation variants ───────────────────────────────────────────────────
@@ -66,16 +70,8 @@ export default function ListingCard({
   })()
   const photo = needsProxy ? `/api/img-proxy?url=${encodeURIComponent(rawPhoto!)}` : rawPhoto
   const src     = SOURCES[listing.source] ?? { name: listing.source, cls: 'bg-slate-600 text-white border-0' }
-  const deal    = dealConfig(listing.deal_score)
-  const hasScore = !listing.contact_for_price && listing.deal_score !== null
-
-  const scoreSubtitle = listing.score_source === 'ai_valuation'
-    ? (lang === 'ar' ? 'تحليل ذكي' : 'AI analysis')
-    : listing.score_comparables != null
-      ? (lang === 'ar'
-          ? `${listing.score_comparables} سيارة مشابهة`
-          : `${listing.score_comparables} comps`)
-      : null
+  const deal = dealConfig(listing.deal_score)
+  const hasBadge = !listing.contact_for_price && deal !== null
 
   return (
     <motion.div
@@ -137,25 +133,26 @@ export default function ListingCard({
               </div>
             )}
 
-            {/* Deal score — top-LEFT overlay (per redesign spec) */}
-            {hasScore && (
-              <div className={`absolute top-2.5 left-2.5 flex flex-col items-center px-2.5 py-1.5 rounded-xl backdrop-blur-sm ${deal.bg} ${deal.ring} shadow-md`}>
-                <span className={`text-lg font-black leading-none ${deal.text}`}>
-                  {listing.deal_score!.toFixed(1)}
-                </span>
-                <span className={`text-[9px] font-bold mt-0.5 leading-none whitespace-nowrap ${deal.text} opacity-90`}>
-                  {deal.label}
-                </span>
-                {scoreSubtitle && (
-                  <span className={`text-[8px] mt-0.5 leading-none whitespace-nowrap ${deal.text} opacity-70`}>
-                    {scoreSubtitle}
-                  </span>
-                )}
+            {/* Tier badge — top-LEFT (RTL leading-edge). Label only; the
+                raw deal_score number lives on the detail page now. */}
+            {hasBadge && (
+              <div
+                className="absolute top-2.5 left-2.5 rounded-full shadow-md"
+                style={{
+                  background: deal!.bg,
+                  color: '#FFFFFF',
+                  padding: '6px 10px',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  lineHeight: 1,
+                }}
+              >
+                {deal!.label}
               </div>
             )}
 
-            {/* Contact-for-price indicator (when no score) */}
-            {listing.contact_for_price && !hasScore && (
+            {/* Contact-for-price indicator (when no badge) */}
+            {listing.contact_for_price && !hasBadge && (
               <div className="absolute top-2.5 left-2.5 bg-black/50 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-1 rounded-lg">
                 {tr.contactForPrice}
               </div>
