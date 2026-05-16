@@ -63,8 +63,13 @@ function parseArgs () {
   const samples = []
 
   while (true) {
+    // Stable pagination requires an explicit ORDER BY — without it PostgREST
+    // gives undefined ordering and offset-based pages can miss or duplicate
+    // rows under concurrent writes (the v1 run missed 86 rows for exactly
+    // this reason).
     let q = sb.from('listings')
       .select('id, make_slug, make_en, make_ar, model_slug, model_en, model_ar, is_active, needs_make_review')
+      .order('id', { ascending: true })
       .range(from, from + PAGE - 1)
     if (args.activeOnly) q = q.eq('is_active', true)
 
