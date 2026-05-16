@@ -356,9 +356,11 @@ export default function HuntClient ({
   }
 
   // ── Strip data ───────────────────────────────────────────────────────────
-  // Default (no pins): top 12 in-chart listings sorted by deal_score.
-  // Pinned (1–4): exactly those pinned cards, in click order.
-  const STRIP_DEFAULT_CAP = 12
+  // Strict invariant: the strip iterates over the EXACT same set of
+  // listings that's plotted in the chart. The default 12-cap was the
+  // source of the "chart shows 24, strip shows 12" mismatch — gone.
+  //   - No pins      → every chart.rendered listing, sorted by deal_score
+  //   - 1–4 pins     → only those listings, in click order
   const stripListings: Listing[] = useMemo(() => {
     if (pinnedIds.size > 0) {
       const ids = [...pinnedIds]
@@ -369,7 +371,6 @@ export default function HuntClient ({
     return chart.rendered
       .map(p => p.listing)
       .sort((a, b) => (b.deal_score ?? -1) - (a.deal_score ?? -1))
-      .slice(0, STRIP_DEFAULT_CAP)
   }, [pinnedIds, chart])
 
   // Look up the listing's slot color when rendering the comparison strip
@@ -441,23 +442,9 @@ export default function HuntClient ({
             boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
           }}
         >
-          {/* Legend */}
-          {hasAnyFullSlot && (
-            <div className="flex flex-wrap justify-end mb-3" style={{ gap: 24 }}>
-              {slotGroups.map(g => {
-                const count = chart.rendered.filter(p => p.modelColor === g.color).length
-                return (
-                  <span key={g.slotIndex} className="inline-flex items-center gap-2">
-                    <span aria-hidden style={{ width: 12, height: 12, borderRadius: 999, background: g.color }} />
-                    <span style={{ color: NAVY_900, fontWeight: 800, fontSize: 15 }}>
-                      {lang === 'ar' ? g.labelAr : g.labelEn}
-                    </span>
-                    <span style={{ color: SLATE, fontWeight: 500, fontSize: 13 }}>({count})</span>
-                  </span>
-                )
-              })}
-            </div>
-          )}
+          {/* (Model legend moved out of the chart frame — see the
+              "Y-title row above the frame" in HuntChart for its new
+              top-right home.) */}
 
           {!hasAnyFullSlot ? (
             <EmptyState />
@@ -491,8 +478,9 @@ export default function HuntClient ({
       {/* ── Listings strip ── */}
       {hasAnyFullSlot && chart.rendered.length > 0 && (
         <section className="max-w-screen-xl mx-auto px-4 pb-12">
-          {/* Bridge — copy + un-pin controls depend on whether the user
-              has pinned anything. */}
+          {/* Bridge — copy + clear control depend on whether the user has
+              pinned anything. Selection mode shows "X من Y" so the user
+              can see how many of the chart's points they've isolated. */}
           <div
             className="rounded-2xl flex items-center justify-between flex-wrap gap-2"
             style={{
@@ -507,33 +495,22 @@ export default function HuntClient ({
             <span>
               <span aria-hidden style={{ marginInlineEnd: 8 }}>👇</span>
               {pinnedIds.size > 0
-                ? <>السيارات المثبتة ({pinnedIds.size})</>
+                ? <>السيارات المثبتة ({pinnedIds.size} من {chart.rendered.length})</>
                 : <>السيارات في المخطط ({stripListings.length} سيارة) — مرتبة حسب أحسن صفقة</>}
             </span>
             {pinnedIds.size > 0 && (
-              <span className="inline-flex items-center gap-3">
-                <button
-                  onClick={() => setPinnedIds(new Set())}
-                  className="rounded-full"
-                  style={{
-                    background: '#FFFFFF',
-                    border: `1px solid ${SLATE_200}`,
-                    color: SLATE_700,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    padding: '4px 10px',
-                  }}
-                >
-                  إلغاء التثبيت
-                </button>
-                <button
-                  onClick={() => setPinnedIds(new Set())}
-                  className="underline"
-                  style={{ color: CORAL, fontSize: 13, fontWeight: 700 }}
-                >
-                  عرض كل السيارات في المخطط ({chart.rendered.length} سيارة)
-                </button>
-              </span>
+              <button
+                onClick={() => setPinnedIds(new Set())}
+                className="inline-flex items-center gap-1"
+                style={{
+                  color: CORAL,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  textDecoration: 'underline',
+                }}
+              >
+                عرض الكل ↩
+              </button>
             )}
           </div>
 
@@ -853,22 +830,29 @@ function HuntChart ({
   return (
     <div className="hunt-plot-wrap" style={{ width: '100%' }}>
       <style>{`
-        .hunt-plot       { height: 480px; }
+        .hunt-plot       { height: 400px; }
         @media (max-width: 767px) {
-          .hunt-plot     { height: 360px; }
+          .hunt-plot     { height: 320px; }
         }
       `}</style>
 
-      {/* Y axis title above the LEFT side of the chart frame. Under the
-          parent dir=rtl, flex-end of the flexbox is the visual LEFT —
-          which is where we want the title to live now that the Y axis
-          tick numbers also sit on the left. */}
-      <div className="flex" style={{
-        color: NAVY_900, fontSize: 18, fontWeight: 800,
-        marginBottom: 8,
-        justifyContent: 'flex-end',
-      }}>
-        {yTitle}
+      {/* Row above the chart frame:
+            - RIGHT (RTL first child) → model legend panel
+            - LEFT  (RTL last child)  → Y axis title, hugging the gradient
+              strip's vertical column below.
+          On <md the legend wraps onto a new line above the title to keep
+          the layout legible on narrow screens. */}
+      <div
+        className="flex items-end justify-between flex-wrap gap-2"
+        style={{ marginBottom: 8 }}
+      >
+        <ModelLegend points={points} />
+        <span style={{
+          color: NAVY_900, fontSize: 18, fontWeight: 800,
+          marginInlineEnd: 8,    // RTL: nudges left edge inward to align with the gradient strip at left:8 inside the frame
+        }}>
+          {yTitle}
+        </span>
       </div>
 
       {/* Chart frame — forced LTR so Recharts internal coordinate math
@@ -938,20 +922,18 @@ function HuntChart ({
           </ResponsiveContainer>
         </div>
 
-        {/* "Better-direction" gradient strips alongside each axis.
-            Positions are approximate (matched to Recharts margin + YAxis
-            width=64 + the frame's 24px internal padding). The strips are
-            decorative cues — they sit at fixed offsets and never need
-            pixel-perfect tracking of the plot area. */}
+        {/* Direction-cue gradient strips. Concrete-not-abstract labels
+            at each end so the user reads what each gradient direction
+            actually means without needing to interpret an arrow. */}
         {xMid > 0 && yMid > 0 && (
           <>
             {/* Vertical strip — leftmost element inside the frame.
-                Emerald at the bottom → amber at the top. */}
+                Emerald (low km / better) at the bottom → amber at the top. */}
             <div
               aria-hidden
               style={{
                 position: 'absolute',
-                top: 36, bottom: 68,
+                top: 32, bottom: 56,
                 left: 8, width: 12,
                 borderRadius: 999,
                 background: 'linear-gradient(to top, #10B981 0%, #F59E0B 100%)',
@@ -959,32 +941,47 @@ function HuntChart ({
                 zIndex: 5,
               }}
             />
+            {/* Top label (amber) */}
             <span
               style={{
                 position: 'absolute',
-                bottom: 64, left: 4,
-                color: '#047857',
+                top: 14, left: 2,
+                color: '#B45309',
                 fontSize: 11, fontWeight: 700,
                 background: 'rgba(255,255,255,0.85)',
-                padding: '0 4px',
+                padding: '1px 5px',
                 borderRadius: 4,
                 zIndex: 6,
                 pointerEvents: 'none',
-                writingMode: 'vertical-rl',
-                transform: 'rotate(180deg)',
               }}
             >
-              ↓ أفضل
+              ممشى أعلى
+            </span>
+            {/* Bottom label (emerald) */}
+            <span
+              style={{
+                position: 'absolute',
+                bottom: 40, left: 2,
+                color: '#047857',
+                fontSize: 11, fontWeight: 700,
+                background: 'rgba(255,255,255,0.85)',
+                padding: '1px 5px',
+                borderRadius: 4,
+                zIndex: 6,
+                pointerEvents: 'none',
+              }}
+            >
+              ممشى أقل
             </span>
 
             {/* Horizontal strip — below the X axis tick numbers.
-                Emerald at the left → amber at the right. */}
+                Emerald (cheaper / better) at the left → amber at the right. */}
             <div
               aria-hidden
               style={{
                 position: 'absolute',
-                left: 104, right: 40,
-                bottom: 8, height: 12,
+                left: 104, right: 28,
+                bottom: 6, height: 12,
                 borderRadius: 999,
                 background: 'linear-gradient(to right, #10B981 0%, #F59E0B 100%)',
                 opacity: 0.40,
@@ -994,17 +991,32 @@ function HuntChart ({
             <span
               style={{
                 position: 'absolute',
-                left: 108, bottom: 6,
+                left: 108, bottom: 4,
                 color: '#047857',
                 fontSize: 11, fontWeight: 700,
                 background: 'rgba(255,255,255,0.85)',
-                padding: '0 4px',
+                padding: '1px 5px',
                 borderRadius: 4,
                 zIndex: 6,
                 pointerEvents: 'none',
               }}
             >
-              ← أفضل
+              سعر أرخص
+            </span>
+            <span
+              style={{
+                position: 'absolute',
+                right: 32, bottom: 4,
+                color: '#B45309',
+                fontSize: 11, fontWeight: 700,
+                background: 'rgba(255,255,255,0.85)',
+                padding: '1px 5px',
+                borderRadius: 4,
+                zIndex: 6,
+                pointerEvents: 'none',
+              }}
+            >
+              سعر أغلى
             </span>
           </>
         )}
@@ -1039,19 +1051,21 @@ function HuntChart ({
         )}
       </div>
 
-      {/* Zone legend strip — sits immediately below the chart frame,
-          above the X axis title. RTL order so the deal-zone swatch
-          (green) reads first under Arabic. */}
+      {/* Zone legend strip — sized up so it reads at a glance instead of
+          requiring a squint. RTL order so the deal-zone swatch (green)
+          comes first under Arabic. */}
       {xMid > 0 && yMid > 0 && (
         <div
           dir="rtl"
-          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+          className="flex flex-wrap items-center justify-center"
           style={{
             marginTop: 12,
             background: SLATE_50,
             borderTop: `1px solid ${SLATE_200}`,
-            padding: '12px 16px',
+            padding: '14px 20px',
             borderRadius: 12,
+            columnGap: 32,
+            rowGap: 8,
           }}
         >
           <LegendEntry text={pills.deal}    fill="#ECFDF5" stroke="#10B981" />
@@ -1072,18 +1086,53 @@ function HuntChart ({
   )
 }
 
+// Model legend — sits in the top-right above the chart frame so it
+// doesn't compete with the in-chart axis annotations. Vertical stack of
+// one entry per model, right-aligned for RTL reading.
+function ModelLegend ({ points }: { points: ChartPoint[] }) {
+  const items = useMemo(() => {
+    const map = new Map<string, { color: string; label: string; count: number }>()
+    for (const p of points) {
+      const cur = map.get(p.modelColor)
+      if (cur) cur.count++
+      else map.set(p.modelColor, { color: p.modelColor, label: p.modelLabel, count: 1 })
+    }
+    return [...map.values()]
+  }, [points])
+  if (items.length === 0) return <span />
+  return (
+    <div
+      className="inline-flex flex-col gap-1"
+      style={{
+        background: SLATE_50,
+        borderRadius: 10,
+        padding: 8,
+        alignItems: 'flex-end',    // right-align entries
+      }}
+    >
+      {items.map(it => (
+        <span key={it.color} className="inline-flex items-center gap-1.5">
+          <span aria-hidden style={{ width: 10, height: 10, borderRadius: 999, background: it.color }} />
+          <span style={{ color: '#1E293B', fontSize: 14, fontWeight: 700 }}>{it.label}</span>
+          <span style={{ color: SLATE, fontSize: 12, fontWeight: 500 }}>({it.count})</span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function LegendEntry ({ text, fill, stroke }: { text: string; fill: string; stroke: string }) {
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex items-center gap-2.5">
       <span
         aria-hidden
         style={{
-          width: 14, height: 14, borderRadius: 4,
+          width: 16, height: 16, borderRadius: 4,
           background: fill, border: `1px solid ${stroke}`,
           display: 'inline-block', flexShrink: 0,
         }}
       />
-      <span style={{ color: SLATE_700, fontSize: 13, fontWeight: 700 }}>
+      <span style={{ color: '#1E293B', fontSize: 14, fontWeight: 700 }}>
         {text}
       </span>
     </span>
