@@ -52,6 +52,10 @@ function buildSpecs (modelsRaw?: string, yearsRaw?: string): SlotSpec[] {
 }
 
 async function loadSlotListings (spec: SlotSpec): Promise<Listing[]> {
+  // Mileage sanity filter: keep 100 km .. 600,000 km only.
+  // 0 / 1 km are seller "didn't fill it in" placeholders;
+  // values > 600k are almost always typos (entered in km when meant in
+  // miles, or extra zero) and they nuke chart scale on small samples.
   const { data, error } = await supabase.from('listings')
     .select('*')
     .eq('is_active', true)
@@ -60,7 +64,8 @@ async function loadSlotListings (spec: SlotSpec): Promise<Listing[]> {
     .eq('model_slug', spec.model)
     .gte('year', spec.yearMin).lte('year', spec.yearMax)
     .gt('price_sar', 1000)
-    .not('mileage_km', 'is', null)
+    .gt('mileage_km', 100)
+    .lte('mileage_km', 600_000)
     .order('deal_score', { ascending: false, nullsFirst: false })
     .limit(PER_SLOT_LIMIT)
   if (error) {

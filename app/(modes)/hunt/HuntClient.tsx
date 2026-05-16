@@ -18,6 +18,7 @@ const NAVY   = '#1E293B'
 const SLATE_700 = '#334155'
 const SLATE  = '#64748B'
 const SLATE_400 = '#94A3B8'
+const SLATE_300 = '#CBD5E1'
 const SLATE_200 = '#E2E8F0'
 const SLATE_100 = '#F1F5F9'
 const SLATE_50  = '#F8FAFC'
@@ -49,10 +50,21 @@ type CanonicalModel = {
   canonical_name_ar: string
 }
 
-function percentile (sorted: number[], p: number) {
+// Linear-interpolation percentile (the previous floor-indexed version
+// effectively returned the MAX for samples of n < 20, which combined with
+// data-entry-error outliers pinned the axes at absurd values like 1.5M km).
+// For n elements the rank position of the p-th percentile is
+// (p/100) * (n - 1), interpolating between the two surrounding sorted
+// values.
+function percentile (sorted: number[], p: number): number {
   if (sorted.length === 0) return 0
-  const i = Math.min(sorted.length - 1, Math.max(0, Math.floor((p / 100) * sorted.length)))
-  return sorted[i]
+  if (sorted.length === 1) return sorted[0]
+  const rank = (p / 100) * (sorted.length - 1)
+  const lo = Math.floor(rank)
+  const hi = Math.ceil(rank)
+  if (lo === hi) return sorted[lo]
+  const frac = rank - lo
+  return sorted[lo] * (1 - frac) + sorted[hi] * frac
 }
 function median (sorted: number[]) {
   if (sorted.length === 0) return 0
@@ -331,13 +343,9 @@ export default function HuntClient ({
               onHover={setHoverId}
               onClick={togglePin}
               reversedX={lang === 'ar'}
+              offChartCount={clippedOutOfChart}
+              lang={lang}
             />
-          )}
-
-          {clippedOutOfChart > 0 && hasAnyFullSlot && (
-            <div className="mt-2 text-center text-[12px]" style={{ color: SLATE }}>
-              {clippedOutOfChart} سيارة خارج المخطط (أعلى من النسبة ٩٥٪)
-            </div>
           )}
         </div>
       </section>
@@ -576,6 +584,7 @@ type ChartGroup = {
 function HuntChart ({
   groups, xMax, yMax, xMid, yMid,
   hoverId, pinned, onHover, onClick, reversedX,
+  offChartCount, lang,
 }: {
   groups: ChartGroup[]
   xMax: number; yMax: number
@@ -585,6 +594,8 @@ function HuntChart ({
   onHover: (id: string | null) => void
   onClick: (id: string) => void
   reversedX: boolean
+  offChartCount: number
+  lang: 'ar' | 'en'
 }) {
   const anyHover = hoverId !== null
   const dotShape = useCallback((props: { cx?: number; cy?: number; payload?: { id: string }; fill?: string }) => {
@@ -617,134 +628,199 @@ function HuntChart ({
   const yTicks = ticksForDomain(0, yMax, 50_000)
   const fmt = (v: number) => v.toLocaleString('en-US')
 
+  // Pill copy by language. The four pills always sit in the four
+  // corners of the chart frame; CSS logical properties handle the RTL
+  // flip so each pill always lands in the corner that matches its zone.
+  const pills = lang === 'ar'
+    ? {
+        deal:    'منطقة اللقطات',
+        bottomS: 'سعر أعلى، ممشى أقل',
+        topS:    'سعر أقل، ممشى أعلى',
+        avoid:   'أعلى من السوق',
+      }
+    : {
+        deal:    'Deal zone',
+        bottomS: 'Higher price, lower km',
+        topS:    'Lower price, higher km',
+        avoid:   'Above market',
+      }
+  const xTitle = lang === 'ar' ? 'السعر (ريال) →' : '← Price (SAR)'
+  const yTitle = lang === 'ar' ? '↑ الممشى (كم)'   : '↑ Mileage (km)'
+
   return (
-    <div
-      className="relative"
-      style={{
-        width: '100%',
-        height: 480,
-      }}
-    >
+    <div className="hunt-plot-wrap relative" style={{ width: '100%' }}>
       <style>{`
+        .hunt-plot       { height: 480px; }
         @media (max-width: 767px) {
-          .hunt-plot { height: 360px; }
+          .hunt-plot     { height: 360px; }
         }
       `}</style>
-      <div className="hunt-plot" style={{ width: '100%', height: '100%' }}>
-        {/* Axis labels.
-            Deal corner = low x, low y. In RTL we want it bottom-right
-            visually; in LTR bottom-left. Use logical properties so the
-            corners auto-flip with the document direction. */}
-        <span
-          style={{
-            position: 'absolute', top: 4, insetInlineStart: 4,
-            color: NAVY_900, fontSize: 16, fontWeight: 800,
-            pointerEvents: 'none', zIndex: 2,
-          }}
-        >↑ الممشى (كم)</span>
-        <span
-          style={{
-            position: 'absolute', bottom: 4, insetInlineEnd: 4,
-            color: NAVY_900, fontSize: 16, fontWeight: 800,
-            pointerEvents: 'none', zIndex: 2,
-          }}
-        >السعر (ريال) →</span>
 
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart margin={{ top: 24, right: 40, bottom: 36, left: 56 }}>
-            <CartesianGrid stroke={SLATE_100} strokeDasharray="0" />
+      {/* Y axis title above the chart frame, on the trailing edge in RTL */}
+      <div
+        className="flex"
+        style={{
+          color: NAVY_900, fontSize: 18, fontWeight: 800,
+          marginBottom: 8,
+          justifyContent: 'flex-start',
+        }}
+      >
+        {yTitle}
+      </div>
 
-            {/* Two zones only:
-                  deal  = low x + low y (emerald-50)
-                  avoid = high x + high y (rose-50)
-                Recharts handles the visual flip when XAxis is `reversed`.
-                Other two quadrants stay transparent. */}
-            {xMid > 0 && yMid > 0 && (
-              <>
-                <ReferenceArea x1={0} x2={xMid} y1={0} y2={yMid}
-                  fill="#ECFDF5" fillOpacity={1} stroke="none" ifOverflow="extendDomain" />
-                <ReferenceArea x1={xMid} x2={xMax} y1={yMid} y2={yMax}
-                  fill="#FFF1F2" fillOpacity={1} stroke="none" ifOverflow="extendDomain" />
-              </>
-            )}
+      {/* The chart frame: 1px slate-300 border + 24px internal padding so
+          dots never touch the edge. Position:relative so the corner pills
+          can be absolutely positioned over the plot. */}
+      <div
+        className="relative"
+        style={{
+          border: `1px solid ${SLATE_300}`,
+          borderRadius: 12,
+          padding: 24,
+          background: '#FFFFFF',
+        }}
+      >
+        <div className="hunt-plot" style={{ width: '100%' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart margin={{ top: 12, right: 16, bottom: 12, left: 16 }}>
+              <CartesianGrid stroke={SLATE_100} strokeWidth={1} strokeDasharray="0" />
 
-            <XAxis
-              type="number" dataKey="x"
-              domain={[0, xMax]}
-              ticks={xTicks}
-              tickFormatter={fmt}
-              tick={{ fill: SLATE_700, fontSize: 13, fontWeight: 700 }}
-              stroke={SLATE_200}
-              tickLine={false}
-              reversed={reversedX}
-              allowDataOverflow={false}
-            />
-            <YAxis
-              type="number" dataKey="y"
-              domain={[0, yMax]}
-              ticks={yTicks}
-              tickFormatter={fmt}
-              tick={{ fill: SLATE_700, fontSize: 13, fontWeight: 700 }}
-              stroke={SLATE_200}
-              tickLine={false}
-              width={64}
-              allowDataOverflow={false}
-              orientation={reversedX ? 'right' : 'left'}
-            />
-            <Tooltip cursor={false} content={<ChartTooltip />} wrapperStyle={{ outline: 'none' }} />
-            {groups.map((g, i) => (
-              <Scatter
-                key={`sc-${i}`}
-                data={g.data}
-                fill={g.color}
-                isAnimationActive={false}
-                shape={dotShape}
+              {/* 4 quadrant backgrounds split at the medians. Same x1/y1
+                  numerics for both AR and EN; Recharts handles the flip
+                  visually because XAxis is `reversed` when AR. */}
+              {xMid > 0 && yMid > 0 && (
+                <>
+                  <ReferenceArea x1={0}   x2={xMid} y1={0}   y2={yMid}  fill="#ECFDF5" fillOpacity={1} stroke="none" />
+                  <ReferenceArea x1={xMid} x2={xMax} y1={0}   y2={yMid}  fill="#F8FAFC" fillOpacity={1} stroke="none" />
+                  <ReferenceArea x1={0}   x2={xMid} y1={yMid} y2={yMax}  fill="#FFFBEB" fillOpacity={1} stroke="none" />
+                  <ReferenceArea x1={xMid} x2={xMax} y1={yMid} y2={yMax} fill="#FFF1F2" fillOpacity={1} stroke="none" />
+                </>
+              )}
+
+              <XAxis
+                type="number" dataKey="x"
+                domain={[0, xMax]}
+                ticks={xTicks}
+                tickFormatter={fmt}
+                tick={{ fill: SLATE_700, fontSize: 14, fontWeight: 700 }}
+                stroke={SLATE_300}
+                strokeWidth={2}
+                tickLine={{ stroke: SLATE_400, strokeWidth: 1 }}
+                tickSize={6}
+                tickMargin={8}
+                reversed={reversedX}
+                allowDataOverflow={false}
               />
-            ))}
-          </ComposedChart>
-        </ResponsiveContainer>
+              <YAxis
+                type="number" dataKey="y"
+                domain={[0, yMax]}
+                ticks={yTicks}
+                tickFormatter={fmt}
+                tick={{ fill: SLATE_700, fontSize: 14, fontWeight: 700 }}
+                stroke={SLATE_300}
+                strokeWidth={2}
+                tickLine={{ stroke: SLATE_400, strokeWidth: 1 }}
+                tickSize={6}
+                tickMargin={8}
+                width={64}
+                allowDataOverflow={false}
+                orientation={reversedX ? 'right' : 'left'}
+              />
+              <Tooltip cursor={false} content={<ChartTooltip />} wrapperStyle={{ outline: 'none', zIndex: 30 }} />
+              {groups.map((g, i) => (
+                <Scatter
+                  key={`sc-${i}`}
+                  data={g.data}
+                  fill={g.color}
+                  isAnimationActive={false}
+                  shape={dotShape}
+                />
+              ))}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
 
-        {/* Corner labels for the two highlighted zones.
-            Deal label: bottom + leading edge (auto-flips with dir).
-            Avoid label: top + trailing edge. */}
+        {/* 4 corner pills, always above dots.
+            Position logic relies on CSS logical properties so the same
+            insetInlineStart / End values land in the visually-correct
+            corner under RTL and LTR.
+              deal  = low x + low y  → bottom + insetInlineStart
+              ↔ slate = high x + low y → bottom + insetInlineEnd
+              amber = low x + high y → top    + insetInlineStart
+              avoid = high x + high y → top    + insetInlineEnd
+        */}
         {xMid > 0 && yMid > 0 && (
           <>
-            <span
-              style={{
-                position: 'absolute',
-                bottom: 56,
-                insetInlineStart: 72,
-                color: '#047857',
-                fontSize: 14,
-                fontWeight: 800,
-                background: 'rgba(255,255,255,0.85)',
-                padding: '3px 10px',
-                borderRadius: 999,
-                pointerEvents: 'none',
-              }}
-            >
-              منطقة اللقطات
-            </span>
-            <span
-              style={{
-                position: 'absolute',
-                top: 40,
-                insetInlineEnd: 72,
-                color: '#BE123C',
-                fontSize: 14,
-                fontWeight: 800,
-                background: 'rgba(255,255,255,0.85)',
-                padding: '3px 10px',
-                borderRadius: 999,
-                pointerEvents: 'none',
-              }}
-            >
-              أعلى من السوق
-            </span>
+            <CornerPill text={pills.deal}    color="#047857" pos={{ bottom: 12, insetInlineStart: 16 }} />
+            <CornerPill text={pills.bottomS} color={SLATE_700} pos={{ bottom: 12, insetInlineEnd: 16 }} />
+            <CornerPill text={pills.topS}    color="#B45309" pos={{ top: 12, insetInlineStart: 16 }} />
+            <CornerPill text={pills.avoid}   color="#BE123C" pos={{ top: 12, insetInlineEnd: 16 }} />
           </>
         )}
+
+        {/* Off-chart indicator — bottom-right inside the frame (visual
+            "off-screen toward higher values" in RTL). */}
+        {offChartCount > 0 && (
+          <span
+            style={{
+              position: 'absolute',
+              bottom: 8, insetInlineEnd: 24,
+              color: SLATE, fontSize: 11, fontWeight: 600,
+              background: 'rgba(255,255,255,0.92)',
+              padding: '2px 8px',
+              borderRadius: 999,
+              pointerEvents: 'none',
+              zIndex: 25,
+            }}
+          >
+            {offChartCount} {lang === 'ar' ? 'سيارة خارج المخطط →' : `cars off-chart →`}
+          </span>
+        )}
+      </div>
+
+      {/* X axis title below the frame */}
+      <div
+        className="flex"
+        style={{
+          color: NAVY_900, fontSize: 18, fontWeight: 800,
+          marginTop: 12,
+          justifyContent: 'center',
+        }}
+      >
+        {xTitle}
       </div>
     </div>
+  )
+}
+
+// ── Corner pill helper ──────────────────────────────────────────────────────
+type PillPos = {
+  top?: number | string
+  bottom?: number | string
+  insetInlineStart?: number | string
+  insetInlineEnd?: number | string
+}
+function CornerPill ({ text, color, pos }: { text: string; color: string; pos: PillPos }) {
+  return (
+    <span
+      style={{
+        position: 'absolute',
+        background: '#FFFFFF',
+        border: `2px solid ${color}`,
+        borderRadius: 12,
+        padding: '8px 14px',
+        color,
+        fontSize: 13,
+        fontWeight: 800,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        whiteSpace: 'nowrap',
+        zIndex: 20,
+        pointerEvents: 'none',
+        ...pos,
+      }}
+    >
+      {text}
+    </span>
   )
 }
 
