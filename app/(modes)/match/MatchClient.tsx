@@ -262,7 +262,13 @@ export default function MatchClient ({
                     }}
                   />
                   <div className="p-4 pt-6 h-full flex flex-col">
-                    <div className="text-3xl leading-none mb-2" aria-hidden>{p.emoji}</div>
+                    <div
+                      aria-hidden
+                      className="leading-none"
+                      style={{ fontSize: 48, marginBottom: 12 }}
+                    >
+                      {p.emoji}
+                    </div>
                     <div
                       className="font-extrabold leading-tight"
                       style={{ color: NAVY, fontSize: 18, fontWeight: 800 }}

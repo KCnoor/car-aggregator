@@ -5,17 +5,18 @@ import { usePathname, useRouter } from 'next/navigation'
 
 // Header search input — the 5th element in the mode tab strip.
 //
-// Behaviour:
-//   - User types a free-text query and presses Enter or the 'بحث' button.
-//   - We push to /browse?q=<encoded>. ListingsClient on /browse picks up
-//     the ?q param on mount and dispatches its existing AI-search pipeline.
-//   - If the user is already on /browse, navigation replaces the URL in
-//     place and the same param effect fires.
+// Layout: clean white card with `overflow: hidden` so the inner button's
+// coral background can't bleed past the rounded corners.
+//   - Text input: ~70% of width, transparent bg, placeholder in slate-400.
+//   - Submit button: ~30% of width on the visual-left, coral bg, white text.
 //
-// Deliberately mic-free. The voice concierge backend is preserved (other
-// routes can still hit /api/voice/*) but it has no UI surface here.
-
-const CORAL = 'var(--accent-primary)'
+// In RTL with default flex-direction:row the FIRST child sits on the right,
+// the LAST child on the left. So we put the input first (it appears on the
+// right) and the submit button second (appears on the left) — no `order:`
+// gymnastics required.
+//
+// Behaviour: submit → /browse?q=<encoded>. ListingsClient picks up the
+// param and runs the existing /api/search pipeline.
 
 export default function SearchBox ({
   className,
@@ -29,8 +30,6 @@ export default function SearchBox ({
   const [q, setQ] = useState(initialValue ?? '')
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Keep the visible value in sync when the page hands us a fresh
-  // initialValue (e.g. cross-route navigation with a different ?q).
   useEffect(() => { setQ(initialValue ?? '') }, [initialValue])
 
   function submit (e: React.FormEvent) {
@@ -51,30 +50,16 @@ export default function SearchBox ({
       aria-label="بحث ذكي عن سيارة"
     >
       <div
-        className="flex items-stretch h-full overflow-hidden"
+        className="flex items-stretch h-full w-full"
         style={{
           background: 'var(--bg-card)',
           border: '1px solid var(--hairline)',
-          borderRadius: 20,
+          borderRadius: 16,
+          overflow: 'hidden',
           boxShadow: 'var(--shadow-soft)',
         }}
       >
-        {/* Coral search button on the visual-left (RTL trailing edge). */}
-        <button
-          type="submit"
-          disabled={!q.trim()}
-          className="shrink-0 font-extrabold transition-opacity disabled:opacity-40 order-2"
-          style={{
-            background: CORAL,
-            color: '#FFFFFF',
-            fontSize: 14,
-            width: 80,
-            borderRadius: 0,
-          }}
-        >
-          بحث
-        </button>
-
+        {/* RTL: first child visually sits on the right. Input ~70%. */}
         <input
           ref={inputRef}
           type="text"
@@ -82,15 +67,35 @@ export default function SearchBox ({
           onChange={e => setQ(e.target.value)}
           placeholder="ابحث عن سيارة، موديل، أو مدينة..."
           dir="auto"
-          className="flex-1 min-w-0 bg-transparent focus:outline-none order-1"
+          className="bg-transparent focus:outline-none placeholder:text-slate-400"
           style={{
+            flex: '7 1 0%',
+            minWidth: 0,
             color: 'var(--text-primary)',
             fontSize: 14,
-            paddingInlineStart: 16,
-            paddingInlineEnd: 12,
+            paddingInline: 16,
           }}
           aria-label="بحث"
         />
+
+        {/* Submit button on the visual-left (last in DOM under RTL). 30%. */}
+        <button
+          type="submit"
+          disabled={!q.trim()}
+          className="font-extrabold transition-opacity disabled:opacity-50 focus:outline-none"
+          style={{
+            flex: '3 1 0%',
+            background: 'var(--accent-primary)',
+            color: '#FFFFFF',
+            fontSize: 14,
+            fontWeight: 800,
+            border: 0,
+            // No own radius — the parent's overflow:hidden clips to 16px.
+          }}
+          aria-label="بحث"
+        >
+          بحث
+        </button>
       </div>
     </form>
   )

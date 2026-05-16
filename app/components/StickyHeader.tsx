@@ -205,10 +205,19 @@ export default function StickyHeader ({
         @media (min-width: 768px) { :root { --hdr-h: 192px; } }
       `}</style>
 
-      {/* ── CUT 1 — Brand strip ──────────────────────────────────────── */}
-      <div className="flex items-center" style={{ minHeight: 64, paddingInlineEnd: 24, paddingInlineStart: 16 }}>
+      {/* ── CUT 1 — Brand strip ────────────────────────────────────────
+          RTL paddings — 32px from the right (logo edge) on desktop. */}
+      <div
+        className="flex items-center"
+        style={{ minHeight: 64, paddingInlineEnd: 32, paddingInlineStart: 16 }}
+      >
         <div className="max-w-screen-xl w-full mx-auto flex items-center gap-3">
-          <a href="/browse" className="shrink-0" aria-label="سيارة AI">
+          <a
+            href="/browse"
+            className="shrink-0 inline-flex items-center"
+            aria-label="سيارة AI"
+            style={{ maxWidth: 240 }}
+          >
             <span className="hidden sm:inline-block"><Logo size="lg" priority /></span>
             <span className="inline-block sm:hidden"><Logo size="sm" priority /></span>
           </a>

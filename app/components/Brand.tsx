@@ -6,7 +6,9 @@
 
 import Image from 'next/image'
 
-/** Full RTL lockup (wordmark + AI badge + tagline + mark) for headers. */
+/** Full RTL lockup (wordmark + AI badge + tagline + mark) — one single
+ *  PNG, no overlays or stacking. logo-full.png contains the entire
+ *  composition already. */
 export function Logo ({
   size = 'lg',
   priority = false,
@@ -14,19 +16,25 @@ export function Logo ({
   size?: 'lg' | 'sm'
   priority?: boolean
 }) {
-  // The logo-full.png is ~1367×403 (≈3.39:1). We size by width and let the
-  // browser preserve aspect ratio.
-  const width  = size === 'lg' ? 280 : 200
-  const height = Math.round(width / 3.39)
+  // Native source is ~1367×403 (≈3.39:1). We size to a max-width and let
+  // height follow.
+  const maxWidth = size === 'lg' ? 240 : 180
+  const intrinsicHeight = Math.round(maxWidth / 3.39)
   return (
     <Image
       src="/brand/logo-full.png"
       alt="سيارة AI — مستشارك الذكي للسيارات في السعودية"
-      width={width}
-      height={height}
+      width={maxWidth}
+      height={intrinsicHeight}
       priority={priority}
-      sizes={`${width}px`}
-      style={{ height: 'auto', width }}
+      sizes={`${maxWidth}px`}
+      style={{
+        width: '100%',
+        maxWidth,
+        height: 'auto',
+        objectFit: 'contain',
+        display: 'block',
+      }}
     />
   )
 }

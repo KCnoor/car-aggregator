@@ -62,14 +62,18 @@
   --sidebar-border:            oklch(0.91 0.003 250);
   --sidebar-ring:              oklch(0.12 0.04 255);
 
-  /* ── CarSa "sky" palette (locked) ──────────────────────────────────────────
+  /* ── CarSa palette (warm cream / sand, locked) ────────────────────────────
      Layered on top of the shadcn defaults rather than replacing them so the
-     existing UI primitives (shadcn Select / Card / Badge) keep working while
-     surfaces explicitly opt-in to the new palette via inline `var(--…)` refs
-     or the `bg-page` / `accent-primary` utilities mapped below. */
-  --bg-hero: linear-gradient(180deg, #E0F2FE 0%, #DBEAFE 100%);
-  --bg-page: #F8FAFC;
+     existing UI primitives keep working; surfaces opt-in to this palette
+     via inline `var(--…)` references.
+     To switch to the mint variant, override the four bg-* / border-* vars
+     under the .theme-mint scope below — no other change required. */
+  --bg-hero-start: #FAF6EE;
+  --bg-hero-end:   #F5EFE3;
+  --bg-hero: linear-gradient(180deg, var(--bg-hero-start) 0%, var(--bg-hero-end) 100%);
+  --bg-page: #FBF9F4;
   --bg-card: #FFFFFF;
+
   --accent-primary:       #FF6B4A;
   --accent-primary-hover: #E55839;
   --accent-secondary:     #3B82F6;
@@ -77,10 +81,20 @@
   --warning: #F59E0B;
   --text-primary:   #1E293B;
   --text-secondary: #64748B;
-  --hairline:       #E2E8F0;
-  --shadow-soft:   0 4px 12px rgba(59, 130, 246, 0.08);
-  --shadow-md:     0 8px 24px rgba(59, 130, 246, 0.12);
+  --hairline:       #E8E0D0;  /* warm slate border — replaces cold #E2E8F0 */
+  --shadow-soft:   0 4px 12px rgba(80, 60, 30, 0.06);
+  --shadow-md:     0 8px 24px rgba(80, 60, 30, 0.10);
   --shadow-active: 0 12px 32px rgba(255, 107, 74, 0.18);
+}
+
+/* Add `class="theme-mint"` to <html> (or any ancestor) to switch the bg
+   trio to soft mint without touching any component. The accent / text /
+   shadow vars deliberately stay the same so coral + emerald still pop. */
+.theme-mint {
+  --bg-hero-start: #ECFDF5;
+  --bg-hero-end:   #D1FAE5;
+  --bg-page:       #F0FDF4;
+  --hairline:      #D7EBE0;
 }
 
 /* ── Theme mapping ────────────────────────────────────────────────────────── */

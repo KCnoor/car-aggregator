@@ -48,7 +48,11 @@ const MODES: Mode[] = [
 export default function ModeTabs ({ className = '' }: { className?: string }) {
   const pathname = usePathname()
   const router = useRouter()
-  const active = MODES.find(m => pathname === m.href || pathname.startsWith(m.href + '/'))?.href ?? null
+  // Default to the first tab (كل السوق) when no route matches — handles
+  // the brief flash between the / → /browse redirect and the first paint.
+  const active =
+    MODES.find(m => pathname === m.href || pathname.startsWith(m.href + '/'))?.href
+    ?? MODES[0].href
 
   function go (href: string) {
     if (href === active) return
@@ -86,30 +90,26 @@ export default function ModeTabs ({ className = '' }: { className?: string }) {
               border: '1px solid',
               borderColor: isActive ? 'transparent' : 'var(--hairline)',
               boxShadow: 'var(--shadow-soft)',
-              minHeight: 88,
+              minHeight: 124,
             }}
           >
-            <div className="h-full w-full flex flex-col items-center justify-center px-2 py-2 gap-1">
-              <div
-                className="rounded-xl overflow-hidden inline-flex items-center justify-center shrink-0"
+            <div className="h-full w-full flex flex-col items-center justify-center px-2 py-2">
+              {/* 56×56 icon, no chip / tint / filter — the PNG artwork is
+                  colored correctly already. 12px gap below the icon. */}
+              <Image
+                src={m.icon}
+                alt=""
+                width={56}
+                height={56}
+                priority={isActive}
                 style={{
-                  // Faintly tinted backplate so PNG icons sit on a chip rather
-                  // than floating loose. Active card hides the chip (icon
-                  // sits on coral directly).
-                  background: isActive ? 'transparent' : '#F8FAFC',
-                  width: 48,
-                  height: 48,
+                  width: 56,
+                  height: 56,
+                  objectFit: 'contain',
+                  marginBottom: 12,
+                  display: 'block',
                 }}
-              >
-                <Image
-                  src={m.icon}
-                  alt=""
-                  width={48}
-                  height={48}
-                  style={{ width: 40, height: 40, objectFit: 'contain' }}
-                  priority={isActive}
-                />
-              </div>
+              />
               <span
                 className="font-extrabold leading-tight"
                 style={{
@@ -126,6 +126,7 @@ export default function ModeTabs ({ className = '' }: { className?: string }) {
                   color: isActive ? 'rgba(255,255,255,0.85)' : 'var(--text-secondary)',
                   fontSize: 11,
                   fontWeight: 400,
+                  marginTop: 2,
                 }}
               >
                 {m.subtitleAr}
