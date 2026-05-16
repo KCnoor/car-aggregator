@@ -43,4 +43,12 @@ export type Listing = {
   photo_urls:         string[] | null
   scraped_at:         string | null
   created_at:         string
+  // v7 enrichment columns (added during the pipeline-v2 refactor)
+  first_seen_at?:     string | null
+  last_seen_at?:      string | null
+  external_price_label?: string | null
+  is_dealer_multi_upload?: boolean
+  market_consensus_score?: number | null
+  cross_source_listing_group?: string | null
+  low_source_confidence?: boolean
 }

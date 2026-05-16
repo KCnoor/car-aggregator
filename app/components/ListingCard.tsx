@@ -9,14 +9,16 @@ import { translations, cityLabel, type Lang } from '@/lib/translations'
 
 // ── Source badge config ───────────────────────────────────────────────────────
 const SOURCES: Record<string, { name: string; cls: string }> = {
-  syarah:    { name: 'Syarah',     cls: 'bg-blue-600 text-white border-0' },
-  haraj:     { name: 'Haraj',      cls: 'bg-orange-500 text-white border-0' },
-  motory:    { name: 'Motory',     cls: 'bg-violet-600 text-white border-0' },
+  syarah:     { name: 'Syarah',      cls: 'bg-blue-600 text-white border-0' },
+  haraj:      { name: 'Haraj',       cls: 'bg-orange-500 text-white border-0' },
+  motory:     { name: 'Motory',      cls: 'bg-violet-600 text-white border-0' },
   soum:       { name: 'Soum',        cls: 'bg-green-600 text-white border-0' },
   gogomotor:  { name: 'GoGoMotor',   cls: 'bg-red-600 text-white border-0' },
   saudisale:  { name: 'Saudi Sale',  cls: 'bg-amber-500 text-white border-0' },
   yallamotor: { name: 'Yalla Motor', cls: 'bg-blue-700 text-white border-0' },
   carswitch:  { name: 'CarSwitch',   cls: 'bg-slate-900 text-white border-0' },
+  digitalcar: { name: 'DigitalCar',  cls: 'bg-rose-600 text-white border-0' },
+  dubizzle:   { name: 'Dubizzle',    cls: 'bg-red-700 text-white border-0' },
   carly:      { name: 'Carly',       cls: 'bg-emerald-500 text-white border-0' },
 }
 
@@ -129,10 +131,21 @@ export default function ListingCard({
             )}
 
             {/* Source badge — top-left overlay */}
-            <div className="absolute top-2.5 left-2.5">
+            <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1">
               <Badge className={`text-[10px] font-bold px-2 py-0.5 rounded-md shadow ${src.cls}`}>
                 {src.name}
               </Badge>
+              {listing.source === 'dubizzle' && (
+                <span
+                  className="inline-flex items-center gap-1 text-[9px] font-semibold leading-none px-1.5 py-0.5 rounded shadow"
+                  style={{ background: '#FEF3C7', color: '#92400E' }}
+                  title={lang === 'ar'
+                    ? 'بعض إعلانات Dubizzle قد تكون لسيارات في الإمارات أو خارج السعودية. تحقق قبل الشراء.'
+                    : 'Some Dubizzle listings may be for cars in UAE or outside Saudi Arabia. Verify before purchase.'}
+                >
+                  ⚠ {lang === 'ar' ? 'تحقق من موقع السيارة' : 'Verify car location'}
+                </span>
+              )}
             </div>
 
             {/* Low-price warning pill — subtle flag, bottom-left corner */}

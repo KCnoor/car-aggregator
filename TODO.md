@@ -29,6 +29,20 @@ These are deferred items uncovered during the v2 refactor. Captured here for the
 
 - **Wreck pattern bug** in `lib/scoring/redflags.js`: `\bdamaged?\b` matches singular/past-tense but not plural "damages". Fix: `\bdamage(d|s)?\b`. Caught by audit; not yet applied. Low impact (1 false negative across 17k listings) but should be fixed.
 
+## Dubizzle import handling
+
+- **Current stopgap**: systemwide -1.3 score haircut on all Dubizzle listings + visible amber warning badge on the card asking the user to verify car location. Configured via `SOURCE_SCORE_ADJUSTMENT` in `lib/scoring/tiers.js`; applied to existing rows by `scripts/_apply_dubizzle_haircut.js`.
+- **Why it's a stopgap**: Dubizzle.sa surfaces a mix of Saudi-domestic and UAE/Dubai-import listings, and we can't currently distinguish them. The flat haircut over-penalizes genuine local listings and under-penalizes imports.
+- **Smarter filtering ideas** (post-launch):
+  - Description-pattern detection for `import|imported|مستورد|دبي|الإمارات|UAE|Dubai|GCC spec|خليجي` → flag `is_import = true` and apply a steeper per-listing penalty.
+  - Photo-location signals (EXIF GPS when present, or background OCR for foreign plates / Arabic vs English shop signs).
+  - Per-listing `is_import` column instead of a blanket source haircut, so domestic Dubizzle ads score on par with Tier-2 sources.
+  - Drop the blanket haircut once per-listing detection lands.
+
+## Homepage UX
+
+- **Tied top-of-feed**: ~220 listings currently tie at deal_score 10.0 after the v2 swap, so the first page is essentially random within that tier. Consider a secondary sort (lower price → newer first_seen_at → trusted source) once the user starts complaining.
+
 ## Operational
 
 - Old `score.js --auto-continue` flag accepts an empty stdin and proceeds past cost cap silently — desirable in CI but worth documenting that running without it requires interactive confirmation.

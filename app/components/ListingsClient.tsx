@@ -69,13 +69,16 @@ const GEO_PATTERN = `url("data:image/svg+xml,${encodeURIComponent(
 
 // ── Source config ──────────────────────────────────────────────────────────────
 const SOURCES = [
-  { key: 'haraj',      nameAr: 'حراج',      nameEn: 'Haraj',       logo: '/source-logos/haraj.svg' },
   { key: 'syarah',     nameAr: 'سيارة',      nameEn: 'Syarah',      logo: '/source-logos/syarah.svg' },
-  { key: 'motory',     nameAr: 'موتري',      nameEn: 'Motory',      logo: '/source-logos/motory.svg' },
   { key: 'soum',       nameAr: 'سوم',        nameEn: 'Soum',        logo: '/source-logos/soum.svg' },
+  { key: 'carswitch',  nameAr: 'كار سويتش',  nameEn: 'CarSwitch',   logo: '/source-logos/carswitch.webp' },
+  { key: 'digitalcar', nameAr: 'ديجيتال كار',nameEn: 'DigitalCar',  logo: '/source-logos/digitalcar.png' },
+  { key: 'motory',     nameAr: 'موتري',      nameEn: 'Motory',      logo: '/source-logos/motory.svg' },
+  { key: 'yallamotor', nameAr: 'يلا موتور', nameEn: 'Yalla Motor', logo: '/source-logos/yallamotor.svg' },
   { key: 'gogomotor',  nameAr: 'قوقو موتور', nameEn: 'GoGoMotor',   logo: '/source-logos/gogomotor.svg' },
   { key: 'saudisale',  nameAr: 'سعودي سيل', nameEn: 'Saudi Sale',  logo: '/source-logos/saudisale.svg' },
-  { key: 'yallamotor', nameAr: 'يلا موتور', nameEn: 'Yalla Motor', logo: '/source-logos/yallamotor.svg' },
+  { key: 'dubizzle',   nameAr: 'دوبيزل',     nameEn: 'Dubizzle',    logo: '/source-logos/dubizzle.svg' },
+  { key: 'haraj',      nameAr: 'حراج',      nameEn: 'Haraj',       logo: '/source-logos/haraj.svg' },
   { key: 'carly',      nameAr: 'كارلي',      nameEn: 'Carly',       logo: '/source-logos/carly.svg' },
 ]
 
@@ -98,12 +101,17 @@ function SiyaraAIWordmark() {
 export default function ListingsClient({
   listings,
   totalCount,
+  newDealsCount = 0,
+  newDealsSinceIso,
 }: {
   listings: Listing[]
   totalCount: number
+  newDealsCount?: number
+  newDealsSinceIso?: string
 }) {
   const [lang, setLang] = useState<Lang>('ar')
   const tr = translations[lang]
+  const [newDealsOnly, setNewDealsOnly] = useState(false)
 
   useEffect(() => {
     document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr'
@@ -275,6 +283,9 @@ export default function ListingsClient({
     }
 
     let base = showContactForPrice ? listings : listings.filter(l => !l.contact_for_price)
+    if (newDealsOnly && newDealsSinceIso) {
+      base = base.filter(l => l.first_seen_at != null && l.first_seen_at >= newDealsSinceIso)
+    }
     const cat    = applyCat(base)
     const strict = applyNum(cat)
 
@@ -290,7 +301,8 @@ export default function ListingsClient({
     return { filtered: [...strict].sort(sortFn), isFallback: false }
   }, [listings, make, model, city, maxPrice, maxMileage, sort, source,
       aiFilters, showContactForPrice, sortFn,
-      yearFrom, yearTo, bodyType, transmission, fuel, condition])
+      yearFrom, yearTo, bodyType, transmission, fuel, condition,
+      newDealsOnly, newDealsSinceIso])
 
   useEffect(() => { setDisplayCount(INITIAL) }, [filtered])
 
@@ -413,8 +425,30 @@ export default function ListingsClient({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] hidden sm:block font-medium" style={{ color: AMBER + '99' }}>
-              {filtered.length.toLocaleString()} {lang === 'ar' ? 'إعلان' : 'listings'}
+            <span className="text-[11px] hidden sm:flex items-center gap-1.5 font-medium" style={{ color: AMBER + '99' }}>
+              <span>
+                {totalCount.toLocaleString()} {lang === 'ar' ? 'إعلان نشط' : 'active listings'}
+              </span>
+              {newDealsCount > 0 && (
+                <>
+                  <span style={{ color: AMBER + '55' }}>•</span>
+                  <button
+                    onClick={() => setNewDealsOnly(v => !v)}
+                    className="rounded-full px-2 py-0.5 transition-colors"
+                    style={{
+                      background: newDealsOnly ? AMBER : 'rgba(212,165,116,0.15)',
+                      color:      newDealsOnly ? '#0A1628' : AMBER,
+                      fontWeight: 600,
+                    }}
+                    title={lang === 'ar'
+                      ? (newDealsOnly ? 'إظهار كل الإعلانات' : 'إظهار آخر 24 ساعة فقط')
+                      : (newDealsOnly ? 'Show all listings' : 'Show last 24 hours only')}
+                    aria-pressed={newDealsOnly}
+                  >
+                    {newDealsCount.toLocaleString()} {lang === 'ar' ? 'صفقة جديدة اليوم' : 'new deals today'}
+                  </button>
+                </>
+              )}
             </span>
             <button
               onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}

@@ -361,7 +361,11 @@ function buildUpdate (listing, result) {
   // via baseline or AI).
   const { score: capped, penalty } = redflags.applyCap(result.deal_score, flags)
 
-  const finalScore = capped
+  // Apply per-source bias adjustment (e.g. Dubizzle -1.3 for UAE imports).
+  const adj = tiers.sourceScoreAdjustment(listing.source)
+  const adjusted = Math.max(0, Math.min(10, capped + adj))
+  const finalScore = Math.round(adjusted * 10) / 10
+
   const lowConfidence = (listing.source_quality_tier ?? 3) >= 2 && finalScore >= 9.0
 
   return {
