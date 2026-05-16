@@ -8,7 +8,11 @@ import Image from 'next/image'
 
 /** Full RTL lockup (wordmark + AI badge + tagline + mark) — one single
  *  PNG, no overlays or stacking. logo-full.png contains the entire
- *  composition already. */
+ *  composition already.
+ *
+ *  Sized by height to match the live-counter card (56px) on desktop, so
+ *  the two anchor elements at the ends of the brand strip read at the
+ *  same visual weight. */
 export function Logo ({
   size = 'lg',
   priority = false,
@@ -16,22 +20,21 @@ export function Logo ({
   size?: 'lg' | 'sm'
   priority?: boolean
 }) {
-  // Native source is ~1367×403 (≈3.39:1). We size to a max-width and let
-  // height follow.
-  const maxWidth = size === 'lg' ? 240 : 180
-  const intrinsicHeight = Math.round(maxWidth / 3.39)
+  // Native source is ~1367×403 (≈3.39:1). We pick a target height and
+  // derive the width so the logo matches the counter card vertically.
+  const targetHeight = size === 'lg' ? 56 : 40
+  const targetWidth  = Math.round(targetHeight * 3.39)
   return (
     <Image
       src="/brand/logo-full.png"
       alt="سيارة AI — كل إعلانات السيارات في السعودية، من مصدر واحد"
-      width={maxWidth}
-      height={intrinsicHeight}
+      width={targetWidth}
+      height={targetHeight}
       priority={priority}
-      sizes={`${maxWidth}px`}
+      sizes={`${targetWidth}px`}
       style={{
-        width: '100%',
-        maxWidth,
-        height: 'auto',
+        width: targetWidth,
+        height: targetHeight,
         objectFit: 'contain',
         display: 'block',
       }}

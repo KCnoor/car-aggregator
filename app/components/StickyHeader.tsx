@@ -216,7 +216,6 @@ export default function StickyHeader ({
             href="/browse"
             className="shrink-0 inline-flex items-center"
             aria-label="سيارة AI"
-            style={{ maxWidth: 240 }}
           >
             <span className="hidden sm:inline-block"><Logo size="lg" priority /></span>
             <span className="inline-block sm:hidden"><Logo size="sm" priority /></span>
