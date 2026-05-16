@@ -490,8 +490,13 @@ export default function ListingsClient({
       )}
 
       <div className="relative">
-        {/* ── Source ribbon — white-card row on the page surface ── */}
-        <div className="border-t" style={{ borderColor: 'var(--hairline)', background: 'transparent' }}>
+        {/* ── Source ribbon ──
+            Very subtle slate-50 surface so the ribbon row is visibly its
+            own band against the pure-white page above and below. */}
+        <div
+          className="border-t border-b"
+          style={{ borderColor: 'var(--hairline)', background: '#F8FAFC' }}
+        >
           <div className="max-w-screen-xl mx-auto px-4 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
             {/* All pill — coral when active */}
             <button

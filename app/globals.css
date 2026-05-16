@@ -68,10 +68,13 @@
      via inline `var(--…)` references.
      To switch to the mint variant, override the four bg-* / border-* vars
      under the .theme-mint scope below — no other change required. */
-  --bg-hero-start: #FAF6EE;
-  --bg-hero-end:   #F5EFE3;
-  --bg-hero: linear-gradient(180deg, var(--bg-hero-start) 0%, var(--bg-hero-end) 100%);
-  --bg-page: #FBF9F4;
+  /* Pure white surface — temporary workaround until the mode-icon PNGs
+     get transparent backgrounds. Matching page bg to the icons' baked-in
+     white makes those tiles vanish visually. */
+  --bg-hero-start: #FFFFFF;
+  --bg-hero-end:   #FFFFFF;
+  --bg-hero: #FFFFFF;
+  --bg-page: #FFFFFF;
   --bg-card: #FFFFFF;
 
   --accent-primary:       #FF6B4A;
@@ -81,9 +84,9 @@
   --warning: #F59E0B;
   --text-primary:   #1E293B;
   --text-secondary: #64748B;
-  --hairline:       #E8E0D0;  /* warm slate border — replaces cold #E2E8F0 */
-  --shadow-soft:   0 4px 12px rgba(80, 60, 30, 0.06);
-  --shadow-md:     0 8px 24px rgba(80, 60, 30, 0.10);
+  --hairline:       #E2E8F0;  /* slate-200 — clean light divider on white */
+  --shadow-soft:   0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-md:     0 8px 24px rgba(15, 23, 42, 0.08);
   --shadow-active: 0 12px 32px rgba(255, 107, 74, 0.18);
 }
 

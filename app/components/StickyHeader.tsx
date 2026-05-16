@@ -251,17 +251,17 @@ export default function StickyHeader ({
         </div>
       </div>
 
-      {/* ── CUT 2 — Mode strip: 4 tabs + search as 5th element ──────────
-          Desktop: single flex row — ModeTabs (4 tabs, equal width) takes
-                   ~70%, SearchBox takes ~30%.
-          Mobile:  stacked — ModeTabs renders as a 2×2 grid (its internal
-                   default), SearchBox sits as a full-width row below. */}
+      {/* ── CUT 2 — Mode strip: 4 tabs, equal width, full row ─────────── */}
+      <div className="px-4 pb-3 md:pb-3">
+        <div className="max-w-screen-xl mx-auto">
+          <ModeTabs />
+        </div>
+      </div>
+
+      {/* ── CUT 3 — Search row (full-width, own row, below the tabs) ─── */}
       <div className="px-4 pb-3 md:pb-4">
-        <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row gap-2 md:gap-3 md:items-stretch">
-          <ModeTabs className="md:flex-[7]" />
-          <div className="md:flex-[3] md:min-w-0" style={{ minHeight: 56 }}>
-            <SearchBox className="h-full block" initialValue={initialQuery} />
-          </div>
+        <div className="max-w-screen-xl mx-auto" style={{ height: 56 }}>
+          <SearchBox className="h-full block w-full" initialValue={initialQuery} />
         </div>
       </div>
     </header>
