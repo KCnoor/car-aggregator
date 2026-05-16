@@ -6,6 +6,7 @@ import type { Listing } from '@/lib/supabase'
 import { translations, cityLabel, type Lang } from '@/lib/translations'
 import ListingCard from './ListingCard'
 import VoiceAdvisor from './VoiceAdvisor'
+import { useLang } from './LangContext'
 import {
   Select,
   SelectContent,
@@ -90,75 +91,8 @@ const container = { hidden: {}, visible: { transition: { staggerChildren: 0.03 }
 // the counter rests on the real value for 60s before the next cycle. The
 // fluctuation signals "system is alive" without ever showing a number far
 // from reality — max delta is ±3 listings.
-function LiveCounter ({ value, className, style }: {
-  value: number; className?: string; style?: React.CSSProperties
-}) {
-  const [display, setDisplay] = useState(value)
-
-  // Reset whenever the underlying value changes (e.g. page refresh).
-  useEffect(() => { setDisplay(value) }, [value])
-
-  useEffect(() => {
-    let cancelled = false
-    let activeTimer: ReturnType<typeof setTimeout> | null = null
-    let restTimer: ReturnType<typeof setTimeout> | null = null
-
-    function runCycle () {
-      if (cancelled) return
-      const startedAt = Date.now()
-      const cycleMs = 30_000
-
-      function tick () {
-        if (cancelled) return
-        if (Date.now() - startedAt >= cycleMs) {
-          // End of cycle — snap back to truth, rest 60s, then loop.
-          setDisplay(value)
-          restTimer = setTimeout(runCycle, 60_000)
-          return
-        }
-        setDisplay(prev => {
-          const delta = prev - value           // current offset from truth
-          // Step is biased back toward zero if we're already off.
-          const step = delta >= 3 ? -1
-                      : delta <= -3 ? +1
-                      : Math.random() < 0.5 ? -1 : +1
-          return prev + step
-        })
-        activeTimer = setTimeout(tick, 8000 + Math.random() * 2000)
-      }
-      activeTimer = setTimeout(tick, 8000 + Math.random() * 2000)
-    }
-
-    // First cycle starts after the initial 60s rest (gives the user a moment
-    // to see the real number before anything moves).
-    restTimer = setTimeout(runCycle, 60_000)
-
-    return () => {
-      cancelled = true
-      if (activeTimer) clearTimeout(activeTimer)
-      if (restTimer)   clearTimeout(restTimer)
-    }
-  }, [value])
-
-  return (
-    <span className={className} style={style} aria-live="off">
-      {display.toLocaleString()}
-    </span>
-  )
-}
-
-// ── Wordmark ───────────────────────────────────────────────────────────────────
-function SiyaraAIWordmark() {
-  return (
-    <span className="inline-flex items-baseline gap-1 leading-none text-3xl">
-      <span className="font-logo font-bold text-white tracking-wide">سيارة</span>
-      <span className="font-bold tracking-tight" style={{
-        fontFamily: 'var(--font-geist), Geist, sans-serif',
-        fontSize: '0.78em', color: AMBER, letterSpacing: '0.04em',
-      }}>AI</span>
-    </span>
-  )
-}
+// LiveCounter and SiyaraAIWordmark previously lived here. Both now live in
+// StickyHeader at the top of the (modes) layout — there is no second copy.
 
 // ── Main component ─────────────────────────────────────────────────────────────
 // Minimum active-listing count for a source to appear in the ribbon.
@@ -196,14 +130,12 @@ export default function ListingsClient({
   canonicalMakes?: CanonicalMake[]
   canonicalModels?: CanonicalModel[]
 }) {
-  const [lang, setLang] = useState<Lang>('ar')
+  // Language is owned by LangContext now (read/write happens in StickyHeader).
+  // ListingsClient stays read-only — toggling the locale anywhere updates it
+  // here without prop drilling.
+  const { lang } = useLang()
   const tr = translations[lang]
   const [newDealsOnly, setNewDealsOnly] = useState(false)
-
-  useEffect(() => {
-    document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr'
-    document.documentElement.lang = lang
-  }, [lang])
 
   // ── Filter state ──────────────────────────────────────────────────────────
   const [make,         setMake]         = useState('')
@@ -535,82 +467,14 @@ export default function ListingsClient({
       />
 
       {/* ═══════════════════════════════════════════════════════════════════
-          HERO  — compact single-band header + source ribbon
+          HERO — search + source ribbon only.
+          Logo, language toggle and listings counter all live in the sticky
+          header at the top of the page now; the hero is a focused search
+          surface, not a marquee for stats.
       ═══════════════════════════════════════════════════════════════════ */}
       <header className="relative overflow-hidden" style={{ background: HERO_BG }}>
         <div className="absolute inset-0 opacity-[0.055] pointer-events-none"
           style={{ backgroundImage: GEO_PATTERN, backgroundRepeat: 'repeat' }} />
-
-        {/* ── Top bar: logo on one side, lang toggle on other ── */}
-        <div className="relative max-w-screen-xl mx-auto px-4 pt-4 pb-0 flex items-center justify-between">
-          {/* RTL: first child = right side */}
-          <div>
-            <SiyaraAIWordmark />
-            <p className="text-[10px] mt-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>
-              {tr.subtitle}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
-              className="text-xs font-semibold rounded-full h-7 px-3 transition-colors border"
-              style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.18)', color: 'white' }}
-            >
-              {tr.toggleLang}
-            </button>
-          </div>
-        </div>
-
-        {/* ── Prominent active-listings stat box ── */}
-        <div className="relative max-w-screen-xl mx-auto px-4 pt-3">
-          <div
-            className="rounded-2xl px-5 py-3.5 flex items-center gap-4 border"
-            style={{
-              background: 'linear-gradient(135deg, rgba(212,165,116,0.14) 0%, rgba(212,165,116,0.06) 100%)',
-              borderColor: 'rgba(212,165,116,0.28)',
-            }}
-          >
-            <div className="flex flex-col leading-none">
-              <LiveCounter
-                value={totalCount}
-                className="font-black tracking-tight tabular-nums"
-                style={{
-                  color: AMBER,
-                  fontSize: 'clamp(2rem, 6vw, 2.75rem)',
-                  fontFamily: 'var(--font-geist), Geist, sans-serif',
-                  letterSpacing: '-0.02em',
-                }}
-              />
-              <span className="mt-1.5 text-[13px] font-semibold tracking-wide" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                {lang === 'ar' ? 'إعلان نشط' : 'active listings'}
-              </span>
-            </div>
-
-            {newDealsCount > 0 && (
-              <button
-                onClick={() => setNewDealsOnly(v => !v)}
-                className="ms-auto rounded-xl px-3.5 py-2 flex items-center gap-1.5 transition-all border"
-                style={{
-                  background: newDealsOnly ? AMBER : 'rgba(212,165,116,0.12)',
-                  color:      newDealsOnly ? HERO_BG : AMBER,
-                  borderColor: newDealsOnly ? AMBER : 'rgba(212,165,116,0.32)',
-                }}
-                title={lang === 'ar'
-                  ? (newDealsOnly ? 'إظهار كل الإعلانات' : 'إظهار آخر 24 ساعة فقط')
-                  : (newDealsOnly ? 'Show all listings' : 'Show last 24 hours only')}
-                aria-pressed={newDealsOnly}
-              >
-                <span aria-hidden style={{ fontSize: 14 }}>↗</span>
-                <span className="text-[13px] font-bold tabular-nums">
-                  {newDealsCount.toLocaleString()}
-                </span>
-                <span className="text-[11px] font-semibold whitespace-nowrap opacity-90">
-                  {lang === 'ar' ? 'صفقة جديدة اليوم' : 'new deals today'}
-                </span>
-              </button>
-            )}
-          </div>
-        </div>
 
         {/* ── Search bar ── */}
         <div className="relative max-w-screen-xl mx-auto px-4 pt-3 pb-0">
@@ -738,15 +602,21 @@ export default function ListingsClient({
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          FILTER BAR — sticky, 10 facets + sort + active chips
+          FILTER BAR — sticky below the global header (64px mobile / 80px
+          desktop). Two rows of filters + active chips below.
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="bg-background/96 backdrop-blur-sm border-b border-border sticky top-0 z-20 shadow-sm">
+      <div
+        className="bg-background/96 backdrop-blur-sm border-b border-border sticky z-20 shadow-sm"
+        style={{ top: 'var(--hdr-h, 64px)' }}
+      >
         <div className="max-w-screen-xl mx-auto px-3">
 
-          {/* ── Filter row ── */}
+          {/* ── Filter rows ──
+              Row 1: primary filters (make / model / price / year).
+              Row 2: secondary filters (city / body / fuel / trans / condition).
+              Sort + result count anchor to the left of row 1 on desktop, drop
+              under row 2 on mobile so the rows stay one-line on small screens. */}
           <div className="flex items-center gap-1.5 py-2 overflow-x-auto no-scrollbar">
-
-            {/* ── Facets (RTL: right → left on screen) ── */}
             <Sel value={make} onChange={v => { setMake(v); setModel('') }}
               placeholder={tr.allMakes}
               activeLabel={makes.find(m => m.value === make)?.label ?? make}>
@@ -759,28 +629,39 @@ export default function ListingsClient({
               {models.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </Sel>
 
-            {/* Year From */}
-            <Sel value={yearFrom} onChange={setYearFrom}
-              placeholder={tr.fromYear} activeLabel={yearFrom} minW={90}>
-              {YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-            </Sel>
-
-            {/* Year To */}
-            <Sel value={yearTo} onChange={setYearTo}
-              placeholder={tr.toYear} activeLabel={yearTo} minW={90}>
-              {YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-            </Sel>
-
             <Sel value={maxPrice} onChange={setMaxPrice}
               placeholder={tr.anyPrice} activeLabel={priceLabel}>
               {tr.priceCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
             </Sel>
 
-            <Sel value={maxMileage} onChange={setMaxMileage}
-              placeholder={tr.anyMileage} activeLabel={mileageLabel}>
-              {tr.mileageCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            <Sel value={yearFrom} onChange={setYearFrom}
+              placeholder={tr.fromYear} activeLabel={yearFrom} minW={92}>
+              {YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
             </Sel>
 
+            <Sel value={yearTo} onChange={setYearTo}
+              placeholder={tr.toYear} activeLabel={yearTo} minW={92}>
+              {YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </Sel>
+
+            {/* Sort + count — pushed to the left (RTL = ms-auto). */}
+            <div className="hidden sm:flex flex-shrink-0 ms-auto items-center gap-2 ps-2 border-s border-border">
+              <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
+                {filtered.length.toLocaleString()}
+                <span className="font-normal ms-0.5">{lang === 'ar' ? ' نتيجة' : ' results'}</span>
+              </span>
+              <Sel value={sort} onChange={v => setSort(v as SortKey)}
+                placeholder={tr.sortBestDeal} activeLabel={sortLabel} minW={140}>
+                <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
+                <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
+                <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>
+                <SelectItem value="mileage_asc">{tr.sortMileageAsc}</SelectItem>
+                <SelectItem value="year_desc">{tr.sortNewest}</SelectItem>
+              </Sel>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 pb-2 overflow-x-auto no-scrollbar border-t border-border/40 pt-2">
             <Sel value={city} onChange={setCity}
               placeholder={tr.allCities} activeLabel={cityLabel_}>
               {cityOptions.map(c => (
@@ -799,20 +680,20 @@ export default function ListingsClient({
               ))}
             </Sel>
 
-            <Sel value={transmission} onChange={setTransmission}
-              placeholder={tr.allTransmissions} activeLabel={transLabel} minW={96}>
-              {VALID_TRANS.map(t => (
-                <SelectItem key={t} value={t}>
-                  {lang === 'ar' ? TRANS_AR[t] : TRANS_EN[t]}
-                </SelectItem>
-              ))}
-            </Sel>
-
             <Sel value={fuel} onChange={setFuel}
               placeholder={tr.allFuels} activeLabel={fuelLabel} minW={88}>
               {fuelTypes.map(f => (
                 <SelectItem key={f} value={f}>
                   {lang === 'ar' ? FUEL_AR[f] ?? f : FUEL_EN[f] ?? f}
+                </SelectItem>
+              ))}
+            </Sel>
+
+            <Sel value={transmission} onChange={setTransmission}
+              placeholder={tr.allTransmissions} activeLabel={transLabel} minW={96}>
+              {VALID_TRANS.map(t => (
+                <SelectItem key={t} value={t}>
+                  {lang === 'ar' ? TRANS_AR[t] : TRANS_EN[t]}
                 </SelectItem>
               ))}
             </Sel>
@@ -826,14 +707,18 @@ export default function ListingsClient({
               ))}
             </Sel>
 
-            {/* ── Sort + count — pushed to the left (RTL = ms-auto) ── */}
-            <div className="flex-shrink-0 ms-auto flex items-center gap-2 ps-2 border-s border-border">
-              <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
+            <Sel value={maxMileage} onChange={setMaxMileage}
+              placeholder={tr.anyMileage} activeLabel={mileageLabel}>
+              {tr.mileageCaps.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            </Sel>
+
+            {/* Mobile: sort + count live under row 2. */}
+            <div className="sm:hidden flex-shrink-0 ms-auto flex items-center gap-2 ps-2 border-s border-border">
+              <span className="text-[11px] font-semibold text-muted-foreground whitespace-nowrap">
                 {filtered.length.toLocaleString()}
-                <span className="font-normal ms-0.5">{lang === 'ar' ? ' نتيجة' : ' results'}</span>
               </span>
               <Sel value={sort} onChange={v => setSort(v as SortKey)}
-                placeholder={tr.sortBestDeal} activeLabel={sortLabel} minW={140}>
+                placeholder={tr.sortBestDeal} activeLabel={sortLabel} minW={120}>
                 <SelectItem value="deal_score">{tr.sortBestDeal}</SelectItem>
                 <SelectItem value="price_asc">{tr.sortPriceAsc}</SelectItem>
                 <SelectItem value="price_desc">{tr.sortPriceDesc}</SelectItem>

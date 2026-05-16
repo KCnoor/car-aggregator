@@ -1,30 +1,30 @@
-'use client'
+import { supabase } from '@/lib/supabase'
+import ModesShell from './ModesShell'
 
-import { usePathname } from 'next/navigation'
-import { AnimatePresence, motion } from 'framer-motion'
-import ModeTabs from '@/app/components/ModeTabs'
+// Server-side layout shell: fetches the listing counters once per request
+// so the sticky header pill always reflects live data, then hands off to
+// the client shell that owns the lang context + cross-fade animation.
+//
+// The counters are not in any client state — refresh to update.
+export const dynamic = 'force-dynamic'
 
-// Shared shell for the four CarSa modes. The ModeTabs row sits above the
-// page content. Each page transition runs a 300ms cross-fade. The fade is
-// keyed by pathname so AnimatePresence treats every route as a fresh subtree.
-export default function ModesLayout ({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
+export default async function ModesLayout ({ children }: { children: React.ReactNode }) {
+  const since24h = new Date(Date.now() - 24 * 3600 * 1000).toISOString()
+
+  const [totalRes, newRes] = await Promise.all([
+    supabase.from('listings').select('*', { count: 'exact', head: true })
+      .eq('is_active', true).neq('freshness_state', 'dead'),
+    supabase.from('listings').select('*', { count: 'exact', head: true })
+      .eq('is_active', true).neq('freshness_state', 'dead')
+      .gte('first_seen_at', since24h),
+  ])
 
   return (
-    <>
-      <ModeTabs />
-      <AnimatePresence mode="wait">
-        <motion.main
-          key={pathname}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="flex-1"
-        >
-          {children}
-        </motion.main>
-      </AnimatePresence>
-    </>
+    <ModesShell
+      totalCount={totalRes.count ?? 0}
+      newDealsCount={newRes.count ?? 0}
+    >
+      {children}
+    </ModesShell>
   )
 }

@@ -1,83 +1,167 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { Sparkles } from 'lucide-react'
 import type { Listing } from '@/lib/supabase'
 import ListingCard from '@/app/components/ListingCard'
 
-type PersonaKey = 'big_family' | 'first_car' | 'upgrade'
+export type PersonaKey =
+  | 'big_family' | 'first_car' | 'upgrade'
+  | 'long_trip'  | 'city_only' | 'investment'
+  | 'economical' | 'luxury'    | 'adventure'
 
 type Persona = {
   key: PersonaKey
   emoji: string
   titleAr: string
-  blurbAr: string
-  accent: string
-  bg: string
-  reasoning: (l: Listing) => string  // per-listing "why this fits" string
+  descAr: string
+  gradFrom: string
+  gradTo:   string
+  accent:   string   // darker of the two for hover/text accents
+  reasoning: (l: Listing) => string
 }
 
-const ROSE = '#B8336A'
-const GOLD = '#D4A574'
 const NAVY = '#0A1628'
+const GOLD = '#D8A66C'
 
+// 9 personas. Gradient pairs match the brief exactly.
 const PERSONAS: Persona[] = [
   {
-    key: 'big_family',
-    emoji: '👨‍👩‍👧‍👦',
-    titleAr: 'عائلة كبيرة',
-    blurbAr: 'سيارة فيها مساحة وأمان للجميع — 7 ركاب أو أكثر، تشغيل عملي يومي.',
-    accent: ROSE,
-    bg: 'linear-gradient(135deg, rgba(184,51,106,0.18) 0%, rgba(184,51,106,0.06) 100%)',
+    key: 'big_family', emoji: '👨‍👩‍👧‍👦', titleAr: 'عائلة كبيرة',
+    descAr: 'مساحة وأمان للجميع — 7 ركاب أو أكثر، تشغيل عملي يومي.',
+    gradFrom: '#F472B6', gradTo: '#FB7185', accent: '#BE185D',
     reasoning: (l) => {
-      const parts: string[] = []
-      if (l.body_type_slug === 'minivan') parts.push('فان عائلي يستوعب 7+ ركاب براحة')
-      else if (l.body_type_slug === 'suv') parts.push('SUV واسع يناسب العائلة الكبيرة')
-      if (l.year && l.year >= 2020) parts.push(`موديل حديث (${l.year}) بأنظمة أمان متطورة`)
-      else if (l.year) parts.push(`موديل ${l.year} متين`)
-      if (l.mileage_km != null && l.mileage_km < 80000) parts.push('ممشى قليل')
-      return parts.join(' · ') || 'مناسبة للعائلة الكبيرة'
+      const p: string[] = []
+      if (l.body_type_slug === 'minivan') p.push('فان عائلي يستوعب 7+ ركاب')
+      else if (l.body_type_slug === 'suv') p.push('SUV واسع يناسب العائلة')
+      if (l.year && l.year >= 2020) p.push(`موديل ${l.year} بأنظمة أمان متطورة`)
+      if (l.mileage_km != null && l.mileage_km < 80000) p.push('ممشى قليل')
+      return p.join(' · ') || 'مناسبة للعائلة الكبيرة'
     },
   },
   {
-    key: 'first_car',
-    emoji: '🌱',
-    titleAr: 'أول سيارة',
-    blurbAr: 'سعر معقول تحت 50 ألف، استهلاك وصيانة منخفضة، موثوقية عالية.',
-    accent: GOLD,
-    bg: 'linear-gradient(135deg, rgba(212,165,116,0.22) 0%, rgba(212,165,116,0.06) 100%)',
+    key: 'first_car', emoji: '🌱', titleAr: 'أول سيارة',
+    descAr: 'سعر معقول تحت 50 ألف، استهلاك منخفض، موثوقية عالية.',
+    gradFrom: '#A3E635', gradTo: '#65A30D', accent: '#3F6212',
     reasoning: (l) => {
-      const parts: string[] = []
-      if (l.price_sar != null) parts.push(`سعرها ${l.price_sar.toLocaleString()} ريال`)
-      if (l.make_slug === 'toyota')       parts.push('تويوتا — صيانة وقطع غيار متوفرة وسعر إعادة بيع ممتاز')
-      else if (l.make_slug === 'hyundai') parts.push('هيونداي — اقتصادية في الوقود والصيانة')
-      else if (l.make_slug === 'kia')     parts.push('كيا — موثوقة بضمان طويل')
-      else if (l.make_slug === 'honda')   parts.push('هوندا — متينة وصيانتها بسيطة')
-      else if (l.make_slug === 'nissan')  parts.push('نيسان — اقتصادية في التشغيل')
-      if (l.mileage_km != null && l.mileage_km < 120000) parts.push('ممشى مقبول لمستعملة')
-      return parts.join(' · ') || 'خيار جيد لسائق جديد'
+      const p: string[] = []
+      if (l.price_sar != null) p.push(`${l.price_sar.toLocaleString()} ريال`)
+      const m = l.make_slug
+      if (m === 'toyota')       p.push('تويوتا — صيانة بسيطة وقيمة إعادة بيع ممتازة')
+      else if (m === 'hyundai') p.push('هيونداي — اقتصادية في الوقود والصيانة')
+      else if (m === 'kia')     p.push('كيا — موثوقة بضمان طويل')
+      else if (m === 'honda')   p.push('هوندا — متينة وصيانتها بسيطة')
+      else if (m === 'nissan')  p.push('نيسان — اقتصادية في التشغيل')
+      return p.join(' · ') || 'خيار جيد لسائق جديد'
     },
   },
   {
-    key: 'upgrade',
-    emoji: '✨',
-    titleAr: 'ترقية',
-    blurbAr: 'فوق 100 ألف، سيارة تمثّل مكانتك بمواصفات وتقنيات حديثة.',
-    accent: '#2A3D78',
-    bg: 'linear-gradient(135deg, rgba(42,61,120,0.20) 0%, rgba(42,61,120,0.06) 100%)',
+    key: 'upgrade', emoji: '✨', titleAr: 'ترقية',
+    descAr: 'فوق 100 ألف، مواصفات حديثة، حضور قوي.',
+    gradFrom: '#FCD34D', gradTo: '#D97706', accent: '#92400E',
     reasoning: (l) => {
-      const parts: string[] = []
-      if (l.make_slug === 'mercedes-benz') parts.push('مرسيدس — راحة وفخامة بمعايير ألمانية')
-      else if (l.make_slug === 'bmw')      parts.push('بي إم دبليو — أداء رياضي وتقنيات قيادة متقدمة')
-      else if (l.make_slug === 'lexus')    parts.push('لكزس — موثوقية يابانية مع فخامة فاخرة')
-      else if (l.make_slug === 'audi')     parts.push('أودي — تصميم نظيف وتقنيات متقدمة')
-      else if (l.make_slug === 'porsche')  parts.push('بورش — أداء بمستوى فئة عالمية')
-      else if (l.make_slug === 'land-rover') parts.push('لاند روفر — قيادة عالية الموقف ورفاهية الطرق الوعرة')
-      else if (l.make_slug === 'genesis')  parts.push('جينيسيس — فخامة كورية بقيمة ممتازة')
-      if (l.year && l.year >= 2022) parts.push(`موديل حديث ${l.year}`)
-      if (l.mileage_km != null && l.mileage_km < 40000) parts.push('ممشى منخفض جداً')
-      return parts.join(' · ') || 'ترقية مستحقة'
+      const p: string[] = []
+      const m = l.make_slug
+      if (m === 'mercedes-benz') p.push('مرسيدس — راحة وفخامة بمعايير ألمانية')
+      else if (m === 'bmw')      p.push('بي إم دبليو — أداء رياضي وتقنيات قيادة متقدمة')
+      else if (m === 'lexus')    p.push('لكزس — موثوقية يابانية مع فخامة')
+      else if (m === 'audi')     p.push('أودي — تصميم نظيف وتقنيات متقدمة')
+      else if (m === 'porsche')  p.push('بورش — أداء بمستوى عالمي')
+      else if (m === 'land-rover') p.push('لاند روفر — قيادة عالية ورفاهية')
+      else if (m === 'genesis')  p.push('جينيسيس — فخامة كورية بقيمة ممتازة')
+      if (l.year && l.year >= 2022) p.push(`موديل ${l.year}`)
+      return p.join(' · ') || 'ترقية مستحقة'
+    },
+  },
+  {
+    key: 'long_trip', emoji: '🛣️', titleAr: 'سفر طويل',
+    descAr: 'مريحة على المسافات الطويلة، ثابتة، اقتصاد وقود جيد.',
+    gradFrom: '#60A5FA', gradTo: '#2563EB', accent: '#1D4ED8',
+    reasoning: (l) => {
+      const p: string[] = []
+      if (l.body_type_slug === 'sedan') p.push('سيدان مريحة على الطرق السريعة')
+      else if (l.body_type_slug === 'suv') p.push('SUV ثابتة على المسافات الطويلة')
+      if (l.fuel_type_slug === 'hybrid' || l.fuel_type_slug === 'mild-hybrid') p.push('هجين موفّر للوقود')
+      if (l.mileage_km != null && l.mileage_km < 80000) p.push('ممشى قليل')
+      return p.join(' · ') || 'مناسبة للسفر الطويل'
+    },
+  },
+  {
+    key: 'city_only', emoji: '🏙️', titleAr: 'مدينة فقط',
+    descAr: 'صغيرة ومرنة، سهلة الركن، استهلاك منخفض.',
+    gradFrom: '#A78BFA', gradTo: '#7C3AED', accent: '#6D28D9',
+    reasoning: (l) => {
+      const p: string[] = []
+      if (l.body_type_slug === 'hatchback') p.push('هاتشباك مدمجة وسهلة الركن')
+      else if (l.body_type_slug === 'sedan') p.push('سيدان عملية في المدينة')
+      if (l.price_sar != null && l.price_sar <= 45000) p.push('سعر اقتصادي')
+      if (l.fuel_type_slug === 'petrol') p.push('استهلاك معقول')
+      return p.join(' · ') || 'مثالية للقيادة داخل المدينة'
+    },
+  },
+  {
+    key: 'investment', emoji: '📈', titleAr: 'استثمار',
+    descAr: 'تحافظ على قيمتها، إعادة بيع قوية، علامات موثوقة.',
+    gradFrom: '#34D399', gradTo: '#059669', accent: '#047857',
+    reasoning: (l) => {
+      const p: string[] = []
+      const m = l.make_slug
+      if (m === 'toyota')  p.push('تويوتا — أعلى نسبة احتفاظ بالقيمة في السوق')
+      else if (m === 'lexus')   p.push('لكزس — قيمة إعادة بيع ممتازة')
+      else if (m === 'porsche') p.push('بورش — تحافظ على قيمتها مع الزمن')
+      if (l.mileage_km != null && l.mileage_km < 80000) p.push('ممشى منخفض')
+      if (l.year && l.year >= 2021) p.push(`موديل حديث ${l.year}`)
+      return p.join(' · ') || 'خيار استثماري قوي'
+    },
+  },
+  {
+    key: 'economical', emoji: '💡', titleAr: 'اقتصادي',
+    descAr: 'أقل تكلفة شراء وصيانة ممكنة، اعتمادية قبل كل شيء.',
+    gradFrom: '#FBBF24', gradTo: '#B45309', accent: '#92400E',
+    reasoning: (l) => {
+      const p: string[] = []
+      if (l.price_sar != null) p.push(`${l.price_sar.toLocaleString()} ريال فقط`)
+      const m = l.make_slug
+      if (m === 'toyota')        p.push('تويوتا — أقل تكلفة صيانة طويلة المدى')
+      else if (m === 'hyundai')  p.push('هيونداي — اقتصادية ومتوفرة قطع الغيار')
+      else if (m === 'suzuki')   p.push('سوزوكي — استهلاك وقود منخفض جداً')
+      return p.join(' · ') || 'الأفضل قيمة مقابل المال'
+    },
+  },
+  {
+    key: 'luxury', emoji: '💎', titleAr: 'فخامة',
+    descAr: 'فوق 200 ألف، علامات ممتازة، حالة مميزة.',
+    gradFrom: '#F9A8D4', gradTo: '#BE185D', accent: '#9D174D',
+    reasoning: (l) => {
+      const p: string[] = []
+      const m = l.make_slug
+      if (m === 'rolls-royce')   p.push('رولز رويس — قمة الفخامة العالمية')
+      else if (m === 'bentley')  p.push('بنتلي — صناعة يدوية بريطانية')
+      else if (m === 'ferrari')  p.push('فيراري — أداء وأناقة إيطالية')
+      else if (m === 'lamborghini') p.push('لامبورغيني — تصميم جريء وأداء ناري')
+      else if (m === 'mercedes-benz') p.push('مرسيدس — فخامة كلاسيكية')
+      else if (m === 'porsche')  p.push('بورش — رياضية فاخرة')
+      if (l.year && l.year >= 2022) p.push(`موديل حديث ${l.year}`)
+      if (l.mileage_km != null && l.mileage_km < 30000) p.push('ممشى ضئيل')
+      return p.join(' · ') || 'فخامة من الدرجة الأولى'
+    },
+  },
+  {
+    key: 'adventure', emoji: '🏔️', titleAr: 'مغامرة',
+    descAr: 'دفع رباعي، خروج بر، قدرات قوية على الطرق الوعرة.',
+    gradFrom: '#FB923C', gradTo: '#C2410C', accent: '#9A3412',
+    reasoning: (l) => {
+      const p: string[] = []
+      const m = l.make_slug
+      if (m === 'toyota') p.push('تويوتا — أسطورة الطرق الوعرة')
+      else if (m === 'jeep')       p.push('جيب — مصممة للمغامرة')
+      else if (m === 'land-rover') p.push('لاند روفر — قدرات استثنائية على البر')
+      else if (m === 'ford')       p.push('فورد — قوة وموثوقية في الطرق الوعرة')
+      if (l.body_type_slug === 'pickup') p.push('بيك أب عملي')
+      else if (l.body_type_slug === 'suv') p.push('SUV بقدرات رفع وعزم عالية')
+      return p.join(' · ') || 'مناسبة لعشاق المغامرة'
     },
   },
 ]
@@ -87,93 +171,175 @@ export default function MatchClient ({
 }: {
   personas: Record<PersonaKey, Listing[]>
 }) {
-  const [selected, setSelected] = useState<PersonaKey | null>(null)
-  const [feedbackText, setFeedbackText] = useState('')
-  const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [selected, setSelected]       = useState<PersonaKey | null>(null)
+  const [helpOpen, setHelpOpen]       = useState(false)
+  const [helpStatus, setHelpStatus]   = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [helpEmail, setHelpEmail]     = useState('')
+  const [helpText, setHelpText]       = useState('')
 
   const active = useMemo(() => PERSONAS.find(p => p.key === selected) ?? null, [selected])
   const listings = active ? personas[active.key] : []
 
-  async function submitFeedback (e: React.FormEvent) {
+  async function submitHelp (e: React.FormEvent) {
     e.preventDefault()
-    if (!feedbackText.trim()) return
-    setFeedbackStatus('sending')
+    if (!helpText.trim()) return
+    setHelpStatus('sending')
     try {
-      const res = await fetch('/api/match-feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ persona: selected, text: feedbackText.trim() }),
-      })
-      if (!res.ok) throw new Error('failed')
-      setFeedbackStatus('sent')
-      setFeedbackText('')
+      // Reuse the existing match_feedback table; capture email separately
+      // into waitlist for follow-up when we ship the AI version.
+      const tasks: Promise<Response>[] = [
+        fetch('/api/match-feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ persona: null, text: helpText.trim() }),
+        }),
+      ]
+      if (helpEmail.trim()) {
+        tasks.push(fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: helpEmail.trim(), mode: 'match_assist' }),
+        }))
+      }
+      const results = await Promise.all(tasks)
+      if (results.some(r => !r.ok)) throw new Error('failed')
+      setHelpStatus('sent'); setHelpText(''); setHelpEmail('')
     } catch {
-      setFeedbackStatus('error')
+      setHelpStatus('error')
     }
   }
 
   return (
     <div dir="rtl" className="min-h-screen" style={{ background: '#FAF7F2' }}>
-      {/* ── Hero ── */}
-      <section
-        className="relative overflow-hidden"
-        style={{
-          background: `linear-gradient(135deg, ${NAVY} 0%, #1A2A4A 60%, ${NAVY} 100%)`,
-        }}
-      >
-        <div className="max-w-screen-md mx-auto px-4 py-10 sm:py-14 text-center">
-          <div className="text-5xl sm:text-6xl mb-3" aria-hidden>☕</div>
-          <h1 className="font-bold text-2xl sm:text-3xl text-white leading-tight">
-            هلا والله، أنا الخطّابة.
-          </h1>
-          <p className="mt-3 text-sm sm:text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.78)' }}>
-            خبريني وش تبحثين عنه وأنا أرشّح لك أنسب السيارات في السوق.
-          </p>
-        </div>
+      {/* ── Top intro ── */}
+      <section className="max-w-screen-xl mx-auto px-4 pt-16 pb-10 text-center">
+        <div className="text-6xl leading-none" aria-hidden>☕</div>
+        <h1
+          className="mt-4 font-extrabold leading-tight"
+          style={{ color: NAVY, fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 800 }}
+        >
+          هلا والله، أنا الخطّابة.
+        </h1>
+        <p
+          className="mt-4 mx-auto max-w-xl"
+          style={{ color: 'rgba(10,22,40,0.65)', fontSize: 16, fontWeight: 400 }}
+        >
+          خبّريني وش تبحثين عنه وأنا أرشّح لك أنسب السيارات.
+        </p>
       </section>
 
-      {/* ── Persona cards ── */}
-      <section className="max-w-screen-xl mx-auto px-4 -mt-6 sm:-mt-8 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          {PERSONAS.map(p => {
-            const isActive = selected === p.key
-            return (
-              <motion.button
-                key={p.key}
-                onClick={() => setSelected(p.key)}
-                whileHover={{ y: -3 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.15 }}
-                className="text-right rounded-2xl p-5 border focus:outline-none focus-visible:ring-2"
-                style={{
-                  background: p.bg,
-                  borderColor: isActive ? p.accent : 'rgba(0,0,0,0.08)',
-                  boxShadow: isActive
-                    ? `0 12px 32px -16px ${p.accent}80`
-                    : '0 4px 12px -8px rgba(0,0,0,0.18)',
-                }}
-                aria-pressed={isActive}
-              >
-                <div className="text-4xl mb-3" aria-hidden>{p.emoji}</div>
-                <div className="font-bold text-lg" style={{ color: NAVY }}>{p.titleAr}</div>
-                <p className="mt-1.5 text-[13px] leading-relaxed" style={{ color: 'rgba(10,22,40,0.66)' }}>
-                  {p.blurbAr}
-                </p>
-                {isActive && (
+      {/* ── Personas grid + assistance panel ── */}
+      <section className="max-w-screen-xl mx-auto px-4 pb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* 9 personas occupy 3 cols on desktop (75%). */}
+          <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {PERSONAS.map(p => {
+              const isActive = selected === p.key
+              return (
+                <motion.button
+                  key={p.key}
+                  onClick={() => setSelected(p.key)}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.15 }}
+                  className="text-right relative rounded-2xl bg-white border focus:outline-none focus-visible:ring-2 overflow-hidden"
+                  style={{
+                    height: 200,
+                    borderColor: isActive ? p.accent : 'rgba(10,22,40,0.08)',
+                    boxShadow: isActive
+                      ? `0 14px 32px -16px ${p.accent}80`
+                      : '0 2px 6px -3px rgba(10,22,40,0.10)',
+                  }}
+                  aria-pressed={isActive}
+                >
+                  {/* 12px gradient ribbon at top */}
                   <div
-                    className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1"
-                    style={{ background: p.accent, color: 'white' }}
-                  >
-                    ← شوفي الترشيحات
+                    aria-hidden
+                    className="absolute top-0 inset-x-0"
+                    style={{
+                      height: 12,
+                      background: `linear-gradient(135deg, ${p.gradFrom} 0%, ${p.gradTo} 100%)`,
+                    }}
+                  />
+                  <div className="p-4 pt-6 h-full flex flex-col">
+                    <div className="text-3xl leading-none mb-2" aria-hidden>{p.emoji}</div>
+                    <div
+                      className="font-extrabold leading-tight"
+                      style={{ color: NAVY, fontSize: 18, fontWeight: 800 }}
+                    >
+                      {p.titleAr}
+                    </div>
+                    <p
+                      className="mt-2 leading-relaxed line-clamp-2"
+                      style={{ color: 'rgba(10,22,40,0.62)', fontSize: 14 }}
+                    >
+                      {p.descAr}
+                    </p>
+                    {isActive && (
+                      <div
+                        className="mt-auto inline-flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1 self-start"
+                        style={{ background: p.accent, color: 'white' }}
+                      >
+                        ← شوفي الترشيحات
+                      </div>
+                    )}
                   </div>
-                )}
-              </motion.button>
-            )
-          })}
+                </motion.button>
+              )
+            })}
+          </div>
+
+          {/* بشيلك أنا — assistance panel, 25% on desktop */}
+          <aside
+            className="rounded-2xl p-5 sm:p-6 flex flex-col"
+            style={{
+              background: `linear-gradient(180deg, rgba(216,166,108,0.10) 0%, rgba(216,166,108,0.04) 100%)`,
+              border: `1px solid ${GOLD}50`,
+            }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+              style={{ background: 'rgba(216,166,108,0.18)' }}
+              aria-hidden
+            >
+              <Sparkles className="w-5 h-5" style={{ color: GOLD }} strokeWidth={1.8} />
+            </div>
+            <h3
+              className="leading-tight"
+              style={{ color: NAVY, fontSize: 18, fontWeight: 800 }}
+            >
+              ما لقيتي اللي تبحثين عنه؟
+            </h3>
+            <p
+              className="mt-2 leading-relaxed"
+              style={{ color: 'rgba(10,22,40,0.62)', fontSize: 14 }}
+            >
+              جاوبي على 3 أسئلة وأنا أساعدك تلقين.
+            </p>
+            <button
+              onClick={() => setHelpOpen(true)}
+              className="mt-auto w-full rounded-xl py-2.5 font-extrabold text-sm transition-opacity hover:opacity-90"
+              style={{ background: GOLD, color: NAVY, borderRadius: 12 }}
+            >
+              ابدأي معي
+            </button>
+          </aside>
+        </div>
+
+        {/* Single-line fallback link to Browse */}
+        <div className="mt-10 text-center text-sm" style={{ color: 'rgba(10,22,40,0.55)' }}>
+          أو{' '}
+          <Link
+            href="/browse"
+            className="font-semibold underline"
+            style={{ color: GOLD, textDecorationColor: `${GOLD}66` }}
+          >
+            تصفّحي كل السوق ←
+          </Link>
         </div>
       </section>
 
-      {/* ── Curated listings + per-card reasoning ── */}
+      {/* ── Curated listings for the selected persona ── */}
       <AnimatePresence mode="wait">
         {active && (
           <motion.section
@@ -182,11 +348,12 @@ export default function MatchClient ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.25 }}
-            className="max-w-screen-xl mx-auto px-4 py-8 sm:py-10"
+            className="max-w-screen-xl mx-auto px-4 pb-12"
           >
-            <div className="mb-5 flex items-baseline gap-2 flex-wrap">
-              <h2 className="font-bold text-xl" style={{ color: NAVY }}>
-                ترشيحاتي لـ <span style={{ color: active.accent }}>{active.titleAr}</span>
+            <div className="flex items-baseline gap-2 flex-wrap mb-5">
+              <h2 className="font-extrabold text-xl" style={{ color: NAVY }}>
+                ترشيحاتي لـ{' '}
+                <span style={{ color: active.accent }}>{active.titleAr}</span>
               </h2>
               <span className="text-sm" style={{ color: 'rgba(10,22,40,0.55)' }}>
                 ({listings.length} {listings.length === 1 ? 'سيارة' : 'سيارات'})
@@ -194,22 +361,19 @@ export default function MatchClient ({
             </div>
 
             {listings.length === 0 ? (
-              <div
-                className="rounded-2xl p-6 text-center text-sm"
-                style={{ background: 'white', color: 'rgba(10,22,40,0.65)' }}
-              >
-                ما لقيت سيارات تطابق هذي الفئة حالياً. جربي شخصية ثانية أو رجعي لاحقاً —
+              <div className="rounded-2xl p-6 bg-white text-center text-sm" style={{ color: 'rgba(10,22,40,0.65)' }}>
+                ما لقيت سيارات تطابق هذي الفئة حالياً. جربي شخصية ثانية —
                 إعلانات جديدة كل يوم.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {listings.map((l, i) => (
                   <div key={l.id} className="flex flex-col gap-2.5">
                     <ListingCard listing={l} lang="ar" index={i} />
                     <div
                       className="rounded-xl px-3.5 py-2.5 text-[12px] leading-relaxed border"
                       style={{
-                        background: active.bg,
+                        background: `linear-gradient(135deg, ${active.gradFrom}18 0%, ${active.gradTo}10 100%)`,
                         borderColor: `${active.accent}30`,
                         color: 'rgba(10,22,40,0.78)',
                       }}
@@ -221,75 +385,83 @@ export default function MatchClient ({
                 ))}
               </div>
             )}
-
-            {/* ── "This isn't quite me" capture ── */}
-            <div
-              className="mt-10 rounded-2xl p-5 sm:p-6 border"
-              style={{
-                background: 'white',
-                borderColor: 'rgba(10,22,40,0.10)',
-              }}
-            >
-              <h3 className="font-bold text-base" style={{ color: NAVY }}>
-                هذا مو أنا تماماً
-              </h3>
-              <p className="mt-1.5 text-[13px]" style={{ color: 'rgba(10,22,40,0.62)' }}>
-                خبّريني وش الفعلاً تبحثين عنه وأنا أتعلّم منكِ للنسخة الجاية.
-              </p>
-              <form onSubmit={submitFeedback} className="mt-3.5 flex flex-col gap-3">
-                <textarea
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="مثال: أنا طالب جامعي وأبحث عن سيارة كهربائية رخيصة..."
-                  rows={3}
-                  maxLength={2000}
-                  className="rounded-xl px-3.5 py-3 text-sm resize-none focus:outline-none focus:ring-2"
-                  style={{
-                    background: '#FAF7F2',
-                    border: '1px solid rgba(10,22,40,0.12)',
-                    color: NAVY,
-                  }}
-                />
-                <div className="flex items-center gap-3">
-                  <button
-                    type="submit"
-                    disabled={!feedbackText.trim() || feedbackStatus === 'sending'}
-                    className="rounded-xl px-4 py-2 font-bold text-sm transition-opacity disabled:opacity-40"
-                    style={{ background: active.accent, color: 'white' }}
-                  >
-                    {feedbackStatus === 'sending' ? '... جاري الإرسال' : 'إرسال'}
-                  </button>
-                  {feedbackStatus === 'sent' && (
-                    <span className="text-[12px] font-semibold" style={{ color: active.accent }}>
-                      شكراً! وصلتني ✓
-                    </span>
-                  )}
-                  {feedbackStatus === 'error' && (
-                    <span className="text-[12px] font-semibold" style={{ color: '#B8336A' }}>
-                      حصل خطأ، حاول مرة ثانية
-                    </span>
-                  )}
-                </div>
-              </form>
-            </div>
           </motion.section>
         )}
       </AnimatePresence>
 
-      {!active && (
-        <div className="max-w-screen-md mx-auto px-4 py-10 text-center">
-          <p className="text-sm" style={{ color: 'rgba(10,22,40,0.55)' }}>
-            اختاري شخصية فوق وأنا أرشّح لكِ أنسب السيارات.
-          </p>
-          <Link
-            href="/browse"
-            className="mt-4 inline-block text-[13px] font-semibold underline"
-            style={{ color: NAVY }}
+      {/* ── "بشيلك أنا" assist modal ── */}
+      <AnimatePresence>
+        {helpOpen && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{ background: 'rgba(10,22,40,0.6)' }}
+            onClick={() => setHelpOpen(false)}
           >
-            أو تصفّحي كل السوق
-          </Link>
-        </div>
-      )}
+            <motion.div
+              initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 12, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-2xl w-full max-w-md p-5 sm:p-6"
+              style={{ borderRadius: 20 }}
+            >
+              <div className="flex items-center gap-2.5 mb-2">
+                <Sparkles className="w-5 h-5" style={{ color: GOLD }} strokeWidth={1.8} />
+                <h3 className="font-extrabold text-lg" style={{ color: NAVY }}>قوليلي أكثر</h3>
+              </div>
+              <p className="text-[13px] leading-relaxed mb-4" style={{ color: 'rgba(10,22,40,0.65)' }}>
+                وش الفعلاً تبحثين عنه؟ كم الميزانية؟ كم شخص بتركبون عادة؟
+                نسخة المحادثة الكاملة بتوصلك على الإيميل إذا تركتيه.
+              </p>
+              <form onSubmit={submitHelp} className="flex flex-col gap-3">
+                <textarea
+                  value={helpText}
+                  onChange={e => setHelpText(e.target.value)}
+                  placeholder="مثال: أبحث عن SUV عائلي تحت 80 ألف، 7 ركاب، استهلاك معقول..."
+                  rows={4}
+                  maxLength={2000}
+                  className="rounded-xl px-3.5 py-3 text-sm resize-none focus:outline-none focus:ring-2"
+                  style={{ background: '#FAF7F2', border: '1px solid rgba(10,22,40,0.12)', color: NAVY }}
+                />
+                <input
+                  type="email"
+                  inputMode="email"
+                  dir="ltr"
+                  value={helpEmail}
+                  onChange={e => setHelpEmail(e.target.value)}
+                  placeholder="email@example.com  (اختياري — لإشعاركِ بإطلاق المحادثة)"
+                  className="rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2"
+                  style={{ background: '#FAF7F2', border: '1px solid rgba(10,22,40,0.12)', color: NAVY }}
+                />
+                <div className="flex items-center gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setHelpOpen(false)}
+                    className="text-sm font-semibold px-3 py-2"
+                    style={{ color: 'rgba(10,22,40,0.55)' }}
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!helpText.trim() || helpStatus === 'sending'}
+                    className="rounded-xl px-4 py-2 font-extrabold text-sm transition-opacity disabled:opacity-40"
+                    style={{ background: GOLD, color: NAVY, borderRadius: 12 }}
+                  >
+                    {helpStatus === 'sending' ? '... جاري الإرسال' :
+                     helpStatus === 'sent'    ? 'وصلتني ✓' : 'إرسال'}
+                  </button>
+                </div>
+                {helpStatus === 'error' && (
+                  <span className="text-[12px] font-semibold text-red-700">
+                    حصل خطأ، حاول مرة ثانية
+                  </span>
+                )}
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

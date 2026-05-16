@@ -1,19 +1,14 @@
 import { supabase, type Listing } from '@/lib/supabase'
-import MatchClient from './MatchClient'
+import MatchClient, { type PersonaKey } from './MatchClient'
 
-// Personas resolve to live DB queries — always pick the freshest set.
+// الخطّابة — v0 handcrafted (no AI yet). Nine personas, each with a
+// declarative DB query and a per-listing reasoning blurb in MatchClient.
+// All queries exclude needs_make_review rows so unmapped long-tail noise
+// never surfaces in a curated set.
 export const dynamic = 'force-dynamic'
-
-// الخطّابة — v0 (handcrafted, no AI). Three personas surface
-// rule-curated listings from the live DB. Each persona has a query that
-// reflects its profile and a sentence explaining why a given listing is
-// a good fit. Real AI matching comes later; the user-provided
-// "this isn't quite me" feedback feeds that effort.
 
 const PER_PERSONA_LIMIT = 12
 
-// Supabase JS filter-chain types are complex generics; an `any` for the
-// builder passed to `apply` keeps the persona definitions readable.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadPersona (apply: (q: any) => any): Promise<Listing[]> {
   let q = supabase.from('listings')
@@ -34,19 +29,19 @@ async function loadPersona (apply: (q: any) => any): Promise<Listing[]> {
 }
 
 export default async function MatchPage () {
-  // Persona queries — kept declarative + lightweight. Tunable without
-  // touching the client component.
-  const [bigFamily, firstCar, upgrade] = await Promise.all([
-    // عائلة كبيرة — 7+ seats OR SUV/minivan body type. Filter for known
-    // people-movers via popular high-capacity models when seats data is null.
+  const [
+    bigFamily, firstCar, upgrade,
+    longTrip, cityOnly, investment,
+    economical, luxury, adventure,
+  ] = await Promise.all<Listing[]>([
+    // عائلة كبيرة — SUV / minivan, recent, low-mid mileage.
     loadPersona(q => q
       .in('body_type_slug', ['suv', 'minivan'])
       .gte('year', 2018)
       .lte('mileage_km', 150000)
       .gte('deal_score', 7.0)
     ),
-    // أول سيارة — under 50k, reliable mass-market makes, low-ish mileage,
-    // reasonably new.
+    // أول سيارة — 15-50k, mass-market makes, recent, good score.
     loadPersona(q => q
       .lte('price_sar', 50000)
       .gte('price_sar', 15000)
@@ -55,23 +50,73 @@ export default async function MatchPage () {
       .lte('mileage_km', 180000)
       .gte('deal_score', 7.5)
     ),
-    // ترقية — 100k+, premium makes, low mileage, modern year.
+    // ترقية — 100-200k, premium makes, recent, low mileage.
     loadPersona(q => q
       .gte('price_sar', 100000)
+      .lte('price_sar', 200000)
       .in('make_slug', ['mercedes-benz', 'bmw', 'audi', 'lexus', 'porsche', 'land-rover', 'genesis', 'cadillac'])
       .gte('year', 2020)
       .lte('mileage_km', 80000)
       .gte('deal_score', 7.0)
     ),
+    // سفر طويل — comfortable highway cars, sedans, low-ish mileage.
+    loadPersona(q => q
+      .in('body_type_slug', ['sedan', 'suv'])
+      .in('make_slug', ['toyota', 'honda', 'hyundai', 'kia', 'lexus', 'mazda', 'nissan'])
+      .gte('year', 2019)
+      .lte('mileage_km', 100000)
+      .lte('price_sar', 150000)
+      .gte('deal_score', 7.5)
+    ),
+    // مدينة فقط — small sedans / hatchbacks, low fuel.
+    loadPersona(q => q
+      .in('body_type_slug', ['sedan', 'hatchback'])
+      .lte('price_sar', 60000)
+      .gte('year', 2018)
+      .lte('mileage_km', 120000)
+      .gte('deal_score', 7.5)
+    ),
+    // استثمار — strong resale (Land Cruiser, Hilux, Lexus LX, Porsche, etc.)
+    loadPersona(q => q
+      .in('make_slug', ['toyota', 'lexus', 'porsche'])
+      .gte('year', 2019)
+      .lte('mileage_km', 100000)
+      .gte('deal_score', 7.5)
+    ),
+    // اقتصادي — cheapest reliable, mass-market, score >= 7.
+    loadPersona(q => q
+      .lte('price_sar', 35000)
+      .in('make_slug', ['toyota', 'hyundai', 'kia', 'nissan', 'suzuki'])
+      .gte('deal_score', 7.0)
+    ),
+    // فخامة — 200k+, top-tier brands, near-new.
+    loadPersona(q => q
+      .gte('price_sar', 200000)
+      .in('make_slug', ['mercedes-benz', 'bmw', 'porsche', 'rolls-royce', 'bentley', 'land-rover', 'lamborghini', 'ferrari', 'maserati', 'lexus'])
+      .gte('year', 2021)
+      .lte('mileage_km', 60000)
+      .gte('deal_score', 7.0)
+    ),
+    // مغامرة — 4x4 SUVs / pickups built for off-road.
+    loadPersona(q => q
+      .in('body_type_slug', ['suv', 'pickup'])
+      .in('make_slug', ['toyota', 'jeep', 'land-rover', 'ford', 'nissan', 'chevrolet', 'gmc'])
+      .gte('year', 2019)
+      .gte('deal_score', 7.5)
+    ),
   ])
 
-  return (
-    <MatchClient
-      personas={{
-        big_family: bigFamily,
-        first_car:  firstCar,
-        upgrade,
-      }}
-    />
-  )
+  const personas: Record<PersonaKey, Listing[]> = {
+    big_family:  bigFamily,
+    first_car:   firstCar,
+    upgrade,
+    long_trip:   longTrip,
+    city_only:   cityOnly,
+    investment,
+    economical,
+    luxury,
+    adventure,
+  }
+
+  return <MatchClient personas={personas} />
 }

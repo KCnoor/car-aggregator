@@ -86,9 +86,15 @@ export default function ListingCard({
       className="card-lift"
     >
       <Link href={`/listings/${listing.id}`} className="block">
-        <Card className="overflow-hidden rounded-2xl border border-border/60 shadow-sm p-0 gap-0">
-          {/* ── Image + overlays ── */}
-          <div className="relative w-full h-52 bg-muted overflow-hidden">
+        <Card
+          className="overflow-hidden border shadow-sm p-0 gap-0 bg-white"
+          style={{ borderRadius: 20, borderColor: 'rgba(0,0,0,0.06)' }}
+        >
+          {/* ── Image + overlays (16:9) ── */}
+          <div
+            className="relative w-full bg-muted overflow-hidden"
+            style={{ aspectRatio: '16 / 9', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
+          >
             {photo ? (
               <img
                 src={photo}
@@ -126,9 +132,9 @@ export default function ListingCard({
               </div>
             )}
 
-            {/* Deal score — top-right overlay */}
+            {/* Deal score — top-LEFT overlay (per redesign spec) */}
             {hasScore && (
-              <div className={`absolute top-2.5 right-2.5 flex flex-col items-center px-2.5 py-1.5 rounded-xl backdrop-blur-sm ${deal.bg} ${deal.ring} shadow-md`}>
+              <div className={`absolute top-2.5 left-2.5 flex flex-col items-center px-2.5 py-1.5 rounded-xl backdrop-blur-sm ${deal.bg} ${deal.ring} shadow-md`}>
                 <span className={`text-lg font-black leading-none ${deal.text}`}>
                   {listing.deal_score!.toFixed(1)}
                 </span>
@@ -143,15 +149,15 @@ export default function ListingCard({
               </div>
             )}
 
-            {/* Contact-for-price indicator */}
-            {listing.contact_for_price && (
-              <div className="absolute top-2.5 right-2.5 bg-black/50 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-1 rounded-lg">
+            {/* Contact-for-price indicator (when no score) */}
+            {listing.contact_for_price && !hasScore && (
+              <div className="absolute top-2.5 left-2.5 bg-black/50 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-1 rounded-lg">
                 {tr.contactForPrice}
               </div>
             )}
 
-            {/* Source badge — top-left overlay */}
-            <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1">
+            {/* Source badge — top-RIGHT overlay (per redesign spec) */}
+            <div className="absolute top-2.5 right-2.5 flex flex-col items-end gap-1">
               <Badge className={`text-[10px] font-bold px-2 py-0.5 rounded-md shadow ${src.cls}`}>
                 {src.name}
               </Badge>
@@ -179,9 +185,13 @@ export default function ListingCard({
 
           {/* ── Card body ── */}
           <CardContent className="px-4 pt-3.5 pb-4 flex flex-col gap-2.5">
-            {/* Title */}
+            {/* Title — 16px / 800 per spec */}
             <div>
-              <h3 className="font-bold text-sm text-foreground leading-snug" dir="ltr">
+              <h3
+                dir="ltr"
+                className="leading-snug text-foreground"
+                style={{ fontSize: 16, fontWeight: 800 }}
+              >
                 {listing.year} {make} {model}
               </h3>
               {listing.trim && (
@@ -189,7 +199,7 @@ export default function ListingCard({
               )}
             </div>
 
-            {/* Price */}
+            {/* Price — 24px / 900 per spec */}
             <div dir="ltr">
               {listing.contact_for_price || listing.price_sar == null ? (
                 <span className="inline-flex items-center px-2.5 py-0.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
@@ -197,7 +207,10 @@ export default function ListingCard({
                 </span>
               ) : (
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-foreground tracking-tight">
+                  <span
+                    className="text-foreground tracking-tight tabular-nums"
+                    style={{ fontSize: 24, fontWeight: 900 }}
+                  >
                     {listing.price_sar.toLocaleString()}
                   </span>
                   <span className="text-xs font-medium text-muted-foreground">{tr.sar}</span>

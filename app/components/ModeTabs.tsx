@@ -1,62 +1,60 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { Globe, BarChart3, Activity } from 'lucide-react'
+import type { ReactNode } from 'react'
 
-// Top-level navigation across the four CarSa modes. Each mode is a route
-// under /(modes)/. Active mode is detected from the URL via usePathname.
-// Click → router.push triggers a cross-fade in the (modes) layout.
+// Mode tabs that live inside StickyHeader. Locked layout:
+//   - Desktop: 4 tabs side-by-side, each ~220px wide × 64px tall.
+//   - Mobile: horizontal scroll, snap to each tab, each 160px wide.
+//   - Active tab: gold border + slight elevation + tiny gold "you-are-here"
+//     dot top-right.
+//   - Lucide icons for 3 modes; the matchmaker keeps the ☕ emoji to
+//     preserve the cultural cue until we ship the real illustration.
+
+const GOLD = '#D8A66C'
 
 type Mode = {
   href: string
-  nameAr: string
-  taglineAr: string
-  emoji: string      // v0 character placeholder
-  accent: string     // accent color per the design brief
-  bgGradient: string // active card gradient
+  titleAr: string
+  subtitleAr: string
+  icon: ReactNode
 }
 
-const MODES: Mode[] = [
-  {
-    href: '/browse',
-    nameAr: 'كل السوق',
-    taglineAr: 'تصفّح كل الإعلانات',
-    emoji: '🗺️',
-    accent: '#1E3A8A',                                              // deep blue
-    bgGradient: 'linear-gradient(135deg, #1E3A8A 0%, #2D4A9E 100%)',
-  },
-  {
-    href: '/match',
-    nameAr: 'الخطّابة',
-    taglineAr: 'تنصحك بالسيارة المناسبة',
-    emoji: '☕',
-    accent: '#B8336A',                                              // warm rose/gold
-    bgGradient: 'linear-gradient(135deg, #B8336A 0%, #D4A574 100%)',
-  },
-  {
-    href: '/analyze',
-    nameAr: 'المحلّل',
-    taglineAr: 'تحليل عميق للسوق',
-    emoji: '📊',
-    accent: '#3B82B5',                                              // chrome blue
-    bgGradient: 'linear-gradient(135deg, #3B82B5 0%, #5E9EC9 100%)',
-  },
-  {
-    href: '/pulse',
-    nameAr: 'نبض السوق',
-    taglineAr: 'الأخبار والاتجاهات',
-    emoji: '📡',
-    accent: '#4A8A8A',                                              // muted teal
-    bgGradient: 'linear-gradient(135deg, #4A8A8A 0%, #6BA8A8 100%)',
-  },
-]
+function modes (): Mode[] {
+  const iconCls = 'w-5 h-5'
+  return [
+    {
+      href: '/browse',
+      titleAr: 'كل السوق',
+      subtitleAr: 'تصفّح كل الإعلانات',
+      icon: <Globe className={iconCls} strokeWidth={1.8} />,
+    },
+    {
+      href: '/match',
+      titleAr: 'الخطّابة',
+      subtitleAr: 'ترشيح ذكي',
+      icon: <span className="text-xl leading-none">☕</span>,
+    },
+    {
+      href: '/analyze',
+      titleAr: 'المحلّل',
+      subtitleAr: 'تحليل عميق',
+      icon: <BarChart3 className={iconCls} strokeWidth={1.8} />,
+    },
+    {
+      href: '/pulse',
+      titleAr: 'نبض السوق',
+      subtitleAr: 'الأخبار والاتجاهات',
+      icon: <Activity className={iconCls} strokeWidth={1.8} />,
+    },
+  ]
+}
 
 export default function ModeTabs () {
   const pathname = usePathname()
   const router = useRouter()
-
-  // Match longest-prefix so /listings/[id] does not light up any tab,
-  // but /browse, /browse/something, /match, etc. all resolve correctly.
+  const MODES = modes()
   const active = MODES.find(m => pathname === m.href || pathname.startsWith(m.href + '/'))?.href ?? null
 
   function go (href: string) {
@@ -67,77 +65,83 @@ export default function ModeTabs () {
   return (
     <nav
       dir="rtl"
-      className="w-full border-b"
-      style={{ background: '#0A1628', borderColor: 'rgba(255,255,255,0.08)' }}
       aria-label="أوضاع سيارة"
+      className="flex items-center gap-2 sm:justify-center overflow-x-auto no-scrollbar snap-x snap-mandatory"
+      style={{ scrollPaddingInline: 8 }}
     >
-      <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
-        {/* Mobile: horizontal scroll. Desktop: 4-up grid. */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-          {MODES.map(m => {
-            const isActive = active === m.href
-            return (
-              <motion.button
-                key={m.href}
-                onClick={() => go(m.href)}
-                whileHover={{ y: isActive ? 0 : -2 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: 'tween', duration: 0.15 }}
-                className="relative text-right rounded-2xl px-4 py-3.5 sm:py-4 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-                style={{
-                  background: isActive ? m.bgGradient : 'rgba(255,255,255,0.04)',
-                  border: isActive
-                    ? `1px solid ${m.accent}`
-                    : '1px solid rgba(255,255,255,0.08)',
-                  boxShadow: isActive
-                    ? `0 10px 24px -10px ${m.accent}80, inset 0 1px 0 rgba(255,255,255,0.12)`
-                    : 'none',
-                  opacity: isActive ? 1 : 0.78,
-                }}
-                aria-pressed={isActive}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                {/* you-are-here indicator */}
-                {isActive && (
-                  <span
-                    aria-hidden
-                    className="absolute top-2 right-2 inline-block w-1.5 h-1.5 rounded-full"
-                    style={{ background: 'rgba(255,255,255,0.85)' }}
-                  />
-                )}
+      {MODES.map(m => {
+        const isActive = active === m.href
+        return (
+          <button
+            key={m.href}
+            onClick={() => go(m.href)}
+            aria-pressed={isActive}
+            aria-current={isActive ? 'page' : undefined}
+            className="relative shrink-0 snap-start text-right rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition-all"
+            style={{
+              width: 'var(--tab-w, 160px)',
+              height: 'var(--tab-h, 52px)',
+              background: isActive
+                ? 'rgba(216,166,108,0.10)'
+                : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${isActive ? GOLD : 'rgba(255,255,255,0.08)'}`,
+              boxShadow: isActive
+                ? '0 6px 16px -8px rgba(216,166,108,0.40), inset 0 1px 0 rgba(255,255,255,0.06)'
+                : 'none',
+              transform: isActive ? 'translateY(-1px)' : 'none',
+            }}
+          >
+            <style>{`
+              :root { --tab-w: 160px; --tab-h: 52px; }
+              @media (min-width: 640px) { :root { --tab-w: 220px; --tab-h: 64px; } }
+            `}</style>
 
-                <div className="flex items-start gap-3">
-                  <span
-                    aria-hidden
-                    className="text-3xl sm:text-4xl leading-none shrink-0 select-none"
-                    style={{
-                      filter: isActive ? 'none' : 'grayscale(0.35)',
-                      transform: isActive ? 'scale(1)' : 'scale(0.92)',
-                      transition: 'transform 0.2s, filter 0.2s',
-                    }}
-                  >
-                    {m.emoji}
-                  </span>
-                  <div className="flex flex-col min-w-0">
-                    <span
-                      className="font-bold text-sm sm:text-base leading-tight truncate"
-                      style={{ color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.92)' }}
-                    >
-                      {m.nameAr}
-                    </span>
-                    <span
-                      className="text-[11px] sm:text-xs mt-1 leading-snug line-clamp-2"
-                      style={{ color: isActive ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.55)' }}
-                    >
-                      {m.taglineAr}
-                    </span>
-                  </div>
-                </div>
-              </motion.button>
-            )
-          })}
-        </div>
-      </div>
+            {/* You-are-here dot */}
+            {isActive && (
+              <span
+                aria-hidden
+                className="absolute top-1.5 right-1.5 inline-block w-1.5 h-1.5 rounded-full"
+                style={{ background: GOLD }}
+              />
+            )}
+
+            <div className="h-full flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4">
+              <span
+                aria-hidden
+                className="shrink-0 inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg"
+                style={{
+                  background: isActive ? 'rgba(216,166,108,0.18)' : 'rgba(255,255,255,0.05)',
+                  color: isActive ? GOLD : 'rgba(255,255,255,0.78)',
+                }}
+              >
+                {m.icon}
+              </span>
+              <div className="flex flex-col min-w-0">
+                <span
+                  className="font-extrabold leading-tight truncate"
+                  style={{
+                    color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.92)',
+                    fontSize: 14,
+                    lineHeight: '18px',
+                  }}
+                >
+                  {m.titleAr}
+                </span>
+                <span
+                  className="hidden sm:block leading-snug truncate"
+                  style={{
+                    color: isActive ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.48)',
+                    fontSize: 12,
+                    fontWeight: 400,
+                  }}
+                >
+                  {m.subtitleAr}
+                </span>
+              </div>
+            </div>
+          </button>
+        )
+      })}
     </nav>
   )
 }
