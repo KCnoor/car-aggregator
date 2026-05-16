@@ -23,7 +23,7 @@ export function Logo ({
   return (
     <Image
       src="/brand/logo-full.png"
-      alt="سيارة AI — مستشارك الذكي للسيارات في السعودية"
+      alt="سيارة AI — كل إعلانات السيارات في السعودية، من مصدر واحد"
       width={maxWidth}
       height={intrinsicHeight}
       priority={priority}

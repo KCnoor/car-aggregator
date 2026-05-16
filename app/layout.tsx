@@ -23,8 +23,8 @@ const reemKufi = Reem_Kufi({
 });
 
 export const metadata: Metadata = {
-  title: "سيارة AI — مستشارك الذكي للسيارات في السعودية",
-  description: "قارن وابحث في إعلانات السيارات من حراج، سيارة، موتور وغيرها بذكاء اصطناعي",
+  title: "سيارة AI — كل إعلانات السيارات في السعودية، من مصدر واحد",
+  description: "كل إعلانات السيارات في السعودية، من مصدر واحد — نجمع من ٩ مصادر (سيارة، سوم، حراج، موتري، يلا موتور، سعودي سيل، كار سويتش، GoGoMotor، Carly) في مكان واحد.",
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'سيارة AI',
-    description: 'مستشارك الذكي للسيارات في السعودية — تجميع، تحليل، قرار.',
+    description: 'كل إعلانات السيارات في السعودية، من مصدر واحد.',
     images: ['/og-image.png'],
     locale: 'ar_SA',
     type: 'website',

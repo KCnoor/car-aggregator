@@ -8,9 +8,11 @@ import type { Listing } from '@/lib/supabase'
 import ListingCard from '@/app/components/ListingCard'
 
 export type PersonaKey =
+  // 7 personas after the trim: city_only merged into first_car,
+  // investment dropped entirely. Keys stay stable so DB-side analytics on
+  // match_feedback.persona_selected don't need a backfill.
   | 'big_family' | 'first_car' | 'upgrade'
-  | 'long_trip'  | 'city_only' | 'investment'
-  | 'economical' | 'luxury'    | 'adventure'
+  | 'long_trip'  | 'economical' | 'luxury' | 'adventure'
 
 type Persona = {
   key: PersonaKey
@@ -42,8 +44,10 @@ const PERSONAS: Persona[] = [
     },
   },
   {
+    // 'first_car' absorbs the former 'city_only' persona — under 50k,
+    // economical, easy to park in the city.
     key: 'first_car', emoji: '🌱', titleAr: 'أول سيارة',
-    descAr: 'سعر معقول تحت 50 ألف، استهلاك منخفض، موثوقية عالية.',
+    descAr: 'سعر معقول تحت 50 ألف، اقتصادية، سهلة الركن في المدينة.',
     gradFrom: '#A3E635', gradTo: '#65A30D', accent: '#3F6212',
     reasoning: (l) => {
       const p: string[] = []
@@ -54,6 +58,7 @@ const PERSONAS: Persona[] = [
       else if (m === 'kia')     p.push('كيا — موثوقة بضمان طويل')
       else if (m === 'honda')   p.push('هوندا — متينة وصيانتها بسيطة')
       else if (m === 'nissan')  p.push('نيسان — اقتصادية في التشغيل')
+      if (l.body_type_slug === 'hatchback') p.push('هاتشباك مدمجة سهلة الركن')
       return p.join(' · ') || 'خيار جيد لسائق جديد'
     },
   },
@@ -86,34 +91,6 @@ const PERSONAS: Persona[] = [
       if (l.fuel_type_slug === 'hybrid' || l.fuel_type_slug === 'mild-hybrid') p.push('هجين موفّر للوقود')
       if (l.mileage_km != null && l.mileage_km < 80000) p.push('ممشى قليل')
       return p.join(' · ') || 'مناسبة للسفر الطويل'
-    },
-  },
-  {
-    key: 'city_only', emoji: '🏙️', titleAr: 'مدينة فقط',
-    descAr: 'صغيرة ومرنة، سهلة الركن، استهلاك منخفض.',
-    gradFrom: '#A78BFA', gradTo: '#7C3AED', accent: '#6D28D9',
-    reasoning: (l) => {
-      const p: string[] = []
-      if (l.body_type_slug === 'hatchback') p.push('هاتشباك مدمجة وسهلة الركن')
-      else if (l.body_type_slug === 'sedan') p.push('سيدان عملية في المدينة')
-      if (l.price_sar != null && l.price_sar <= 45000) p.push('سعر اقتصادي')
-      if (l.fuel_type_slug === 'petrol') p.push('استهلاك معقول')
-      return p.join(' · ') || 'مثالية للقيادة داخل المدينة'
-    },
-  },
-  {
-    key: 'investment', emoji: '📈', titleAr: 'استثمار',
-    descAr: 'تحافظ على قيمتها، إعادة بيع قوية، علامات موثوقة.',
-    gradFrom: '#34D399', gradTo: '#059669', accent: '#047857',
-    reasoning: (l) => {
-      const p: string[] = []
-      const m = l.make_slug
-      if (m === 'toyota')  p.push('تويوتا — أعلى نسبة احتفاظ بالقيمة في السوق')
-      else if (m === 'lexus')   p.push('لكزس — قيمة إعادة بيع ممتازة')
-      else if (m === 'porsche') p.push('بورش — تحافظ على قيمتها مع الزمن')
-      if (l.mileage_km != null && l.mileage_km < 80000) p.push('ممشى منخفض')
-      if (l.year && l.year >= 2021) p.push(`موديل حديث ${l.year}`)
-      return p.join(' · ') || 'خيار استثماري قوي'
     },
   },
   {
@@ -228,11 +205,15 @@ export default function MatchClient ({
         </p>
       </section>
 
-      {/* ── Personas grid + assistance panel ── */}
+      {/* ── Personas grid + assistance panel ──
+          7 personas + 1 panel = 8 cells on a 3-column grid. Layout:
+            Row 1: p1  p2  p3
+            Row 2: p4  p5  p6
+            Row 3: p7  ▷── panel spans cols 2-3 ──▷
+          On <sm the grid collapses to one column and the panel falls
+          naturally to the end. */}
       <section className="max-w-screen-xl mx-auto px-4 pb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {/* 9 personas occupy 3 cols on desktop (75%). */}
-          <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {PERSONAS.map(p => {
               const isActive = selected === p.key
               return (
@@ -293,12 +274,13 @@ export default function MatchClient ({
                 </motion.button>
               )
             })}
-          </div>
 
-          {/* بشيلك أنا — assistance panel, 25% on desktop */}
+          {/* بشيلك أنا — assistance panel. Spans the remaining 2 columns of
+              the bottom row on desktop so the grid finishes cleanly. */}
           <aside
-            className="rounded-2xl p-5 sm:p-6 flex flex-col"
+            className="rounded-2xl p-5 sm:p-6 flex flex-col sm:col-span-1 lg:col-span-2"
             style={{
+              minHeight: 200,
               background: 'linear-gradient(180deg, rgba(255,107,74,0.08) 0%, rgba(255,107,74,0.03) 100%)',
               border: '1px solid rgba(255,107,74,0.30)',
             }}

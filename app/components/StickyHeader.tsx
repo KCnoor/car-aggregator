@@ -35,7 +35,7 @@ function PulseDot () {
 // left-border, the pulse dot, the active count, and a green '+N جديد
 // اليوم' pill that filters /browse to the last 24h on click.
 function LiveCounter ({
-  totalCount, newDealsCount, onNewClick, langLabel = 'إعلان نشط الآن',
+  totalCount, newDealsCount, onNewClick, langLabel = 'سيارة من ٩ مصادر',
 }: {
   totalCount: number
   newDealsCount: number
@@ -227,7 +227,7 @@ export default function StickyHeader ({
               totalCount={totalCount}
               newDealsCount={newDealsCount}
               onNewClick={gotoLast24h}
-              langLabel={lang === 'ar' ? 'إعلان نشط الآن' : 'active now'}
+              langLabel={lang === 'ar' ? 'سيارة من ٩ مصادر' : 'cars from 9 sources'}
             />
             <MobileLiveCounter
               totalCount={totalCount}

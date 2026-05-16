@@ -1,8 +1,8 @@
 import { supabase, type Listing } from '@/lib/supabase'
 import MatchClient, { type PersonaKey } from './MatchClient'
 
-// الخطّابة — v0 handcrafted (no AI yet). Nine personas, each with a
-// declarative DB query and a per-listing reasoning blurb in MatchClient.
+// الخطّابة — v0 handcrafted (no AI yet). Seven personas after the
+// 2026-05-17 trim (investment dropped, city_only merged into first_car).
 // All queries exclude needs_make_review rows so unmapped long-tail noise
 // never surfaces in a curated set.
 export const dynamic = 'force-dynamic'
@@ -31,8 +31,7 @@ async function loadPersona (apply: (q: any) => any): Promise<Listing[]> {
 export default async function MatchPage () {
   const [
     bigFamily, firstCar, upgrade,
-    longTrip, cityOnly, investment,
-    economical, luxury, adventure,
+    longTrip, economical, luxury, adventure,
   ] = await Promise.all<Listing[]>([
     // عائلة كبيرة — SUV / minivan, recent, low-mid mileage.
     loadPersona(q => q
@@ -41,11 +40,14 @@ export default async function MatchPage () {
       .lte('mileage_km', 150000)
       .gte('deal_score', 7.0)
     ),
-    // أول سيارة — 15-50k, mass-market makes, recent, good score.
+    // أول سيارة (now absorbs the former 'مدينة فقط' persona): under
+    // 50k, mass-market makes, sedan/hatchback so the city-friendly
+    // body types surface, recent, good score.
     loadPersona(q => q
       .lte('price_sar', 50000)
       .gte('price_sar', 15000)
       .in('make_slug', ['toyota', 'hyundai', 'kia', 'nissan', 'honda', 'mazda', 'suzuki'])
+      .in('body_type_slug', ['sedan', 'hatchback'])
       .gte('year', 2017)
       .lte('mileage_km', 180000)
       .gte('deal_score', 7.5)
@@ -66,21 +68,6 @@ export default async function MatchPage () {
       .gte('year', 2019)
       .lte('mileage_km', 100000)
       .lte('price_sar', 150000)
-      .gte('deal_score', 7.5)
-    ),
-    // مدينة فقط — small sedans / hatchbacks, low fuel.
-    loadPersona(q => q
-      .in('body_type_slug', ['sedan', 'hatchback'])
-      .lte('price_sar', 60000)
-      .gte('year', 2018)
-      .lte('mileage_km', 120000)
-      .gte('deal_score', 7.5)
-    ),
-    // استثمار — strong resale (Land Cruiser, Hilux, Lexus LX, Porsche, etc.)
-    loadPersona(q => q
-      .in('make_slug', ['toyota', 'lexus', 'porsche'])
-      .gte('year', 2019)
-      .lte('mileage_km', 100000)
       .gte('deal_score', 7.5)
     ),
     // اقتصادي — cheapest reliable, mass-market, score >= 7.
@@ -111,8 +98,6 @@ export default async function MatchPage () {
     first_car:   firstCar,
     upgrade,
     long_trip:   longTrip,
-    city_only:   cityOnly,
-    investment,
     economical,
     luxury,
     adventure,
