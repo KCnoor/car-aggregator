@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Target } from 'lucide-react'
+import { Target, AlertCircle, Scale, MousePointer2, Pin, Sparkles } from 'lucide-react'
 import {
   ComposedChart, Scatter, XAxis, YAxis, CartesianGrid,
   ResponsiveContainer, Tooltip, ReferenceArea,
@@ -106,6 +106,18 @@ export default function HuntClient ({
   const [pinned, setPinned]   = useState<string[]>([])
   const [hoverId, setHoverId] = useState<string | null>(null)
 
+  // "Comparing 4+ models thins the chart" — soft amber warning above the
+  // chart. Dismissable; dismissal persists only for this session
+  // (sessionStorage), so a fresh visit re-surfaces the nudge.
+  const [tooManyDismissed, setTooManyDismissed] = useState(false)
+  useEffect(() => {
+    try { setTooManyDismissed(window.sessionStorage.getItem('hunt_4plus_dismissed') === '1') } catch {}
+  }, [])
+  function dismissTooMany () {
+    setTooManyDismissed(true)
+    try { window.sessionStorage.setItem('hunt_4plus_dismissed', '1') } catch {}
+  }
+
   // Reflect slot state in the URL on changes (skip the first mount —
   // the server already loaded the initial set for whatever URL we landed on).
   const firstRender = useRef(true)
@@ -202,23 +214,46 @@ export default function HuntClient ({
   const hasAnyFullSlot = slotGroups.length > 0
   const allListings = useMemo(() => slotGroups.flatMap(g => g.listings), [slotGroups])
 
-  // ── Chart geometry (percentile clip + medians) ──
+  // ── Chart geometry (dynamic ranges + percentile clip + medians) ──
   const chart = useMemo(() => {
     if (allListings.length === 0) {
       return {
         pointsByGroup: [] as ChartGroup[],
-        xMax: 1, yMax: 1, xMid: 0, yMid: 0,
+        xMin: 0, xMax: 1, yMin: 0, yMax: 1,
+        xStep: 50_000, yStep: 50_000,
+        xMid: 0, yMid: 0,
         clippedCount: 0, totalCount: 0,
       }
     }
     const prices = [...allListings.map(l => l.price_sar!).filter(Number.isFinite)].sort((a, b) => a - b)
     const miles  = [...allListings.map(l => l.mileage_km!).filter(Number.isFinite)].sort((a, b) => a - b)
-    // 95th-percentile clip on both axes; domain starts at 0.
-    const xMax = percentile(prices, 95) * 1.05
-    const yMax = percentile(miles, 95) * 1.05
+
+    // Dynamic axis ranges:
+    //   min = max(0, floor(rawMin * 0.9 / step) * step)
+    //   max = ceil(p95 * 1.1 / step) * step
+    // Step is chosen from the visible range so ticks are tidy:
+    //   < 25k spread → 10k step
+    //   < 200k spread → 25k step
+    //   else        → 50k step
+    function dynamicAxis (vals: number[]) {
+      const rawMin = vals[0]
+      const p95    = percentile(vals, 95)
+      const spread = Math.max(1, p95 - rawMin)
+      const step = spread <= 25_000  ? 10_000
+                 : spread <= 200_000 ? 25_000
+                 :                     50_000
+      const min = Math.max(0, Math.floor((rawMin * 0.9) / step) * step)
+      const max = Math.ceil ((p95   * 1.1) / step) * step
+      return { min, max: Math.max(max, min + step), step }
+    }
+
+    const x = dynamicAxis(prices)
+    const y = dynamicAxis(miles)
+
     const inRange = (l: Listing) =>
-      l.price_sar! >= 0 && l.price_sar! <= xMax &&
-      l.mileage_km! >= 0 && l.mileage_km! <= yMax
+      l.price_sar!  >= x.min && l.price_sar!  <= x.max &&
+      l.mileage_km! >= y.min && l.mileage_km! <= y.max
+
     const pointsByGroup: ChartGroup[] = slotGroups.map(g => {
       const data = g.listings
         .filter(inRange)
@@ -236,7 +271,9 @@ export default function HuntClient ({
     const renderedPrices = pointsByGroup.flatMap(m => m.data.map(d => d.x)).sort((a, b) => a - b)
     const renderedMiles  = pointsByGroup.flatMap(m => m.data.map(d => d.y)).sort((a, b) => a - b)
     return {
-      pointsByGroup, xMax, yMax,
+      pointsByGroup,
+      xMin: x.min, xMax: x.max, yMin: y.min, yMax: y.max,
+      xStep: x.step, yStep: y.step,
       xMid: median(renderedPrices), yMid: median(renderedMiles),
       clippedCount: allListings.length - totalInRange,
       totalCount: allListings.length,
@@ -260,18 +297,26 @@ export default function HuntClient ({
 
   return (
     <div dir="rtl" className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
-      {/* ── Intro strip ── */}
+      {/* ── Intro strip + tips panel ── */}
       <section className="max-w-screen-xl mx-auto px-4" style={{ paddingTop: 40, paddingBottom: 24 }}>
-        <h1 className="leading-tight" style={{ color: NAVY_900, fontSize: 40, fontWeight: 900 }}>
-          الصياد
-        </h1>
-        <p className="mt-3" style={{ color: SLATE_700, fontSize: 20, fontWeight: 600 }}>
-          تعرف وش تبي، بس تدور اللقطة.
-        </p>
-        <p className="mt-2 max-w-3xl" style={{ color: SLATE, fontSize: 16, lineHeight: 1.7 }}>
-          اختر حتى ٥ موديلات في الخانات تحت، وشوف على المخطط وين السيارات الأرخص
-          والممشى الأقل. حوم على نقطة لتفاصيلها، اضغط لتثبيتها.
-        </p>
+        <div className="grid grid-cols-1 md:grid-cols-[55fr_45fr] gap-6">
+          {/* Title column (right under RTL) */}
+          <div>
+            <h1 className="leading-tight" style={{ color: NAVY_900, fontSize: 40, fontWeight: 900 }}>
+              الصياد
+            </h1>
+            <p className="mt-3" style={{ color: SLATE_700, fontSize: 20, fontWeight: 600 }}>
+              تعرف وش تبي، بس تدور اللقطة.
+            </p>
+            <p className="mt-2 max-w-prose" style={{ color: SLATE, fontSize: 16, lineHeight: 1.7 }}>
+              اختر حتى ٥ موديلات في الخانات تحت، وشوف على المخطط وين السيارات الأرخص
+              والممشى الأقل. حوم على نقطة لتفاصيلها، اضغط لتثبيتها.
+            </p>
+          </div>
+
+          {/* Tips column (left under RTL — stacks below on mobile) */}
+          <UsageTips />
+        </div>
       </section>
 
       {/* ── 5 slot cards ── */}
@@ -293,6 +338,14 @@ export default function HuntClient ({
           ))}
         </div>
       </section>
+
+      {/* ── 4-plus-models soft warning. Only renders when the user has
+          filled 4 or 5 slots AND hasn't dismissed it this session. ── */}
+      {slotGroups.length >= 4 && !tooManyDismissed && (
+        <section className="mx-auto px-4 pb-4" style={{ maxWidth: 1100 }}>
+          <TooManyModelsBanner onDismiss={dismissTooMany} />
+        </section>
+      )}
 
       {/* ── Chart ── */}
       <section className="mx-auto px-4 pb-5" style={{ maxWidth: 1100 }}>
@@ -334,10 +387,10 @@ export default function HuntClient ({
           ) : (
             <HuntChart
               groups={chart.pointsByGroup}
-              xMax={chart.xMax}
-              yMax={chart.yMax}
-              xMid={chart.xMid}
-              yMid={chart.yMid}
+              xMin={chart.xMin} xMax={chart.xMax}
+              yMin={chart.yMin} yMax={chart.yMax}
+              xStep={chart.xStep} yStep={chart.yStep}
+              xMid={chart.xMid} yMid={chart.yMid}
               hoverId={hoverId}
               pinned={pinned}
               onHover={setHoverId}
@@ -391,6 +444,78 @@ export default function HuntClient ({
 }
 
 // ── Empty state ──────────────────────────────────────────────────────────────
+// ── Soft amber warning when 4+ slots are filled ──────────────────────────────
+function TooManyModelsBanner ({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div
+      role="alert"
+      className="flex items-start gap-3 rounded-xl"
+      style={{
+        background: '#FFFBEB',
+        borderInlineStart: '4px solid #F59E0B',
+        padding: '12px 16px',
+        color: '#92400E',
+      }}
+    >
+      {/* Icon on the right under RTL (first DOM child = right visually) */}
+      <AlertCircle size={20} color="#D97706" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
+      <p className="flex-1" style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.65 }}>
+        ملاحظة: نقترح مقارنة ٣ موديلات أو أقل من نفس الفئة. كل ما تضيف موديلات
+        مختلفة الحجم أو السعر، كل ما يصير المخطط أقل دقّة.
+      </p>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="إغلاق"
+        className="rounded-full w-7 h-7 inline-flex items-center justify-center hover:bg-amber-100 transition-colors flex-shrink-0"
+        style={{ color: '#92400E', fontSize: 18, lineHeight: 1 }}
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
+// ── Usage tips panel beside the title ────────────────────────────────────────
+function UsageTips () {
+  const TIPS: { Icon: typeof Scale; text: string }[] = [
+    { Icon: Scale,         text: 'قارن سيارات من نفس الفئة (مو رولز رويس مع كورولا)' },
+    { Icon: Target,        text: 'النتيجة الأوضح بـ ٣ موديلات أو أقل' },
+    { Icon: MousePointer2, text: 'حوم على نقطة لتفاصيل السيارة' },
+    { Icon: Pin,           text: 'اضغط لتثبيت سيارة للمقارنة' },
+    { Icon: Sparkles,      text: 'انتبه وتأكد من اللقطات لا يكونوا قفطات 😉' },
+  ]
+  return (
+    <aside
+      className="rounded-2xl"
+      style={{
+        background: SLATE_50,
+        border: `1px solid ${SLATE_200}`,
+        padding: 20,
+      }}
+    >
+      <h3
+        className="mb-3"
+        style={{ color: SLATE_700, fontSize: 14, fontWeight: 800 }}
+      >
+        كيف تستخدم الصياد؟
+      </h3>
+      <ul className="flex flex-col gap-2.5" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        {TIPS.map(({ Icon, text }, i) => (
+          <li
+            key={i}
+            className="flex items-start gap-2.5"
+            style={{ color: '#1E293B', fontSize: 14, fontWeight: 600, lineHeight: 1.55 }}
+          >
+            <Icon size={20} color={CORAL} strokeWidth={1.9} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>{text}</span>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
+}
+
 function EmptyState () {
   return (
     <div
@@ -464,7 +589,7 @@ function SlotCard ({
       {/* Slot label + clear */}
       <div className="flex items-center justify-between">
         <span style={{ color: SLATE, fontSize: 13, fontWeight: 700 }}>
-          موديل {slotIndex + 1}
+          موديل {slotIndex + 1}{slotIndex >= 3 && <span style={{ color: SLATE_400, fontWeight: 500 }}> (إضافي)</span>}
         </span>
         {fullyFilled && (
           <button
@@ -582,12 +707,13 @@ type ChartGroup = {
 }
 
 function HuntChart ({
-  groups, xMax, yMax, xMid, yMid,
+  groups, xMin, xMax, yMin, yMax, xStep, yStep, xMid, yMid,
   hoverId, pinned, onHover, onClick, reversedX,
   offChartCount, lang,
 }: {
   groups: ChartGroup[]
-  xMax: number; yMax: number
+  xMin: number; xMax: number; yMin: number; yMax: number
+  xStep: number; yStep: number
   xMid: number; yMid: number
   hoverId: string | null
   pinned: string[]
@@ -624,8 +750,8 @@ function HuntChart ({
     )
   }, [hoverId, pinned, anyHover, onHover, onClick])
 
-  const xTicks = ticksForDomain(0, xMax, 50_000)
-  const yTicks = ticksForDomain(0, yMax, 50_000)
+  const xTicks = ticksForDomain(xMin, xMax, xStep)
+  const yTicks = ticksForDomain(yMin, yMax, yStep)
   const fmt = (v: number) => v.toLocaleString('en-US')
 
   // Pill copy by language. The four pills always sit in the four
@@ -690,16 +816,16 @@ function HuntChart ({
                   visually because XAxis is `reversed` when AR. */}
               {xMid > 0 && yMid > 0 && (
                 <>
-                  <ReferenceArea x1={0}   x2={xMid} y1={0}   y2={yMid}  fill="#ECFDF5" fillOpacity={1} stroke="none" />
-                  <ReferenceArea x1={xMid} x2={xMax} y1={0}   y2={yMid}  fill="#F8FAFC" fillOpacity={1} stroke="none" />
-                  <ReferenceArea x1={0}   x2={xMid} y1={yMid} y2={yMax}  fill="#FFFBEB" fillOpacity={1} stroke="none" />
+                  <ReferenceArea x1={xMin} x2={xMid} y1={yMin} y2={yMid} fill="#ECFDF5" fillOpacity={1} stroke="none" />
+                  <ReferenceArea x1={xMid} x2={xMax} y1={yMin} y2={yMid} fill="#F8FAFC" fillOpacity={1} stroke="none" />
+                  <ReferenceArea x1={xMin} x2={xMid} y1={yMid} y2={yMax} fill="#FFFBEB" fillOpacity={1} stroke="none" />
                   <ReferenceArea x1={xMid} x2={xMax} y1={yMid} y2={yMax} fill="#FFF1F2" fillOpacity={1} stroke="none" />
                 </>
               )}
 
               <XAxis
                 type="number" dataKey="x"
-                domain={[0, xMax]}
+                domain={[xMin, xMax]}
                 ticks={xTicks}
                 tickFormatter={fmt}
                 tick={{ fill: SLATE_700, fontSize: 14, fontWeight: 700 }}
@@ -713,7 +839,7 @@ function HuntChart ({
               />
               <YAxis
                 type="number" dataKey="y"
-                domain={[0, yMax]}
+                domain={[yMin, yMax]}
                 ticks={yTicks}
                 tickFormatter={fmt}
                 tick={{ fill: SLATE_700, fontSize: 14, fontWeight: 700 }}
