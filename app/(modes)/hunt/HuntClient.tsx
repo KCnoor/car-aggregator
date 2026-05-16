@@ -355,7 +355,10 @@ export default function HuntClient ({
     })
   }
 
-  // ── Strip data: pinned set if any, else everything in-chart ──────────────
+  // ── Strip data ───────────────────────────────────────────────────────────
+  // Default (no pins): top 12 in-chart listings sorted by deal_score.
+  // Pinned (1–4): exactly those pinned cards, in click order.
+  const STRIP_DEFAULT_CAP = 12
   const stripListings: Listing[] = useMemo(() => {
     if (pinnedIds.size > 0) {
       const ids = [...pinnedIds]
@@ -366,6 +369,7 @@ export default function HuntClient ({
     return chart.rendered
       .map(p => p.listing)
       .sort((a, b) => (b.deal_score ?? -1) - (a.deal_score ?? -1))
+      .slice(0, STRIP_DEFAULT_CAP)
   }, [pinnedIds, chart])
 
   // Look up the listing's slot color when rendering the comparison strip
@@ -487,22 +491,50 @@ export default function HuntClient ({
       {/* ── Listings strip ── */}
       {hasAnyFullSlot && chart.rendered.length > 0 && (
         <section className="max-w-screen-xl mx-auto px-4 pb-12">
+          {/* Bridge — copy + un-pin controls depend on whether the user
+              has pinned anything. */}
           <div
-            className="rounded-2xl"
+            className="rounded-2xl flex items-center justify-between flex-wrap gap-2"
             style={{
               background: SLATE_50,
-              padding: 16,
+              padding: 12,
               marginBottom: 16,
               color: SLATE_700,
               fontSize: 16,
               fontWeight: 600,
             }}
           >
-            <span aria-hidden style={{ marginInlineEnd: 8 }}>👇</span>
-            السيارات في المخطط ({stripListings.length} سيارة)
-            {pinnedIds.size > 0
-              ? <> · <button onClick={() => setPinnedIds(new Set())} className="underline" style={{ color: CORAL }}>عرض كل السيارات</button></>
-              : <> — مرتبة حسب أحسن صفقة</>}
+            <span>
+              <span aria-hidden style={{ marginInlineEnd: 8 }}>👇</span>
+              {pinnedIds.size > 0
+                ? <>السيارات المثبتة ({pinnedIds.size})</>
+                : <>السيارات في المخطط ({stripListings.length} سيارة) — مرتبة حسب أحسن صفقة</>}
+            </span>
+            {pinnedIds.size > 0 && (
+              <span className="inline-flex items-center gap-3">
+                <button
+                  onClick={() => setPinnedIds(new Set())}
+                  className="rounded-full"
+                  style={{
+                    background: '#FFFFFF',
+                    border: `1px solid ${SLATE_200}`,
+                    color: SLATE_700,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    padding: '4px 10px',
+                  }}
+                >
+                  إلغاء التثبيت
+                </button>
+                <button
+                  onClick={() => setPinnedIds(new Set())}
+                  className="underline"
+                  style={{ color: CORAL, fontSize: 13, fontWeight: 700 }}
+                >
+                  عرض كل السيارات في المخطط ({chart.rendered.length} سيارة)
+                </button>
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -827,11 +859,14 @@ function HuntChart ({
         }
       `}</style>
 
-      {/* Y axis title above the frame */}
+      {/* Y axis title above the LEFT side of the chart frame. Under the
+          parent dir=rtl, flex-end of the flexbox is the visual LEFT —
+          which is where we want the title to live now that the Y axis
+          tick numbers also sit on the left. */}
       <div className="flex" style={{
         color: NAVY_900, fontSize: 18, fontWeight: 800,
         marginBottom: 8,
-        justifyContent: 'flex-start',
+        justifyContent: 'flex-end',
       }}>
         {yTitle}
       </div>
@@ -903,22 +938,84 @@ function HuntChart ({
           </ResponsiveContainer>
         </div>
 
-        {/* Corner pills — fixed LTR positions, Arabic text */}
+        {/* "Better-direction" gradient strips alongside each axis.
+            Positions are approximate (matched to Recharts margin + YAxis
+            width=64 + the frame's 24px internal padding). The strips are
+            decorative cues — they sit at fixed offsets and never need
+            pixel-perfect tracking of the plot area. */}
         {xMid > 0 && yMid > 0 && (
           <>
-            <CornerPill text={pills.deal}    color="#047857" pos={{ bottom: 12, left:  16 }} />
-            <CornerPill text={pills.bottomR} color={SLATE_700} pos={{ bottom: 12, right: 16 }} />
-            <CornerPill text={pills.topL}    color="#B45309" pos={{ top: 12,    left:  16 }} />
-            <CornerPill text={pills.avoid}   color="#BE123C" pos={{ top: 12,    right: 16 }} />
+            {/* Vertical strip — leftmost element inside the frame.
+                Emerald at the bottom → amber at the top. */}
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                top: 36, bottom: 68,
+                left: 8, width: 12,
+                borderRadius: 999,
+                background: 'linear-gradient(to top, #10B981 0%, #F59E0B 100%)',
+                opacity: 0.40,
+                zIndex: 5,
+              }}
+            />
+            <span
+              style={{
+                position: 'absolute',
+                bottom: 64, left: 4,
+                color: '#047857',
+                fontSize: 11, fontWeight: 700,
+                background: 'rgba(255,255,255,0.85)',
+                padding: '0 4px',
+                borderRadius: 4,
+                zIndex: 6,
+                pointerEvents: 'none',
+                writingMode: 'vertical-rl',
+                transform: 'rotate(180deg)',
+              }}
+            >
+              ↓ أفضل
+            </span>
+
+            {/* Horizontal strip — below the X axis tick numbers.
+                Emerald at the left → amber at the right. */}
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: 104, right: 40,
+                bottom: 8, height: 12,
+                borderRadius: 999,
+                background: 'linear-gradient(to right, #10B981 0%, #F59E0B 100%)',
+                opacity: 0.40,
+                zIndex: 5,
+              }}
+            />
+            <span
+              style={{
+                position: 'absolute',
+                left: 108, bottom: 6,
+                color: '#047857',
+                fontSize: 11, fontWeight: 700,
+                background: 'rgba(255,255,255,0.85)',
+                padding: '0 4px',
+                borderRadius: 4,
+                zIndex: 6,
+                pointerEvents: 'none',
+              }}
+            >
+              ← أفضل
+            </span>
           </>
         )}
 
-        {/* Off-chart indicator — bottom-right inside the frame */}
+        {/* Off-chart indicator — top-right inside the frame so it doesn't
+            collide with the X-axis gradient strip running along the bottom. */}
         {offChartCount > 0 && (
           <span
             style={{
               position: 'absolute',
-              bottom: 8, right: 24,
+              top: 8, right: 24,
               color: SLATE, fontSize: 11, fontWeight: 600,
               background: 'rgba(255,255,255,0.92)',
               padding: '2px 8px',
@@ -942,7 +1039,29 @@ function HuntChart ({
         )}
       </div>
 
-      {/* X axis title below the frame */}
+      {/* Zone legend strip — sits immediately below the chart frame,
+          above the X axis title. RTL order so the deal-zone swatch
+          (green) reads first under Arabic. */}
+      {xMid > 0 && yMid > 0 && (
+        <div
+          dir="rtl"
+          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+          style={{
+            marginTop: 12,
+            background: SLATE_50,
+            borderTop: `1px solid ${SLATE_200}`,
+            padding: '12px 16px',
+            borderRadius: 12,
+          }}
+        >
+          <LegendEntry text={pills.deal}    fill="#ECFDF5" stroke="#10B981" />
+          <LegendEntry text={pills.topL}    fill="#FFFBEB" stroke="#F59E0B" />
+          <LegendEntry text={pills.bottomR} fill="#F8FAFC" stroke={SLATE_400} />
+          <LegendEntry text={pills.avoid}   fill="#FFF1F2" stroke="#F43F5E" />
+        </div>
+      )}
+
+      {/* X axis title below the legend */}
       <div className="flex" style={{
         color: NAVY_900, fontSize: 18, fontWeight: 800,
         marginTop: 12, justifyContent: 'center',
@@ -953,34 +1072,26 @@ function HuntChart ({
   )
 }
 
-// ─── Corner pill ────────────────────────────────────────────────────────────
-type PillPos = { top?: number; bottom?: number; left?: number; right?: number }
-function CornerPill ({ text, color, pos }: { text: string; color: string; pos: PillPos }) {
+function LegendEntry ({ text, fill, stroke }: { text: string; fill: string; stroke: string }) {
   return (
-    <span
-      style={{
-        position: 'absolute',
-        background: '#FFFFFF',
-        border: `2px solid ${color}`,
-        borderRadius: 12,
-        padding: '8px 14px',
-        color,
-        fontSize: 13,
-        fontWeight: 800,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        whiteSpace: 'nowrap',
-        zIndex: 20,
-        pointerEvents: 'none',
-        // Right-to-left text content under an LTR container needs an
-        // explicit direction hint to render correctly.
-        direction: 'rtl',
-        ...pos,
-      }}
-    >
-      {text}
+    <span className="inline-flex items-center gap-2">
+      <span
+        aria-hidden
+        style={{
+          width: 14, height: 14, borderRadius: 4,
+          background: fill, border: `1px solid ${stroke}`,
+          display: 'inline-block', flexShrink: 0,
+        }}
+      />
+      <span style={{ color: SLATE_700, fontSize: 13, fontWeight: 700 }}>
+        {text}
+      </span>
     </span>
   )
 }
+
+// (CornerPill / PillPos types were removed when the in-chart zone pills
+// were replaced by the legend strip below the chart frame.)
 
 // ─── Custom tooltip (renders our own; we don't use Recharts <Tooltip>) ─────
 function ChartTooltip ({ point, xy }: { point: ChartPoint; xy: { x: number; y: number } }) {
