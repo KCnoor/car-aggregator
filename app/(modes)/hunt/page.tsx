@@ -1,59 +1,26 @@
 import { supabase, type Listing } from '@/lib/supabase'
 import HuntClient from './HuntClient'
-import { BUNDLES, type Bundle } from './bundles'
 
-// الصياد — the hunter mode at /hunt. Server component fetches all
-// candidate listings for the currently-selected models + year window.
+// الصياد — focused hunter mode at /hunt.
 //
-// URL params (for cross-mode hand-off):
-//   ?models=toyota-camry,honda-accord    — pairs of "{make_slug}-{model_slug}"
+// URL params (shareable + cross-mode hand-off from الخطّابة later):
+//   ?models=toyota-camry,honda-accord    — pairs of "{make_slug}-{model_slug}", max 5
 //   ?years=2020-2024                     — inclusive range
-//   ?bundle=<bundle-id>                  — load a named preset
 //
-// When nothing is specified the default bundle (Mid Japanese Sedan) loads
-// so the user sees a working chart on first visit.
+// No bundles anymore (deliberately). Empty selection → empty state on
+// the client; user fills slots manually using the make→model picker.
 
 export const dynamic = 'force-dynamic'
 
-const DEFAULT_BUNDLE_ID = 'mid-japanese-sedan'
-const DEFAULT_YEAR_MIN  = 2020
-const DEFAULT_YEAR_MAX  = 2024
+const DEFAULT_YEAR_MIN = 2020
+const DEFAULT_YEAR_MAX = 2024
 
 type ModelKey = { make: string; model: string }
 
-// Parse `make_slug-model_slug` from the URL. Model slugs can themselves
-// contain hyphens (e.g. land-cruiser), so we treat the FIRST hyphen as the
-// make/model separator and the remainder as the model slug.
 function parseModelToken (token: string): ModelKey | null {
   const dash = token.indexOf('-')
   if (dash <= 0) return null
   return { make: token.slice(0, dash), model: token.slice(dash + 1) }
-}
-
-function resolveSelection (params: { models?: string; years?: string; bundle?: string }): {
-  models: ModelKey[]
-  yearMin: number
-  yearMax: number
-  activeBundleId: string | null
-} {
-  // Models from URL win over the bundle preset.
-  const rawModels = (params.models ?? '').trim()
-  if (rawModels) {
-    const tokens = rawModels.split(',').map(t => parseModelToken(t.trim())).filter(Boolean) as ModelKey[]
-    const yr = parseYearRange(params.years)
-    return { models: tokens.slice(0, 5), yearMin: yr[0], yearMax: yr[1], activeBundleId: null }
-  }
-  const bundleId = (params.bundle ?? '').trim() || DEFAULT_BUNDLE_ID
-  const bundle: Bundle | undefined = BUNDLES.find(b => b.id === bundleId)
-  if (!bundle) {
-    return {
-      models: BUNDLES[0].models,
-      yearMin: DEFAULT_YEAR_MIN, yearMax: DEFAULT_YEAR_MAX,
-      activeBundleId: BUNDLES[0].id,
-    }
-  }
-  const yr = parseYearRange(params.years)
-  return { models: bundle.models, yearMin: yr[0], yearMax: yr[1], activeBundleId: bundle.id }
 }
 
 function parseYearRange (raw?: string): [number, number] {
@@ -67,10 +34,6 @@ function parseYearRange (raw?: string): [number, number] {
 
 async function loadListings (selection: ModelKey[], yearMin: number, yearMax: number): Promise<Listing[]> {
   if (selection.length === 0) return []
-  // Pull anything matching (make_slug, model_slug) and the year range, then
-  // post-filter to the exact (make, model) pairs client-side — Supabase has
-  // no native tuple-IN operator. We cap server-side at 800 (200 per model
-  // × 5 models max), then trim further on the client after percentile clip.
   const makes  = [...new Set(selection.map(s => s.make))]
   const models = [...new Set(selection.map(s => s.model))]
   const { data, error } = await supabase.from('listings')
@@ -97,10 +60,30 @@ async function loadListings (selection: ModelKey[], yearMin: number, yearMax: nu
 export default async function HuntPage ({
   searchParams,
 }: {
-  searchParams: Promise<{ models?: string; years?: string; bundle?: string }>
+  searchParams: Promise<{ models?: string; years?: string }>
 }) {
   const params = await searchParams
-  const { models, yearMin, yearMax, activeBundleId } = resolveSelection(params)
+  const models = (params.models ?? '')
+    .split(',')
+    .map(t => parseModelToken(t.trim()))
+    .filter(Boolean)
+    .slice(0, 5) as ModelKey[]
+  const [yearMin, yearMax] = parseYearRange(params.years)
+
+  // Canonical catalogue for the make→model picker. Restricted to entries
+  // that have at least one active listing so the picker doesn't surface
+  // makes the user can never get results for.
+  const [canonicalMakesRes, canonicalModelsRes] = await Promise.all([
+    supabase.from('canonical_makes')
+      .select('canonical_make_slug, canonical_name_en, canonical_name_ar')
+      .order('canonical_name_en'),
+    supabase.from('canonical_models')
+      .select('canonical_make_slug, canonical_model_slug, canonical_name_en, canonical_name_ar')
+      .order('canonical_name_en'),
+  ])
+  const canonicalMakes  = canonicalMakesRes.data  ?? []
+  const canonicalModels = canonicalModelsRes.data ?? []
+
   const listings = await loadListings(models, yearMin, yearMax)
 
   return (
@@ -108,9 +91,9 @@ export default async function HuntPage ({
       initialModels={models}
       initialYearMin={yearMin}
       initialYearMax={yearMax}
-      initialBundleId={activeBundleId}
       initialListings={listings}
-      bundles={BUNDLES}
+      canonicalMakes={canonicalMakes}
+      canonicalModels={canonicalModels}
     />
   )
 }

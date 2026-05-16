@@ -1,58 +1,55 @@
 import { supabase, type Listing } from '@/lib/supabase'
 import ListingsClient from '@/app/components/ListingsClient'
 
-// Browse pulls live listings + new-deals count on every request. Without
-// this the App Router prerenders it at build time and the count + cards
-// never refresh until a redeploy.
+// Browse — server-side paginated. 50 listings per page, page index from
+// the ?page query param. Total count comes back via Supabase's
+// count:'exact' on the same query.
 export const dynamic = 'force-dynamic'
 
-// Sources known to the ribbon. New sources added to the catalogue need a
-// matching entry here so the per-source count query covers them.
+const PAGE_SIZE = 50
+
 const KNOWN_SOURCES = [
   'syarah','soum','carswitch','digitalcar','motory','yallamotor',
   'gogomotor','saudisale','dubizzle','haraj','carly',
 ]
 
-export default async function Home() {
-  // 24h cutoff for the "new deals today" metric, computed server-side.
+export default async function Home ({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const params = await searchParams
+  const requestedPage = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
+
+  // 24h cutoff for the "new deals today" metric.
   const since24h = new Date(Date.now() - 24 * 3600 * 1000).toISOString()
 
-  // PostgREST caps at 1000 rows per request — fetch in 3 parallel batches.
-  // b0 doubles as the source of `totalCount` via the count: 'exact' hint.
-  // newDealsCount comes from a separate head-only count query.
-  const [b0, b1, b2, newCountRes] = await Promise.all([
-    supabase.from('listings').select('*', { count: 'exact' })
-      .eq('is_active', true)
-      .neq('freshness_state', 'dead')
-      .order('deal_score', { ascending: false, nullsFirst: false })
-      .range(0, 999),
+  const offset = (requestedPage - 1) * PAGE_SIZE
+  const pageEnd = offset + PAGE_SIZE - 1
+
+  const [pageRes, totalRes, newCountRes] = await Promise.all([
     supabase.from('listings').select('*')
       .eq('is_active', true)
       .neq('freshness_state', 'dead')
       .order('deal_score', { ascending: false, nullsFirst: false })
-      .range(1000, 1999),
-    supabase.from('listings').select('*')
+      .range(offset, pageEnd),
+    supabase.from('listings').select('*', { count: 'exact', head: true })
       .eq('is_active', true)
-      .neq('freshness_state', 'dead')
-      .order('deal_score', { ascending: false, nullsFirst: false })
-      .range(2000, 2999),
+      .neq('freshness_state', 'dead'),
     supabase.from('listings').select('*', { count: 'exact', head: true })
       .eq('is_active', true)
       .neq('freshness_state', 'dead')
       .gte('first_seen_at', since24h),
   ])
 
-  if (b0.error) console.error('Failed to fetch listings:', b0.error.message)
+  if (pageRes.error) console.error('Failed to fetch listings:', pageRes.error.message)
 
-  const listings = [
-    ...((b0.data ?? []) as Listing[]),
-    ...((b1.data ?? []) as Listing[]),
-    ...((b2.data ?? []) as Listing[]),
-  ]
+  const listings = (pageRes.data ?? []) as Listing[]
+  const totalCount = totalRes.count ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  // Clamp current page in case the user navigated past the last page.
+  const currentPage = Math.min(requestedPage, totalPages)
 
-  // Per-source active counts — drives the 5-listing ribbon threshold so a
-  // source under-represented in the corpus doesn't surface in the UI looking
-  // broken. 11 parallel head-count queries — adds ~100ms to page render.
   const sourceCountRes = await Promise.all(
     KNOWN_SOURCES.map(src =>
       supabase.from('listings').select('*', { count: 'exact', head: true })
@@ -62,9 +59,6 @@ export default async function Home() {
   const sourceCounts: Record<string, number> = {}
   KNOWN_SOURCES.forEach((src, i) => { sourceCounts[src] = sourceCountRes[i].count ?? 0 })
 
-  // Canonical make/model catalogue — powers the filter dropdowns so they
-  // show one row per canonical make (no 'Mercedes' / 'Mercedes Benz' /
-  // 'Mercedes-Benz' triplicates) and clean per-make model lists.
   const [canonicalMakesRes, canonicalModelsRes] = await Promise.all([
     supabase.from('canonical_makes')
       .select('canonical_make_slug, canonical_name_en, canonical_name_ar')
@@ -73,18 +67,19 @@ export default async function Home() {
       .select('canonical_make_slug, canonical_model_slug, canonical_name_en, canonical_name_ar')
       .order('canonical_name_en'),
   ])
-  const canonicalMakes  = canonicalMakesRes.data  ?? []
-  const canonicalModels = canonicalModelsRes.data ?? []
 
   return (
     <ListingsClient
       listings={listings}
-      totalCount={b0.count ?? listings.length}
+      totalCount={totalCount}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      pageSize={PAGE_SIZE}
       newDealsCount={newCountRes.count ?? 0}
       newDealsSinceIso={since24h}
       sourceCounts={sourceCounts}
-      canonicalMakes={canonicalMakes}
-      canonicalModels={canonicalModels}
+      canonicalMakes={canonicalMakesRes.data ?? []}
+      canonicalModels={canonicalModelsRes.data ?? []}
     />
   )
 }

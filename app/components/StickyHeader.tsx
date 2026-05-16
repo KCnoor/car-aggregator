@@ -257,12 +257,16 @@ export default function StickyHeader ({
         </div>
       </div>
 
-      {/* ── CUT 3 — Search row (full-width, own row, below the tabs) ─── */}
-      <div className="px-4 pb-3 md:pb-4">
-        <div className="max-w-screen-xl mx-auto" style={{ height: 56 }}>
-          <SearchBox className="h-full block w-full" initialValue={initialQuery} />
+      {/* ── CUT 3 — Search row, ONLY on /browse. The other modes have
+          their own content (personas / model slots / teaser) and don't
+          benefit from a global search input cluttering the chrome. */}
+      {pathname === '/browse' && (
+        <div className="px-4 pb-3 md:pb-4">
+          <div className="max-w-screen-xl mx-auto" style={{ height: 56 }}>
+            <SearchBox className="h-full block w-full" initialValue={initialQuery} />
+          </div>
         </div>
-      </div>
+      )}
     </header>
   )
 }

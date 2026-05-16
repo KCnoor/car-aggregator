@@ -90,47 +90,57 @@ export default function ModeTabs ({ className = '' }: { className?: string }) {
               border: '1px solid',
               borderColor: isActive ? 'transparent' : 'var(--hairline)',
               boxShadow: 'var(--shadow-soft)',
-              minHeight: 124,
+              minHeight: 'var(--tab-h, 64px)',
             }}
           >
-            <div className="h-full w-full flex flex-col items-center justify-center px-2 py-2">
-              {/* 56×56 icon, no chip / tint / filter — the PNG artwork is
-                  colored correctly already. 12px gap below the icon. */}
+            {/* Compact layout: 36px icon on the trailing side (RTL = left
+                visually), title + subtitle stack on the leading side.
+                Locked dimensions per the May-17 refinement:
+                  desktop 72px tall × ~12×16 padding
+                  mobile  64px tall × 12×12 padding */}
+            <style>{`
+              :root { --tab-h: 64px; }
+              @media (min-width: 768px) { :root { --tab-h: 72px; } }
+            `}</style>
+            <div className="h-full w-full flex flex-row-reverse items-center justify-between gap-2.5"
+                 style={{ padding: '12px 16px' }}>
               <Image
                 src={m.icon}
                 alt=""
-                width={56}
-                height={56}
+                width={36}
+                height={36}
                 priority={isActive}
                 style={{
-                  width: 56,
-                  height: 56,
+                  width: 36,
+                  height: 36,
                   objectFit: 'contain',
-                  marginBottom: 12,
+                  flexShrink: 0,
                   display: 'block',
                 }}
               />
-              <span
-                className="font-extrabold leading-tight"
-                style={{
-                  color: isActive ? '#FFFFFF' : 'var(--text-primary)',
-                  fontSize: 14,
-                  fontWeight: 800,
-                }}
-              >
-                {m.titleAr}
-              </span>
-              <span
-                className="leading-tight hidden md:block text-center px-1"
-                style={{
-                  color: isActive ? 'rgba(255,255,255,0.85)' : 'var(--text-secondary)',
-                  fontSize: 11,
-                  fontWeight: 400,
-                  marginTop: 2,
-                }}
-              >
-                {m.subtitleAr}
-              </span>
+              <div className="flex flex-col items-end min-w-0 flex-1">
+                <span
+                  className="font-extrabold leading-tight truncate"
+                  style={{
+                    color: isActive ? '#FFFFFF' : 'var(--text-primary)',
+                    fontSize: 16,
+                    fontWeight: 800,
+                  }}
+                >
+                  {m.titleAr}
+                </span>
+                <span
+                  className="leading-tight hidden md:block truncate w-full text-end"
+                  style={{
+                    color: isActive ? 'rgba(255,255,255,0.85)' : 'var(--text-secondary)',
+                    fontSize: 12,
+                    fontWeight: 400,
+                    marginTop: 2,
+                  }}
+                >
+                  {m.subtitleAr}
+                </span>
+              </div>
             </div>
           </motion.button>
         )

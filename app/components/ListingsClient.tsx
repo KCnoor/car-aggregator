@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import type { Listing } from '@/lib/supabase'
 import { translations, cityLabel, type Lang } from '@/lib/translations'
 import ListingCard from './ListingCard'
@@ -110,6 +110,9 @@ type CanonicalModel = {
 export default function ListingsClient({
   listings,
   totalCount,
+  currentPage = 1,
+  totalPages = 1,
+  pageSize = 50,
   newDealsCount = 0,
   newDealsSinceIso,
   sourceCounts = {},
@@ -118,6 +121,9 @@ export default function ListingsClient({
 }: {
   listings: Listing[]
   totalCount: number
+  currentPage?: number
+  totalPages?: number
+  pageSize?: number
   newDealsCount?: number
   newDealsSinceIso?: string
   sourceCounts?: Record<string, number>
@@ -153,11 +159,21 @@ export default function ListingsClient({
   const [aiFilters, setAiFilters] = useState<AIFilters>({})
   const lastAppliedQ = useRef<string>('')
 
-  // Infinite scroll
-  const [displayCount, setDisplayCount] = useState(INITIAL)
-  const sentinelRef = useRef<HTMLDivElement>(null)
+  // Infinite-scroll mechanics removed when /browse moved to server-side
+  // pagination (50/page). The page-of-listings is what the parent passes
+  // in; we just render the whole thing.
 
   const searchParams = useSearchParams()
+  const router = useRouter()
+
+  function goToPage (n: number) {
+    const clamped = Math.min(Math.max(1, n), totalPages)
+    const sp = new URLSearchParams(searchParams.toString())
+    if (clamped <= 1) sp.delete('page')
+    else sp.set('page', String(clamped))
+    const qs = sp.toString()
+    router.push(qs ? `/browse?${qs}` : '/browse')
+  }
 
   async function runSearch (query: string) {
     if (!query.trim()) return
@@ -356,19 +372,6 @@ export default function ListingsClient({
       aiFilters, showContactForPrice, sortFn,
       yearFrom, yearTo, bodyType, transmission, fuel, condition,
       newDealsOnly, newDealsSinceIso])
-
-  useEffect(() => { setDisplayCount(INITIAL) }, [filtered])
-
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      entries => { if (entries[0].isIntersecting) setDisplayCount(c => Math.min(c + PAGE, filtered.length)) },
-      { rootMargin: '300px' }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [filtered.length])
 
   // ── Active chips ──────────────────────────────────────────────────────────
   const cityLabel_ = city
@@ -726,26 +729,42 @@ export default function ListingsClient({
           </motion.div>
         ) : (
           <>
+            {/* Compact pager top-right */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+                {lang === 'ar'
+                  ? `الصفحة ${currentPage} من ${totalPages}`
+                  : `Page ${currentPage} of ${totalPages}`}
+              </span>
+              <PagerCompact
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPage={goToPage}
+                lang={lang}
+              />
+            </div>
+
             <motion.div
               variants={container}
               initial="hidden"
               animate="visible"
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
             >
-              {filtered.slice(0, displayCount).map((listing, i) => (
+              {filtered.map((listing, i) => (
                 <ListingCard key={listing.id} listing={listing} lang={lang} index={i} />
               ))}
             </motion.div>
 
-            {/* Infinite scroll sentinel */}
-            <div ref={sentinelRef} className="h-12 flex items-center justify-center mt-4">
-              {displayCount < filtered.length && (
-                <span className="text-xs text-muted-foreground">
-                  {lang === 'ar'
-                    ? `${displayCount.toLocaleString()} من ${filtered.length.toLocaleString()}`
-                    : `${displayCount.toLocaleString()} of ${filtered.length.toLocaleString()}`}
-                </span>
-              )}
+            {/* Full pager at the bottom of the grid */}
+            <div className="mt-8">
+              <PagerFull
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                pageSize={pageSize}
+                onPage={goToPage}
+                lang={lang}
+              />
             </div>
           </>
         )}
@@ -919,5 +938,116 @@ function DrawerRow ({ label, control }: { label: string; control: React.ReactNod
       </label>
       <div className="flex">{control}</div>
     </div>
+  )
+}
+
+// ── Pagination ───────────────────────────────────────────────────────────────
+// Two presentation variants pulled out as small components so they can be
+// reused above (compact) and below (full) the listings grid without
+// duplicating logic.
+
+function PagerCompact ({
+  currentPage, totalPages, onPage, lang,
+}: {
+  currentPage: number; totalPages: number; onPage: (n: number) => void; lang: Lang
+}) {
+  if (totalPages <= 1) return null
+  const isFirst = currentPage <= 1
+  const isLast  = currentPage >= totalPages
+  return (
+    <div className="inline-flex items-center gap-1">
+      <button
+        onClick={() => onPage(currentPage - 1)}
+        disabled={isFirst}
+        className="rounded-lg px-2.5 py-1 text-[12px] font-semibold border transition-colors disabled:opacity-40"
+        style={{ background: 'var(--bg-card)', borderColor: 'var(--hairline)', color: 'var(--text-primary)' }}
+      >
+        {/* RTL: → is "previous" visually because it points to the right */}
+        {lang === 'ar' ? 'السابق →' : '← Prev'}
+      </button>
+      <button
+        onClick={() => onPage(currentPage + 1)}
+        disabled={isLast}
+        className="rounded-lg px-2.5 py-1 text-[12px] font-bold border transition-colors disabled:opacity-40"
+        style={{
+          background: isLast ? 'var(--bg-card)' : 'var(--accent-primary)',
+          borderColor: isLast ? 'var(--hairline)' : 'var(--accent-primary)',
+          color: isLast ? 'var(--text-secondary)' : '#FFFFFF',
+        }}
+      >
+        {lang === 'ar' ? '← التالي' : 'Next →'}
+      </button>
+    </div>
+  )
+}
+
+function PagerFull ({
+  currentPage, totalPages, totalCount, pageSize, onPage, lang,
+}: {
+  currentPage: number; totalPages: number
+  totalCount: number; pageSize: number
+  onPage: (n: number) => void
+  lang: Lang
+}) {
+  if (totalPages <= 1) return null
+  // Build a windowed page list: first, last, current ±2, with ellipses.
+  const window = 2
+  const pages: (number | 'gap')[] = []
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - window && i <= currentPage + window)) {
+      pages.push(i)
+    } else if (pages[pages.length - 1] !== 'gap') {
+      pages.push('gap')
+    }
+  }
+  const from = (currentPage - 1) * pageSize + 1
+  const to   = Math.min(totalCount, currentPage * pageSize)
+
+  return (
+    <nav
+      className="flex flex-col sm:flex-row items-center justify-between gap-3"
+      aria-label={lang === 'ar' ? 'تنقّل بين الصفحات' : 'Pagination'}
+    >
+      <span className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+        {lang === 'ar'
+          ? `عرض ${from.toLocaleString()}–${to.toLocaleString()} من ${totalCount.toLocaleString()}`
+          : `Showing ${from.toLocaleString()}–${to.toLocaleString()} of ${totalCount.toLocaleString()}`}
+      </span>
+      <div className="inline-flex items-center gap-1 flex-wrap" dir="ltr">
+        <button
+          onClick={() => onPage(currentPage - 1)}
+          disabled={currentPage <= 1}
+          className="rounded-lg w-9 h-9 inline-flex items-center justify-center text-[13px] font-semibold border transition-colors disabled:opacity-40"
+          style={{ background: 'var(--bg-card)', borderColor: 'var(--hairline)', color: 'var(--text-primary)' }}
+          aria-label={lang === 'ar' ? 'السابق' : 'Previous'}
+        >‹</button>
+        {pages.map((p, i) =>
+          p === 'gap'
+            ? <span key={`gap-${i}`} className="px-1 text-[13px]" style={{ color: 'var(--text-secondary)' }}>…</span>
+            : (
+              <button
+                key={p}
+                onClick={() => onPage(p)}
+                aria-current={p === currentPage ? 'page' : undefined}
+                className="rounded-lg w-9 h-9 inline-flex items-center justify-center text-[13px] font-semibold border transition-colors"
+                style={{
+                  background: p === currentPage ? 'var(--accent-primary)' : 'var(--bg-card)',
+                  borderColor: p === currentPage ? 'var(--accent-primary)' : 'var(--hairline)',
+                  color: p === currentPage ? '#FFFFFF' : 'var(--text-primary)',
+                }}
+              >
+                {p}
+              </button>
+            )
+        )}
+        <button
+          onClick={() => onPage(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+          className="rounded-lg w-9 h-9 inline-flex items-center justify-center text-[13px] font-semibold border transition-colors disabled:opacity-40"
+          style={{ background: 'var(--bg-card)', borderColor: 'var(--hairline)', color: 'var(--text-primary)' }}
+          aria-label={lang === 'ar' ? 'التالي' : 'Next'}
+        >›</button>
+      </div>
+    </nav>
   )
 }
