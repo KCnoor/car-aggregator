@@ -51,4 +51,10 @@ export type Listing = {
   market_consensus_score?: number | null
   cross_source_listing_group?: string | null
   low_source_confidence?: boolean
+  // v8 freshness columns (added in migrate-v8.sql)
+  freshness_state?:    'unverified' | 'verified_active' | 'stale' | 'dead'
+  last_verified_at?:   string | null
+  last_checked_at?:    string | null
+  last_http_status?:   number | null
+  dead_reason?:        string | null
 }

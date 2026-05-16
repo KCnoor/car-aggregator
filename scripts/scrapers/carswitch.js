@@ -206,9 +206,28 @@ async function extractListing (page, url, id) {
     }
     if (!title) title = document.querySelector('h1')?.textContent?.trim() ?? null
 
-    // Photos
-    const photos = [...new Set([...document.querySelectorAll('img[src]')].map(img => img.src)
-      .filter(s => /carswitch|cdn/i.test(s) && /\.(jpe?g|png|webp)/i.test(s)))].slice(0, 20)
+    // Photos: CarSwitch ships listing photos in JSON-LD `image` array.
+    // The cloudfront URLs are extensionless (e.g. /cars/used/images/original/<uuid>)
+    // so the legacy <img src> + extension filter missed them entirely.
+    const photos = (() => {
+      const seen = new Set()
+      const out = []
+      for (const s of document.querySelectorAll('script[type="application/ld+json"]')) {
+        try {
+          const j = JSON.parse(s.textContent || '')
+          const imgs = Array.isArray(j.image) ? j.image
+                     : (typeof j.image === 'string' ? [j.image] : [])
+          for (const u of imgs) {
+            if (typeof u !== 'string') continue
+            if (seen.has(u)) continue
+            seen.add(u)
+            out.push(u)
+            if (out.length >= 20) return out
+          }
+        } catch { /* skip non-JSON */ }
+      }
+      return out
+    })()
 
     // Monthly installment
     const instMatch = text.match(/Installments:\s*\n?\s*SAR\s*([\d,]+)/i)

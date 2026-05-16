@@ -265,12 +265,21 @@ export default function ListingDetailClient({
                     </div>
                   )}
 
-                  {/* CTA */}
+                  {/* CTA — fires a background freshness check so dead URLs
+                       get pruned even before the nightly sweep runs. */}
                   {listing.source_url && (
                     <a
                       href={listing.source_url}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => {
+                        fetch('/api/freshness-check', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ id: listing.id }),
+                          keepalive: true,
+                        }).catch(() => { /* fire-and-forget */ })
+                      }}
                       className={buttonVariants({ variant: 'default', size: 'lg' }) + ' w-full rounded-xl font-bold text-sm justify-center'}
                     >
                       {lang === 'ar'

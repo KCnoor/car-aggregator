@@ -11,18 +11,22 @@ export default async function Home() {
   const [b0, b1, b2, newCountRes] = await Promise.all([
     supabase.from('listings').select('*', { count: 'exact' })
       .eq('is_active', true)
+      .neq('freshness_state', 'dead')
       .order('deal_score', { ascending: false, nullsFirst: false })
       .range(0, 999),
     supabase.from('listings').select('*')
       .eq('is_active', true)
+      .neq('freshness_state', 'dead')
       .order('deal_score', { ascending: false, nullsFirst: false })
       .range(1000, 1999),
     supabase.from('listings').select('*')
       .eq('is_active', true)
+      .neq('freshness_state', 'dead')
       .order('deal_score', { ascending: false, nullsFirst: false })
       .range(2000, 2999),
     supabase.from('listings').select('*', { count: 'exact', head: true })
       .eq('is_active', true)
+      .neq('freshness_state', 'dead')
       .gte('first_seen_at', since24h),
   ])
 
