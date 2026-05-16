@@ -23,7 +23,10 @@
     "scrape:digitalcar": "node scripts/scrapers/digitalcar.js",
     "scrape:haraj":      "node scripts/scrapers/haraj.js",
     "scrape:all": "npm run scrape:syarah && npm run scrape:motory && npm run scrape:yallamotor && npm run scrape:gogomotor && npm run scrape:saudisale && npm run scrape:carswitch && npm run scrape:dubizzle && npm run scrape:digitalcar",
-    "pipeline:full": "npm run scrape:all && npm run normalize && npm run baselines && npm run score"
+    "pipeline:full":    "npm run scrape:all && npm run normalize && npm run baselines && npm run score",
+    "pipeline:refresh": "node scripts/pipeline_full.js",
+    "pipeline:status":  "node scripts/pipeline_status.js",
+    "freshness:sweep":  "node scripts/freshness_check.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",

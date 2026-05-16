@@ -1,0 +1,62 @@
+# Paste this file's body (everything after the marker line below) into a new
+# GitHub Actions workflow when you're ready to enable automated nightly
+# freshness sweeps. Stored here (not under .github/workflows/) so it doesn't
+# require a `workflow` scope on the push token — add it via the GitHub UI:
+#
+#   1. Repo → Actions tab → "New workflow" → "set up a workflow yourself".
+#   2. Name the file `.github/workflows/freshness-sweep.yml`.
+#   3. Paste the body below (skip this comment header).
+#   4. Repo → Settings → Secrets and variables → Actions, add:
+#        NEXT_PUBLIC_SUPABASE_URL
+#        SUPABASE_SERVICE_ROLE_KEY
+#   5. Commit. The schedule trigger fires on the next 23:00 UTC tick.
+#
+# What it does:
+#   - Cron 23:00 UTC every day = 02:00 Asia/Riyadh (UTC+3).
+#   - Runs scripts/freshness_check.js: HEAD-checks every active listing's
+#     source_url, marks 404s / dead-redirects as freshness_state='dead' and
+#     is_active=false. ~17k listings, ~45 min walltime with the per-source
+#     800ms floor and 8 workers.
+#   - Then scripts/coverage-audit.js: snapshots active counts per (source,
+#     make, model) into coverage_snapshots and flags ≥20%/≥10-listing drops.
+#   - workflow_dispatch is also enabled, so you can trigger a sweep ad-hoc
+#     from the Actions tab without waiting for the cron.
+#
+# ── workflow body (paste below this line) ────────────────────────────────────
+name: Daily freshness sweep
+
+on:
+  schedule:
+    - cron: '0 23 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Write .env.local from secrets
+        run: |
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+            echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          } > .env.local
+
+      - name: Run freshness sweep
+        run: node scripts/freshness_check.js
+        env:
+          NODE_TLS_REJECT_UNAUTHORIZED: '0'
+
+      - name: Run coverage audit
+        run: node scripts/coverage-audit.js
+        env:
+          NODE_TLS_REJECT_UNAUTHORIZED: '0'

@@ -29,6 +29,16 @@ These are deferred items uncovered during the v2 refactor. Captured here for the
 
 - **Wreck pattern bug** in `lib/scoring/redflags.js`: `\bdamaged?\b` matches singular/past-tense but not plural "damages". Fix: `\bdamage(d|s)?\b`. Caught by audit; not yet applied. Low impact (1 false negative across 17k listings) but should be fixed.
 
+## Dubizzle — structural compromise (decision point in 2-3 weeks)
+
+Dubizzle is structurally compromised — no JS-rendered images (placeholders
+shown), US-import contamination affecting score accuracy, lower overall
+data quality. 909 listings contributing significant volume but lowest
+quality in the dataset. Decision point in 2-3 weeks: invest in proper
+Dubizzle support (image CDN reverse-engineering, import risk detection,
+residential proxy if blocked further) or deprioritize like Haraj.
+Currently kept active with -1.3 score haircut + visible warning badge.
+
 ## Dubizzle import handling
 
 - **Current stopgap**: systemwide -1.3 score haircut on all Dubizzle listings + visible amber warning badge on the card asking the user to verify car location. Configured via `SOURCE_SCORE_ADJUSTMENT` in `lib/scoring/tiers.js`; applied to existing rows by `scripts/_apply_dubizzle_haircut.js`.
