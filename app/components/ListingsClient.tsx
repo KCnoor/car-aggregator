@@ -24,8 +24,6 @@ type AIFilters = {
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const HERO_BG = '#0A1628'
-const AMBER   = '#D4A574'
 const INITIAL = 60
 const PAGE    = 40
 const ALL     = '__all__'
@@ -55,18 +53,8 @@ const COND_EN: Record<string, string>  = { used: 'Used', new: 'New' }
 
 const VALID_TRANS = ['automatic', 'manual']
 
-// ── Geometric SVG pattern ──────────────────────────────────────────────────────
-const GEO_PATTERN = `url("data:image/svg+xml,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56">' +
-  '<path d="M28 3 L53 28 L28 53 L3 28 Z" fill="none" stroke="white" stroke-width="0.7"/>' +
-  '<path d="M28 15 L41 28 L28 41 L15 28 Z" fill="none" stroke="white" stroke-width="0.7"/>' +
-  '<circle cx="28" cy="3"  r="1.4" fill="white"/>' +
-  '<circle cx="53" cy="28" r="1.4" fill="white"/>' +
-  '<circle cx="28" cy="53" r="1.4" fill="white"/>' +
-  '<circle cx="3"  cy="28" r="1.4" fill="white"/>' +
-  '<circle cx="28" cy="28" r="2"   fill="white"/>' +
-  '</svg>'
-)}")`
+// (The legacy navy-hero geometric SVG pattern and HERO_BG / AMBER tokens
+// were deleted when the hero section moved to the global StickyHeader.)
 
 // ── Source config ──────────────────────────────────────────────────────────────
 const SOURCES = [
