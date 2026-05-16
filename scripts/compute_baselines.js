@@ -59,15 +59,21 @@ const UPSERT_BATCH = 500
 
   // 1. Read all active priced listings keyed by (make, model, year). City is
   //    optional — used for the city-scope bucket only.
+  //
+  //    Pre-baseline filters applied here (per refactor v2.5 spec):
+  //      - Exclude is_dealer_multi_upload = true (dealer inventory dupes).
+  //      - Exclude price_sar < 5,000 (parse-error suspects).
   let offset = 0
   const all = []
   for (;;) {
     const { data, error } = await sb
       .from('listings')
-      .select('make_slug, model_slug, year, city_slug, price_sar, source, source_quality_tier')
+      .select('make_slug, model_slug, year, city_slug, price_sar, source, source_quality_tier, market_consensus_score, is_dealer_multi_upload')
       .eq('is_active', true)
       .eq('contact_for_price', false)
-      .not('price_sar', 'is', null)
+      .eq('is_dealer_multi_upload', false)
+      .gte('price_sar', 5000)
+      .lte('price_sar', 5_000_000)
       .not('make_slug', 'is', null)
       .not('model_slug', 'is', null)
       .not('year', 'is', null)
@@ -81,7 +87,7 @@ const UPSERT_BATCH = 500
     offset += data.length
   }
   process.stdout.write('\n')
-  console.log(`  total priced+keyed listings: ${all.length}`)
+  console.log(`  total priced+keyed listings (after multi-upload & price>=5000 filters): ${all.length}`)
 
   for (const r of all) {
     if (!r.source_quality_tier) r.source_quality_tier = tiers.sourceToTier(r.source)

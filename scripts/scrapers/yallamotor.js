@@ -48,7 +48,10 @@ async function harvestPage (ctx, url) {
         const ariaLabel = link.getAttribute('aria-label') || ''
         const title = ariaLabel.replace(/^View details for\s*/i, '').trim() || `${make} ${model} ${year}`
         const tc = art.textContent || ''
-        const priceMatch = tc.match(/SAR\s*([\d,]+)/)
+        // Use a strict comma-grouped regex so we don't accidentally swallow
+        // the listing's year that's rendered immediately after the price
+        // without a separator (Yalla's card HTML collapses them).
+        const priceMatch = tc.match(/SAR\s*(\d{1,3}(?:,\d{3}){0,2})\b/)
         const price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : null
         const mileMatch = tc.match(/([\d,]+)\s*KM/i)
         const mileage = mileMatch ? parseInt(mileMatch[1].replace(/,/g, '')) : null

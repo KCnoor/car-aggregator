@@ -85,7 +85,7 @@ const valuator = REQUIRE_AI ? new Valuator({ anthropicKey: ANTHROPIC_KEY }) : nu
 const PAGE = 1000
 const UPDATE_CONCURRENCY = 15
 const AI_CONCURRENCY     = 5
-const CHECKPOINT_EVERY   = 100
+const CHECKPOINT_EVERY   = 500
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 async function prompt (q) {
@@ -118,7 +118,7 @@ async function fetchListings () {
   const out = []
   for (;;) {
     let q = sb.from('listings')
-      .select('id, source, source_quality_tier, make_slug, make_en, make_ar, model_slug, model_en, model_ar, year, price_sar, mileage_km, city_slug, city_en, city_ar, color_slug, color_en, color_ar, fuel_type_slug, transmission_slug, trim, condition, description_ar, title, red_flags, deal_score, score_source')
+      .select('id, source, source_quality_tier, make_slug, make_en, make_ar, model_slug, model_en, model_ar, year, price_sar, mileage_km, city_slug, city_en, city_ar, color_slug, color_en, color_ar, fuel_type_slug, transmission_slug, trim, condition, description_ar, title, red_flags, deal_score, score_source, external_price_label, is_dealer_multi_upload, cross_source_listing_group, market_consensus_score')
       .eq('is_active', true)
       .eq('contact_for_price', false)
       .not('price_sar', 'is', null)
@@ -141,6 +141,61 @@ async function fetchListings () {
   return out
 }
 
+// ── Loose baseline lookup for AI market_context ─────────────────────────────
+// When a listing doesn't qualify for a strict (make, model, year, city)
+// baseline, build a looser context from broader baselines so the AI call
+// has SOME market anchor. Prefer:
+//   1. exact (make, model, year, country)
+//   2. (make, model, year ±1, country)
+//   3. (make, model, any year) — averaged
+function buildLooseMarketContext (baselines, listing) {
+  const m = listing.make_slug, mo = listing.model_slug, y = listing.year
+  if (!m || !mo) return null
+
+  // 1. exact country for the listing's year
+  if (y) {
+    const k = `${m}|${mo}|${y}|${COUNTRY_SCOPE_SENTINEL}|${SCOPE_COUNTRY}`
+    const b = baselines.get(k)
+    if (b && b.sample_size >= 3) return { median_price: b.weighted_median_price, sample_size: b.sample_size, scope: `country/${y}` }
+  }
+  // 2. ±1 year country
+  if (y) {
+    for (const dy of [-1, 1, -2, 2]) {
+      const b = baselines.get(`${m}|${mo}|${y + dy}|${COUNTRY_SCOPE_SENTINEL}|${SCOPE_COUNTRY}`)
+      if (b && b.sample_size >= 5) return { median_price: b.weighted_median_price, sample_size: b.sample_size, scope: `country/${y + dy}` }
+    }
+  }
+  // 3. any year for this make+model
+  let total = 0, n = 0, biggest = 0
+  for (const [k, b] of baselines) {
+    if (!k.startsWith(`${m}|${mo}|`)) continue
+    if (!k.includes(SCOPE_COUNTRY)) continue
+    total += b.weighted_median_price * b.sample_size
+    n += b.sample_size
+    if (b.sample_size > biggest) biggest = b.sample_size
+  }
+  if (n >= 5) return { median_price: total / n, sample_size: n, scope: 'make-model-any-year' }
+
+  return null
+}
+
+// ── Map an external CarSwitch price label to our 0-10 tier ─────────────────
+function scoreFromExternalLabel (label) {
+  if (!label) return null
+  const s = String(label).toLowerCase()
+  if (s === 'great_price') return { deal_score: 9.0, score_tier: 'great_deal' }
+  if (s === 'good_price')  return { deal_score: 7.7, score_tier: 'good_deal'  }
+  if (s === 'fair_price')  return { deal_score: 6.0, score_tier: 'fair'       }
+  const offMatch = s.match(/^discount_(\d+)_percent$/)
+  if (offMatch) {
+    const pct = parseInt(offMatch[1])
+    if (pct >= 30) return { deal_score: 9.5, score_tier: 'great_deal' }
+    if (pct >= 15) return { deal_score: 8.5, score_tier: 'good_deal'  }
+    return { deal_score: 7.0, score_tier: 'good_deal' }
+  }
+  return null
+}
+
 // ── Main scoring loop ───────────────────────────────────────────────────────
 ;(async () => {
   console.log(`Layer 4: score (cost_cap=$${COST_CAP_USD}${NO_AI ? ', NO_AI' : ''})\n`)
@@ -156,11 +211,26 @@ async function fetchListings () {
 
   if (listings.length === 0) { console.log('Nothing to do.'); return }
 
-  // Partition by available baseline (with city → country fallback).
-  const bucket = { city: [], country: [], needsAi: [] }
+  // ── Partition listings ─────────────────────────────────────────────────
+  // Order of skip rules:
+  //   1. external_price_label populated     → map CarSwitch's label to tier
+  //   2. price_sar < 5000                   → skip (outlier)
+  //   3. baseline available                 → city → country
+  //   4. else → AI valuation
+  //
+  // is_dealer_multi_upload listings are NOT specially routed — they're
+  // scored against their own price like any other listing. The flag only
+  // prevents them from contributing to baselines (in compute_baselines.js).
+  // An earlier inheritance step copied a sibling's score, but siblings
+  // can have wildly different prices, so inheritance produced wrong scores.
+  const bucket = { external: [], outlier: [], city: [], country: [], needsAi: [] }
   const baselineHitsByListing = new Map()
   for (const l of listings) {
     if (!l.source_quality_tier) l.source_quality_tier = tiers.sourceToTier(l.source)
+
+    if (l.external_price_label) { bucket.external.push(l); continue }
+    if (l.price_sar < 5000 || l.price_sar > 5_000_000) { bucket.outlier.push(l); continue }
+
     const hit = bl.lookupBaselineWithFallback(baselines, l, 5)
     if (hit) {
       baselineHitsByListing.set(l.id, hit)
@@ -170,28 +240,51 @@ async function fetchListings () {
       bucket.needsAi.push(l)
     }
   }
-  console.log(`  city baseline:    ${bucket.city.length}`)
-  console.log(`  country baseline: ${bucket.country.length}`)
-  console.log(`  ai path:          ${bucket.needsAi.length}`)
+  console.log(`  external label:    ${bucket.external.length}`)
+  console.log(`  price outlier:     ${bucket.outlier.length} (skipped)`)
+  console.log(`  city baseline:     ${bucket.city.length}`)
+  console.log(`  country baseline:  ${bucket.country.length}`)
+  console.log(`  ai path:           ${bucket.needsAi.length}`)
 
-  // ── Phase 1: baseline path (fast, no API calls) ─────────────────────────
   const updates = []
   let costPaused = false
 
+  // ── Phase 1: baseline path (fast, no API calls) ─────────────────────────
   for (const l of [...bucket.city, ...bucket.country]) {
     const hit = baselineHitsByListing.get(l.id)
     const result = bl.scoreAgainstBaseline(l, hit.baseline, hit.scope)
     if (!result) continue
     updates.push(buildUpdate(l, result))
   }
-  console.log(`  baseline-scored: ${updates.length}`)
+  console.log(`  baseline-scored:  ${updates.length}`)
+
+  // ── Phase 1b: external label path (CarSwitch only) ─────────────────────
+  let externalScored = 0
+  for (const l of bucket.external) {
+    const r = scoreFromExternalLabel(l.external_price_label)
+    if (!r) continue
+    const result = { ...r, score_source: 'external_label', score_comparables: null, baseline_scope: null }
+    updates.push(buildUpdate(l, result))
+    externalScored++
+  }
+  console.log(`  external-scored:  ${externalScored}`)
 
   // ── Phase 2: AI path (gated by cost guard) ──────────────────────────────
+  // Sort AI batch by (make, model, year) so similar listings score together
+  // — this maximises soft cache reuse on the static system prompt.
+  bucket.needsAi.sort((a, b) => {
+    const ka = `${a.make_slug ?? ''}|${a.model_slug ?? ''}|${a.year ?? 0}`
+    const kb = `${b.make_slug ?? ''}|${b.model_slug ?? ''}|${b.year ?? 0}`
+    return ka.localeCompare(kb)
+  })
   let aiScored = 0
   if (REQUIRE_AI && bucket.needsAi.length > 0) {
     for (let i = 0; i < bucket.needsAi.length; i += AI_CONCURRENCY) {
       const batch = bucket.needsAi.slice(i, i + AI_CONCURRENCY)
-      const results = await Promise.all(batch.map(l => valuator.scoreListing(l).catch(() => null)))
+      const results = await Promise.all(batch.map(l => {
+        const ctx = buildLooseMarketContext(baselines, l)
+        return valuator.scoreListing(l, ctx).catch(() => null)
+      }))
       for (let j = 0; j < batch.length; j++) {
         const r = results[j]
         if (!r) continue
