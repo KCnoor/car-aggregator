@@ -2,21 +2,24 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Target, AlertCircle, Scale, MousePointer2, Pin, Sparkles } from 'lucide-react'
+import {
+  Target, AlertCircle, Scale, MousePointer2, Pin, Sparkles,
+} from 'lucide-react'
 import {
   ComposedChart, Scatter, XAxis, YAxis, CartesianGrid,
-  ResponsiveContainer, Tooltip, ReferenceArea,
+  ResponsiveContainer, ReferenceArea,
 } from 'recharts'
 import type { Listing } from '@/lib/supabase'
 import ListingCard from '@/app/components/ListingCard'
 import { useLang } from '@/app/components/LangContext'
 import { MODEL_COLORS } from './bundles'
 
-const CORAL  = '#FF6B4A'
+// ── Palette ─────────────────────────────────────────────────────────────────
+const CORAL    = '#FF6B4A'
 const NAVY_900 = '#0F172A'
-const NAVY   = '#1E293B'
+const NAVY     = '#1E293B'
 const SLATE_700 = '#334155'
-const SLATE  = '#64748B'
+const SLATE     = '#64748B'
 const SLATE_400 = '#94A3B8'
 const SLATE_300 = '#CBD5E1'
 const SLATE_200 = '#E2E8F0'
@@ -29,13 +32,13 @@ const DEFAULT_YEAR_MAX = 2024
 const YEAR_OPTIONS = Array.from({ length: 2026 - 2005 + 1 }, (_, i) => 2026 - i)
 const POINT_CAP = 120
 
+// ── Types ──────────────────────────────────────────────────────────────────
 export type SlotSpec = {
   make: string
   model: string
   yearMin: number
   yearMax: number
 }
-
 type Slot = SlotSpec | null
 
 type CanonicalMake = {
@@ -50,12 +53,19 @@ type CanonicalModel = {
   canonical_name_ar: string
 }
 
-// Linear-interpolation percentile (the previous floor-indexed version
-// effectively returned the MAX for samples of n < 20, which combined with
-// data-entry-error outliers pinned the axes at absurd values like 1.5M km).
-// For n elements the rank position of the p-th percentile is
-// (p/100) * (n - 1), interpolating between the two surrounding sorted
-// values.
+// One row per renderable listing on the chart. All interaction state
+// references entries here by their stable `id` — never by array index.
+type ChartPoint = {
+  id: string
+  modelKey: string       // "make|model" — for color grouping
+  modelColor: string
+  modelLabel: string     // resolved label for the legend / tooltip
+  x: number              // price_sar
+  y: number              // mileage_km
+  listing: Listing
+}
+
+// ── Math helpers ───────────────────────────────────────────────────────────
 function percentile (sorted: number[], p: number): number {
   if (sorted.length === 0) return 0
   if (sorted.length === 1) return sorted[0]
@@ -79,6 +89,16 @@ function ticksForDomain (lo: number, hi: number, step: number): number[] {
   return out
 }
 
+// Defensive validity check on a raw listing.
+function isPlottable (l: Listing): boolean {
+  if (!l || !l.id) return false
+  if (!l.make_slug || !l.model_slug) return false
+  if (typeof l.price_sar !== 'number'  || !Number.isFinite(l.price_sar)  || l.price_sar  <= 0) return false
+  if (typeof l.mileage_km !== 'number' || !Number.isFinite(l.mileage_km) || l.mileage_km <= 0) return false
+  return true
+}
+
+// ── Component ──────────────────────────────────────────────────────────────
 export default function HuntClient ({
   initialSpecs,
   initialPerSlot,
@@ -93,22 +113,16 @@ export default function HuntClient ({
   const router = useRouter()
   const { lang } = useLang()
 
-  // 5 fixed slots; each may hold a spec or be null.
   const [slots, setSlots] = useState<Slot[]>(() => {
     const seeded: Slot[] = Array(MAX_SLOTS).fill(null)
     initialSpecs.slice(0, MAX_SLOTS).forEach((s, i) => { seeded[i] = s })
     return seeded
   })
-  // Server-fetched listings, indexed by filled-slot ORDER (not slot index).
-  // We keep a separate per-slot map so reordering / nulling slots doesn't
-  // shuffle the listings.
   const [perSlot, setPerSlot] = useState<Listing[][]>(initialPerSlot)
-  const [pinned, setPinned]   = useState<string[]>([])
-  const [hoverId, setHoverId] = useState<string | null>(null)
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
+  const [hoverId,   setHoverId]   = useState<string | null>(null)
+  const [hoverXY,   setHoverXY]   = useState<{ x: number; y: number } | null>(null)
 
-  // "Comparing 4+ models thins the chart" — soft amber warning above the
-  // chart. Dismissable; dismissal persists only for this session
-  // (sessionStorage), so a fresh visit re-surfaces the nudge.
   const [tooManyDismissed, setTooManyDismissed] = useState(false)
   useEffect(() => {
     try { setTooManyDismissed(window.sessionStorage.getItem('hunt_4plus_dismissed') === '1') } catch {}
@@ -118,8 +132,7 @@ export default function HuntClient ({
     try { window.sessionStorage.setItem('hunt_4plus_dismissed', '1') } catch {}
   }
 
-  // Reflect slot state in the URL on changes (skip the first mount —
-  // the server already loaded the initial set for whatever URL we landed on).
+  // Sync slot state into the URL on changes (skip first mount).
   const firstRender = useRef(true)
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return }
@@ -130,22 +143,26 @@ export default function HuntClient ({
     }
     const modelsQ = filled.map(s => `${s.make}-${s.model}`).join(',')
     const yearsQ  = filled.map(s => `${s.yearMin}-${s.yearMax}`).join(',')
-    router.replace(`/hunt?models=${encodeURIComponent(modelsQ)}&years=${encodeURIComponent(yearsQ)}`, { scroll: false })
+    router.replace(
+      `/hunt?models=${encodeURIComponent(modelsQ)}&years=${encodeURIComponent(yearsQ)}`,
+      { scroll: false },
+    )
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slots])
 
-  // initialPerSlot changes whenever the server re-renders (URL changed) —
-  // sync it into local state so subsequent client computations see fresh data.
   useEffect(() => { setPerSlot(initialPerSlot) }, [initialPerSlot])
 
-  // ── Slot operations ────────────────────────────────────────────────────────
+  // ── Slot mutators ─────────────────────────────────────────────────────────
   function setSlot (idx: number, value: Slot) {
     setSlots(prev => {
-      const next = [...prev]
-      next[idx] = value
-      return next
+      const next = [...prev]; next[idx] = value; return next
     })
-    setPinned([])
+    // Reset interactions — pinned/hover IDs may belong to listings about
+    // to disappear. The pinned-prune effect below will refill what's still
+    // valid once the next data fetch lands.
+    setPinnedIds(new Set())
+    setHoverId(null)
+    setHoverXY(null)
   }
   function setSlotMake (idx: number, makeSlug: string | null) {
     setSlot(idx, makeSlug
@@ -160,7 +177,7 @@ export default function HuntClient ({
       next[idx] = { ...cur, model: modelSlug ?? '' }
       return next
     })
-    setPinned([])
+    setPinnedIds(new Set()); setHoverId(null); setHoverXY(null)
   }
   function setSlotYears (idx: number, yearMin: number, yearMax: number) {
     setSlots(prev => {
@@ -170,14 +187,10 @@ export default function HuntClient ({
       next[idx] = { ...cur, yearMin, yearMax }
       return next
     })
-  }
-  function togglePin (id: string) {
-    setPinned(prev => prev.includes(id)
-      ? prev.filter(p => p !== id)
-      : (prev.length >= 4 ? prev : [...prev, id]))
+    setPinnedIds(new Set()); setHoverId(null); setHoverXY(null)
   }
 
-  // ── Group server listings to slot order (only for fully-filled slots) ──
+  // ── Group resolved metadata for each filled slot (in slot order) ─────────
   type SlotGroup = {
     color: string
     labelAr: string
@@ -186,15 +199,10 @@ export default function HuntClient ({
     slotIndex: number
   }
   const slotGroups: SlotGroup[] = useMemo(() => {
-    // Walk filled slots in order; `perSlot` indexes line up because the
-    // server returns one array per filled slot in declaration order.
     const groups: SlotGroup[] = []
     let perSlotCursor = 0
     slots.forEach((s, idx) => {
-      if (!s || !s.model) {
-        // unfilled slot — skip listings but keep slot color reserved
-        return
-      }
+      if (!s || !s.model) return
       const cm = canonicalModels.find(c =>
         c.canonical_make_slug === s.make && c.canonical_model_slug === s.model)
       const mk = canonicalMakes.find(c => c.canonical_make_slug === s.make)
@@ -212,29 +220,55 @@ export default function HuntClient ({
   }, [slots, perSlot, canonicalMakes, canonicalModels])
 
   const hasAnyFullSlot = slotGroups.length > 0
-  const allListings = useMemo(() => slotGroups.flatMap(g => g.listings), [slotGroups])
 
-  // ── Chart geometry (dynamic ranges + percentile clip + medians) ──
+  // ── Canonical ChartPoint set — single source of truth, keyed by id ────────
+  // Built once per (slotGroups, lang) change. Everything downstream that
+  // needs to look up a listing does so via this map by id, not by index
+  // into a Recharts payload (which is the root cause of the desync bugs).
   const chart = useMemo(() => {
-    if (allListings.length === 0) {
+    if (slotGroups.length === 0) {
       return {
-        pointsByGroup: [] as ChartGroup[],
+        all: [] as ChartPoint[],
+        byId: new Map<string, ChartPoint>(),
+        rendered: [] as ChartPoint[],
+        excluded: { invalid: 0, offChart: 0 },
         xMin: 0, xMax: 1, yMin: 0, yMax: 1,
         xStep: 50_000, yStep: 50_000,
         xMid: 0, yMid: 0,
-        clippedCount: 0, totalCount: 0,
       }
     }
-    const prices = [...allListings.map(l => l.price_sar!).filter(Number.isFinite)].sort((a, b) => a - b)
-    const miles  = [...allListings.map(l => l.mileage_km!).filter(Number.isFinite)].sort((a, b) => a - b)
+    // 1. Build the master point list with defensive validity filtering.
+    const all: ChartPoint[] = []
+    let invalidCount = 0
+    for (const g of slotGroups) {
+      for (const l of g.listings) {
+        if (!isPlottable(l)) { invalidCount++; continue }
+        all.push({
+          id: l.id,
+          modelKey: `${l.make_slug}|${l.model_slug}`,
+          modelColor: g.color,
+          modelLabel: lang === 'ar' ? g.labelAr : g.labelEn,
+          x: l.price_sar!,
+          y: l.mileage_km!,
+          listing: l,
+        })
+      }
+    }
+    if (all.length === 0) {
+      return {
+        all,
+        byId: new Map<string, ChartPoint>(all.map(p => [p.id, p])),
+        rendered: [] as ChartPoint[],
+        excluded: { invalid: invalidCount, offChart: 0 },
+        xMin: 0, xMax: 1, yMin: 0, yMax: 1,
+        xStep: 50_000, yStep: 50_000,
+        xMid: 0, yMid: 0,
+      }
+    }
 
-    // Dynamic axis ranges:
-    //   min = max(0, floor(rawMin * 0.9 / step) * step)
-    //   max = ceil(p95 * 1.1 / step) * step
-    // Step is chosen from the visible range so ticks are tidy:
-    //   < 25k spread → 10k step
-    //   < 200k spread → 25k step
-    //   else        → 50k step
+    // 2. Pick a tick step and snap min/max to clean multiples of it.
+    const prices = all.map(p => p.x).sort((a, b) => a - b)
+    const miles  = all.map(p => p.y).sort((a, b) => a - b)
     function dynamicAxis (vals: number[]) {
       const rawMin = vals[0]
       const p95    = percentile(vals, 95)
@@ -243,64 +277,112 @@ export default function HuntClient ({
                  : spread <= 200_000 ? 25_000
                  :                     50_000
       const min = Math.max(0, Math.floor((rawMin * 0.9) / step) * step)
-      const max = Math.ceil ((p95   * 1.1) / step) * step
+      const max = Math.ceil ((p95    * 1.1) / step) * step
       return { min, max: Math.max(max, min + step), step }
     }
-
     const x = dynamicAxis(prices)
     const y = dynamicAxis(miles)
 
-    const inRange = (l: Listing) =>
-      l.price_sar!  >= x.min && l.price_sar!  <= x.max &&
-      l.mileage_km! >= y.min && l.mileage_km! <= y.max
+    // 3. Clip points outside the axis range — count as off-chart.
+    const inRange = (p: ChartPoint) =>
+      p.x >= x.min && p.x <= x.max &&
+      p.y >= y.min && p.y <= y.max
+    let rendered = all.filter(inRange)
+    const offChart = all.length - rendered.length
 
-    const pointsByGroup: ChartGroup[] = slotGroups.map(g => {
-      const data = g.listings
-        .filter(inRange)
-        .map(l => ({ x: l.price_sar!, y: l.mileage_km!, id: l.id, listing: l }))
-      return { color: g.color, label: lang === 'ar' ? g.labelAr : g.labelEn, data }
-    })
-    const totalInRange = pointsByGroup.reduce((a, m) => a + m.data.length, 0)
-    if (totalInRange > POINT_CAP) {
-      const ranked = pointsByGroup.flatMap(m =>
-        m.data.map(d => ({ id: d.id, score: d.listing.deal_score ?? -1 }))
-      ).sort((a, b) => b.score - a.score).slice(0, POINT_CAP)
-      const keep = new Set(ranked.map(r => r.id))
-      for (const m of pointsByGroup) m.data = m.data.filter(d => keep.has(d.id))
+    // 4. Cap to POINT_CAP top-by-deal-score.
+    if (rendered.length > POINT_CAP) {
+      rendered = [...rendered]
+        .sort((a, b) => (b.listing.deal_score ?? -1) - (a.listing.deal_score ?? -1))
+        .slice(0, POINT_CAP)
     }
-    const renderedPrices = pointsByGroup.flatMap(m => m.data.map(d => d.x)).sort((a, b) => a - b)
-    const renderedMiles  = pointsByGroup.flatMap(m => m.data.map(d => d.y)).sort((a, b) => a - b)
+
+    // 5. Jitter overlapping points by a small fraction of the range so
+    // hover hits aren't blocked by exact stacking. Stable per id.
+    const xJitterScale = (x.max - x.min) * 0.002
+    const yJitterScale = (y.max - y.min) * 0.002
+    function pseudoRand (id: string) {
+      let h = 0
+      for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
+      return ((h & 0x7fff) / 0x7fff - 0.5) * 2  // [-1, 1]
+    }
+    rendered = rendered.map(p => ({
+      ...p,
+      x: p.x + xJitterScale * pseudoRand(p.id + 'x'),
+      y: p.y + yJitterScale * pseudoRand(p.id + 'y'),
+    }))
+
+    const byId = new Map<string, ChartPoint>(all.map(p => [p.id, p]))
+    const renderedPrices = rendered.map(p => p.x).sort((a, b) => a - b)
+    const renderedMiles  = rendered.map(p => p.y).sort((a, b) => a - b)
     return {
-      pointsByGroup,
+      all, byId, rendered,
+      excluded: { invalid: invalidCount, offChart },
       xMin: x.min, xMax: x.max, yMin: y.min, yMax: y.max,
       xStep: x.step, yStep: y.step,
       xMid: median(renderedPrices), yMid: median(renderedMiles),
-      clippedCount: allListings.length - totalInRange,
-      totalCount: allListings.length,
     }
-  }, [allListings, slotGroups, lang])
+  }, [slotGroups, lang])
 
-  const totalRendered = chart.pointsByGroup.reduce((a, m) => a + m.data.length, 0)
-  const clippedOutOfChart = chart.totalCount - totalRendered
+  // ── Pinned cleanup: drop any pinned id that's no longer in the rendered set.
+  // Runs whenever the data changes so stale references are pruned. We use a
+  // ref to compare the previous rendered-id signature and only mutate state
+  // when the set actually shrinks.
+  const lastRenderedIdsRef = useRef<string>('')
+  useEffect(() => {
+    const renderedIds = new Set(chart.rendered.map(p => p.id))
+    const sig = chart.rendered.map(p => p.id).sort().join(',')
+    if (sig === lastRenderedIdsRef.current) return
+    lastRenderedIdsRef.current = sig
+    setPinnedIds(prev => {
+      const next = new Set<string>()
+      let changed = false
+      for (const id of prev) {
+        if (renderedIds.has(id)) next.add(id)
+        else changed = true
+      }
+      return changed ? next : prev
+    })
+    setHoverId(prev => (prev && !renderedIds.has(prev) ? null : prev))
+  }, [chart.rendered])
 
-  // Listings strip data: pinned set if any, else everything in-chart.
-  const stripIds = useMemo(() => {
-    if (pinned.length > 0) return pinned
-    return chart.pointsByGroup.flatMap(g => g.data.map(d => d.id))
-  }, [pinned, chart])
+  function togglePin (id: string) {
+    setPinnedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else if (next.size < 4) next.add(id)
+      return next
+    })
+  }
+
+  // ── Strip data: pinned set if any, else everything in-chart ──────────────
   const stripListings: Listing[] = useMemo(() => {
-    const idSet = new Set(stripIds)
-    return allListings
-      .filter(l => idSet.has(l.id))
+    if (pinnedIds.size > 0) {
+      const ids = [...pinnedIds]
+      return ids
+        .map(id => chart.byId.get(id)?.listing)
+        .filter(Boolean) as Listing[]
+    }
+    return chart.rendered
+      .map(p => p.listing)
       .sort((a, b) => (b.deal_score ?? -1) - (a.deal_score ?? -1))
-  }, [stripIds, allListings])
+  }, [pinnedIds, chart])
+
+  // Look up the listing's slot color when rendering the comparison strip
+  // (must match the dot's color so the user can tell which slot a card
+  // came from).
+  const colorOf = useCallback((id: string) => chart.byId.get(id)?.modelColor ?? CORAL, [chart])
+
+  // Hover/tooltip data — derived strictly from hoverId via byId, never
+  // from Recharts payloads (that was the source of the cross-wired tooltip
+  // bug).
+  const hoverPoint = hoverId ? chart.byId.get(hoverId) ?? null : null
 
   return (
     <div dir="rtl" className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
-      {/* ── Intro strip + tips panel ── */}
+      {/* ── Intro + tips ── */}
       <section className="max-w-screen-xl mx-auto px-4" style={{ paddingTop: 40, paddingBottom: 24 }}>
         <div className="grid grid-cols-1 md:grid-cols-[55fr_45fr] gap-6">
-          {/* Title column (right under RTL) */}
           <div>
             <h1 className="leading-tight" style={{ color: NAVY_900, fontSize: 40, fontWeight: 900 }}>
               الصياد
@@ -313,8 +395,6 @@ export default function HuntClient ({
               والممشى الأقل. حوم على نقطة لتفاصيلها، اضغط لتثبيتها.
             </p>
           </div>
-
-          {/* Tips column (left under RTL — stacks below on mobile) */}
           <UsageTips />
         </div>
       </section>
@@ -339,8 +419,7 @@ export default function HuntClient ({
         </div>
       </section>
 
-      {/* ── 4-plus-models soft warning. Only renders when the user has
-          filled 4 or 5 slots AND hasn't dismissed it this session. ── */}
+      {/* ── 4+ models soft warning ── */}
       {slotGroups.length >= 4 && !tooManyDismissed && (
         <section className="mx-auto px-4 pb-4" style={{ maxWidth: 1100 }}>
           <TooManyModelsBanner onDismiss={dismissTooMany} />
@@ -358,26 +437,27 @@ export default function HuntClient ({
             boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
           }}
         >
-          {/* Legend (right-aligned in RTL) */}
+          {/* Legend */}
           {hasAnyFullSlot && (
             <div className="flex flex-wrap justify-end mb-3" style={{ gap: 24 }}>
-              {slotGroups.map(g => (
-                <span key={g.slotIndex} className="inline-flex items-center gap-2">
-                  <span aria-hidden style={{ width: 12, height: 12, borderRadius: 999, background: g.color }} />
-                  <span style={{ color: NAVY_900, fontWeight: 800, fontSize: 15 }}>
-                    {lang === 'ar' ? g.labelAr : g.labelEn}
+              {slotGroups.map(g => {
+                const count = chart.rendered.filter(p => p.modelColor === g.color).length
+                return (
+                  <span key={g.slotIndex} className="inline-flex items-center gap-2">
+                    <span aria-hidden style={{ width: 12, height: 12, borderRadius: 999, background: g.color }} />
+                    <span style={{ color: NAVY_900, fontWeight: 800, fontSize: 15 }}>
+                      {lang === 'ar' ? g.labelAr : g.labelEn}
+                    </span>
+                    <span style={{ color: SLATE, fontWeight: 500, fontSize: 13 }}>({count})</span>
                   </span>
-                  <span style={{ color: SLATE, fontWeight: 500, fontSize: 13 }}>
-                    ({g.listings.length})
-                  </span>
-                </span>
-              ))}
+                )
+              })}
             </div>
           )}
 
           {!hasAnyFullSlot ? (
             <EmptyState />
-          ) : totalRendered < 1 ? (
+          ) : chart.rendered.length < 1 ? (
             <div
               className="flex items-center justify-center text-center"
               style={{ height: 360, color: SLATE, fontSize: 14 }}
@@ -386,25 +466,26 @@ export default function HuntClient ({
             </div>
           ) : (
             <HuntChart
-              groups={chart.pointsByGroup}
+              points={chart.rendered}
               xMin={chart.xMin} xMax={chart.xMax}
               yMin={chart.yMin} yMax={chart.yMax}
               xStep={chart.xStep} yStep={chart.yStep}
               xMid={chart.xMid} yMid={chart.yMid}
               hoverId={hoverId}
-              pinned={pinned}
-              onHover={setHoverId}
+              pinnedIds={pinnedIds}
+              onHover={(id, xy) => { setHoverId(id); setHoverXY(xy) }}
               onClick={togglePin}
-              reversedX={lang === 'ar'}
-              offChartCount={clippedOutOfChart}
+              offChartCount={chart.excluded.offChart + chart.excluded.invalid}
               lang={lang}
+              hoverPoint={hoverPoint}
+              hoverXY={hoverXY}
             />
           )}
         </div>
       </section>
 
       {/* ── Listings strip ── */}
-      {hasAnyFullSlot && totalRendered > 0 && (
+      {hasAnyFullSlot && chart.rendered.length > 0 && (
         <section className="max-w-screen-xl mx-auto px-4 pb-12">
           <div
             className="rounded-2xl"
@@ -419,17 +500,14 @@ export default function HuntClient ({
           >
             <span aria-hidden style={{ marginInlineEnd: 8 }}>👇</span>
             السيارات في المخطط ({stripListings.length} سيارة)
-            {pinned.length > 0
-              ? <> · <button onClick={() => setPinned([])} className="underline" style={{ color: CORAL }}>عرض كل السيارات</button></>
+            {pinnedIds.size > 0
+              ? <> · <button onClick={() => setPinnedIds(new Set())} className="underline" style={{ color: CORAL }}>عرض كل السيارات</button></>
               : <> — مرتبة حسب أحسن صفقة</>}
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {stripListings.map((l, i) => {
-              const matchingGroup = slotGroups.find(g =>
-                g.listings.some(x => x.id === l.id)
-              )
-              const color = matchingGroup?.color ?? CORAL
+              const color = colorOf(l.id)
               return (
                 <div key={l.id} style={{ borderInlineStart: `4px solid ${color}`, paddingInlineStart: 8 }}>
                   <ListingCard listing={l} lang="ar" index={i} />
@@ -443,8 +521,7 @@ export default function HuntClient ({
   )
 }
 
-// ── Empty state ──────────────────────────────────────────────────────────────
-// ── Soft amber warning when 4+ slots are filled ──────────────────────────────
+// ─── Banner ─────────────────────────────────────────────────────────────────
 function TooManyModelsBanner ({ onDismiss }: { onDismiss: () => void }) {
   return (
     <div
@@ -457,7 +534,6 @@ function TooManyModelsBanner ({ onDismiss }: { onDismiss: () => void }) {
         color: '#92400E',
       }}
     >
-      {/* Icon on the right under RTL (first DOM child = right visually) */}
       <AlertCircle size={20} color="#D97706" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
       <p className="flex-1" style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.65 }}>
         ملاحظة: نقترح مقارنة ٣ موديلات أو أقل من نفس الفئة. كل ما تضيف موديلات
@@ -476,7 +552,7 @@ function TooManyModelsBanner ({ onDismiss }: { onDismiss: () => void }) {
   )
 }
 
-// ── Usage tips panel beside the title ────────────────────────────────────────
+// ─── Tips panel ─────────────────────────────────────────────────────────────
 function UsageTips () {
   const TIPS: { Icon: typeof Scale; text: string }[] = [
     { Icon: Scale,         text: 'قارن سيارات من نفس الفئة (مو رولز رويس مع كورولا)' },
@@ -488,16 +564,9 @@ function UsageTips () {
   return (
     <aside
       className="rounded-2xl"
-      style={{
-        background: SLATE_50,
-        border: `1px solid ${SLATE_200}`,
-        padding: 20,
-      }}
+      style={{ background: SLATE_50, border: `1px solid ${SLATE_200}`, padding: 20 }}
     >
-      <h3
-        className="mb-3"
-        style={{ color: SLATE_700, fontSize: 14, fontWeight: 800 }}
-      >
+      <h3 className="mb-3" style={{ color: SLATE_700, fontSize: 14, fontWeight: 800 }}>
         كيف تستخدم الصياد؟
       </h3>
       <ul className="flex flex-col gap-2.5" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -516,12 +585,10 @@ function UsageTips () {
   )
 }
 
+// ─── Empty state ────────────────────────────────────────────────────────────
 function EmptyState () {
   return (
-    <div
-      className="flex flex-col items-center justify-center text-center px-4"
-      style={{ height: 360 }}
-    >
+    <div className="flex flex-col items-center justify-center text-center px-4" style={{ height: 360 }}>
       <Target size={72} strokeWidth={1.2} color={CORAL} style={{ opacity: 0.18, marginBottom: 14 }} />
       <p style={{ color: SLATE_700, fontSize: 17, fontWeight: 600 }}>
         اختر ماركة وموديل في الخانات أعلاه لتشوف المخطط
@@ -533,17 +600,11 @@ function EmptyState () {
   )
 }
 
-// ── Slot card ────────────────────────────────────────────────────────────────
+// ─── Slot card ──────────────────────────────────────────────────────────────
 function SlotCard ({
-  slotIndex,
-  slot,
-  color,
-  canonicalMakes,
-  canonicalModels,
-  onPickMake,
-  onPickModel,
-  onPickYears,
-  onClear,
+  slotIndex, slot, color,
+  canonicalMakes, canonicalModels,
+  onPickMake, onPickModel, onPickYears, onClear,
 }: {
   slotIndex: number
   slot: Slot
@@ -568,13 +629,9 @@ function SlotCard ({
       style={{
         background: '#FFFFFF',
         borderRadius: 16,
-        borderTop:    `1px ${filled ? 'solid' : 'dashed'} ${filled ? SLATE_200 : SLATE_200}`,
+        borderTop:    `1px ${filled ? 'solid' : 'dashed'} ${SLATE_200}`,
         borderInlineEnd:  `1px ${filled ? 'solid' : 'dashed'} ${SLATE_200}`,
         borderBottom: `1px ${filled ? 'solid' : 'dashed'} ${SLATE_200}`,
-        // RTL: insetInlineStart = left visually under dir=rtl on parent; in LTR = right.
-        // But the spec says "left border in slot color" — semantically it should
-        // be on the leading edge of the card. Use borderInlineStart so it
-        // auto-flips with the document direction.
         borderInlineStart: `4px ${filled ? 'solid' : 'dashed'} ${filled ? color : `${color}80`}`,
         padding: 12,
         minHeight: 130,
@@ -586,10 +643,10 @@ function SlotCard ({
         opacity: filled ? 1 : 0.92,
       }}
     >
-      {/* Slot label + clear */}
       <div className="flex items-center justify-between">
         <span style={{ color: SLATE, fontSize: 13, fontWeight: 700 }}>
-          موديل {slotIndex + 1}{slotIndex >= 3 && <span style={{ color: SLATE_400, fontWeight: 500 }}> (إضافي)</span>}
+          موديل {slotIndex + 1}
+          {slotIndex >= 3 && <span style={{ color: SLATE_400, fontWeight: 500 }}> (إضافي)</span>}
         </span>
         {fullyFilled && (
           <button
@@ -598,25 +655,17 @@ function SlotCard ({
             aria-label="مسح"
             className="inline-flex items-center justify-center rounded-full w-5 h-5 hover:bg-slate-100"
             style={{ color: SLATE, fontSize: 14 }}
-          >
-            ×
-          </button>
+          >×</button>
         )}
       </div>
 
-      {/* Make dropdown */}
       <select
         value={slot?.make ?? ''}
         onChange={e => onPickMake(e.target.value || null)}
         style={{
-          background: '#FFFFFF',
-          border: `1px solid ${SLATE_200}`,
-          borderRadius: 8,
-          padding: '6px 10px',
-          fontSize: 13,
-          fontWeight: 600,
-          color: slot?.make ? NAVY : SLATE_400,
-          width: '100%',
+          background: '#FFFFFF', border: `1px solid ${SLATE_200}`, borderRadius: 8,
+          padding: '6px 10px', fontSize: 13, fontWeight: 600,
+          color: slot?.make ? NAVY : SLATE_400, width: '100%',
         }}
       >
         <option value="">الماركة</option>
@@ -627,20 +676,15 @@ function SlotCard ({
         ))}
       </select>
 
-      {/* Model dropdown (disabled until make picked) */}
       <select
         value={slot?.model ?? ''}
         onChange={e => onPickModel(e.target.value || null)}
         disabled={!slot?.make}
         style={{
           background: !slot?.make ? SLATE_50 : '#FFFFFF',
-          border: `1px solid ${SLATE_200}`,
-          borderRadius: 8,
-          padding: '6px 10px',
-          fontSize: 13,
-          fontWeight: 600,
-          color: slot?.model ? NAVY : SLATE_400,
-          width: '100%',
+          border: `1px solid ${SLATE_200}`, borderRadius: 8,
+          padding: '6px 10px', fontSize: 13, fontWeight: 600,
+          color: slot?.model ? NAVY : SLATE_400, width: '100%',
           cursor: slot?.make ? 'pointer' : 'not-allowed',
         }}
       >
@@ -652,7 +696,6 @@ function SlotCard ({
         ))}
       </select>
 
-      {/* Per-slot year range */}
       <div className="flex items-center gap-1.5">
         <select
           value={yearMin}
@@ -661,18 +704,11 @@ function SlotCard ({
           aria-label="من"
           style={{
             background: !fullyFilled ? SLATE_50 : '#FFFFFF',
-            border: `1px solid ${SLATE_200}`,
-            borderRadius: 8,
-            padding: '4px 6px',
-            fontSize: 12,
-            fontWeight: 700,
-            color: NAVY,
-            flex: 1,
+            border: `1px solid ${SLATE_200}`, borderRadius: 8,
+            padding: '4px 6px', fontSize: 12, fontWeight: 700, color: NAVY, flex: 1,
           }}
         >
-          {YEAR_OPTIONS.map(y => (
-            <option key={y} value={y}>من {y}</option>
-          ))}
+          {YEAR_OPTIONS.map(y => <option key={y} value={y}>من {y}</option>)}
         </select>
         <select
           value={yearMax}
@@ -681,13 +717,8 @@ function SlotCard ({
           aria-label="إلى"
           style={{
             background: !fullyFilled ? SLATE_50 : '#FFFFFF',
-            border: `1px solid ${SLATE_200}`,
-            borderRadius: 8,
-            padding: '4px 6px',
-            fontSize: 12,
-            fontWeight: 700,
-            color: NAVY,
-            flex: 1,
+            border: `1px solid ${SLATE_200}`, borderRadius: 8,
+            padding: '4px 6px', fontSize: 12, fontWeight: 700, color: NAVY, flex: 1,
           }}
         >
           {YEAR_OPTIONS.filter(y => y >= yearMin).map(y => (
@@ -699,82 +730,96 @@ function SlotCard ({
   )
 }
 
-// ── Chart ────────────────────────────────────────────────────────────────────
-type ChartGroup = {
-  color: string
-  label: string
-  data: { x: number; y: number; id: string; listing: Listing }[]
-}
-
+// ─── Chart ──────────────────────────────────────────────────────────────────
 function HuntChart ({
-  groups, xMin, xMax, yMin, yMax, xStep, yStep, xMid, yMid,
-  hoverId, pinned, onHover, onClick, reversedX,
+  points,
+  xMin, xMax, yMin, yMax, xStep, yStep, xMid, yMid,
+  hoverId, pinnedIds, onHover, onClick,
   offChartCount, lang,
+  hoverPoint, hoverXY,
 }: {
-  groups: ChartGroup[]
+  points: ChartPoint[]
   xMin: number; xMax: number; yMin: number; yMax: number
   xStep: number; yStep: number
   xMid: number; yMid: number
   hoverId: string | null
-  pinned: string[]
-  onHover: (id: string | null) => void
+  pinnedIds: Set<string>
+  onHover: (id: string | null, xy: { x: number; y: number } | null) => void
   onClick: (id: string) => void
-  reversedX: boolean
   offChartCount: number
   lang: 'ar' | 'en'
+  hoverPoint: ChartPoint | null
+  hoverXY: { x: number; y: number } | null
 }) {
   const anyHover = hoverId !== null
-  const dotShape = useCallback((props: { cx?: number; cy?: number; payload?: { id: string }; fill?: string }) => {
-    const { cx, cy, payload, fill } = props
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // One Scatter for all points; the dot shape reads its own color and
+  // hover/pin state from the `id` stamped on each datum. This avoids the
+  // multiple-Scatter z-stacking bug that made dots in earlier groups
+  // unhoverable in the previous implementation.
+  const dotShape = useCallback((props: { cx?: number; cy?: number; payload?: ChartPoint }) => {
+    const { cx, cy, payload } = props
     if (cx == null || cy == null || !payload) return <g />
     const id = payload.id
     const isHover  = hoverId === id
-    const isPinned = pinned.includes(id)
+    const isPinned = pinnedIds.has(id)
     const r = isHover ? 14 : 9
     const fillOpacity = anyHover ? (isHover ? 1 : 0.25) : 1
     return (
       <g
         style={{ cursor: 'pointer', transition: 'r 0.18s' }}
-        onMouseEnter={() => onHover(id)}
-        onMouseLeave={() => onHover(null)}
+        onMouseEnter={e => {
+          const rect = containerRef.current?.getBoundingClientRect()
+          onHover(id, rect
+            ? { x: e.clientX - rect.left, y: e.clientY - rect.top }
+            : null)
+        }}
+        onMouseMove={e => {
+          const rect = containerRef.current?.getBoundingClientRect()
+          if (rect) onHover(id, { x: e.clientX - rect.left, y: e.clientY - rect.top })
+        }}
+        onMouseLeave={() => onHover(null, null)}
         onClick={() => onClick(id)}
       >
         <circle
           cx={cx} cy={cy} r={r}
-          fill={fill}
+          fill={payload.modelColor}
           fillOpacity={fillOpacity}
           stroke={isPinned ? CORAL : '#FFFFFF'}
           strokeWidth={isPinned ? 3 : 1}
         />
       </g>
     )
-  }, [hoverId, pinned, anyHover, onHover, onClick])
+  }, [hoverId, pinnedIds, anyHover, onHover, onClick])
 
   const xTicks = ticksForDomain(xMin, xMax, xStep)
   const yTicks = ticksForDomain(yMin, yMax, yStep)
   const fmt = (v: number) => v.toLocaleString('en-US')
 
-  // Pill copy by language. The four pills always sit in the four
-  // corners of the chart frame; CSS logical properties handle the RTL
-  // flip so each pill always lands in the corner that matches its zone.
+  // Always-LTR layout. Labels remain Arabic; only the chart math is LTR.
+  //   bottom-LEFT  = deal (low x, low y)
+  //   bottom-RIGHT = secondary (high x, low y)
+  //   top-LEFT     = secondary (low x, high y)
+  //   top-RIGHT    = avoid (high x, high y)
   const pills = lang === 'ar'
     ? {
         deal:    'منطقة اللقطات',
-        bottomS: 'سعر أعلى، ممشى أقل',
-        topS:    'سعر أقل، ممشى أعلى',
+        bottomR: 'سعر أعلى، ممشى أقل',
+        topL:    'سعر أقل، ممشى أعلى',
         avoid:   'أعلى من السوق',
       }
     : {
         deal:    'Deal zone',
-        bottomS: 'Higher price, lower km',
-        topS:    'Lower price, higher km',
+        bottomR: 'Higher price, lower km',
+        topL:    'Lower price, higher km',
         avoid:   'Above market',
       }
-  const xTitle = lang === 'ar' ? 'السعر (ريال) →' : '← Price (SAR)'
+  const xTitle = lang === 'ar' ? 'السعر (ريال) →' : 'Price (SAR) →'
   const yTitle = lang === 'ar' ? '↑ الممشى (كم)'   : '↑ Mileage (km)'
 
   return (
-    <div className="hunt-plot-wrap relative" style={{ width: '100%' }}>
+    <div className="hunt-plot-wrap" style={{ width: '100%' }}>
       <style>{`
         .hunt-plot       { height: 480px; }
         @media (max-width: 767px) {
@@ -782,23 +827,21 @@ function HuntChart ({
         }
       `}</style>
 
-      {/* Y axis title above the chart frame, on the trailing edge in RTL */}
-      <div
-        className="flex"
-        style={{
-          color: NAVY_900, fontSize: 18, fontWeight: 800,
-          marginBottom: 8,
-          justifyContent: 'flex-start',
-        }}
-      >
+      {/* Y axis title above the frame */}
+      <div className="flex" style={{
+        color: NAVY_900, fontSize: 18, fontWeight: 800,
+        marginBottom: 8,
+        justifyContent: 'flex-start',
+      }}>
         {yTitle}
       </div>
 
-      {/* The chart frame: 1px slate-300 border + 24px internal padding so
-          dots never touch the edge. Position:relative so the corner pills
-          can be absolutely positioned over the plot. */}
+      {/* Chart frame — forced LTR so Recharts internal coordinate math
+          isn't fighting the surrounding document direction. */}
       <div
+        ref={containerRef}
         className="relative"
+        dir="ltr"
         style={{
           border: `1px solid ${SLATE_300}`,
           borderRadius: 12,
@@ -811,9 +854,6 @@ function HuntChart ({
             <ComposedChart margin={{ top: 12, right: 16, bottom: 12, left: 16 }}>
               <CartesianGrid stroke={SLATE_100} strokeWidth={1} strokeDasharray="0" />
 
-              {/* 4 quadrant backgrounds split at the medians. Same x1/y1
-                  numerics for both AR and EN; Recharts handles the flip
-                  visually because XAxis is `reversed` when AR. */}
               {xMid > 0 && yMid > 0 && (
                 <>
                   <ReferenceArea x1={xMin} x2={xMid} y1={yMin} y2={yMid} fill="#ECFDF5" fillOpacity={1} stroke="none" />
@@ -834,7 +874,6 @@ function HuntChart ({
                 tickLine={{ stroke: SLATE_400, strokeWidth: 1 }}
                 tickSize={6}
                 tickMargin={8}
-                reversed={reversedX}
                 allowDataOverflow={false}
               />
               <YAxis
@@ -850,47 +889,36 @@ function HuntChart ({
                 tickMargin={8}
                 width={64}
                 allowDataOverflow={false}
-                orientation={reversedX ? 'right' : 'left'}
+                orientation="left"
               />
-              <Tooltip cursor={false} content={<ChartTooltip />} wrapperStyle={{ outline: 'none', zIndex: 30 }} />
-              {groups.map((g, i) => (
-                <Scatter
-                  key={`sc-${i}`}
-                  data={g.data}
-                  fill={g.color}
-                  isAnimationActive={false}
-                  shape={dotShape}
-                />
-              ))}
+              {/* SINGLE Scatter for all points — color comes from each datum.
+                  Drawing in a single SVG layer fixes the cross-group hover
+                  occlusion bug from the previous N-Scatter implementation. */}
+              <Scatter
+                data={points}
+                isAnimationActive={false}
+                shape={dotShape}
+              />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
 
-        {/* 4 corner pills, always above dots.
-            Position logic relies on CSS logical properties so the same
-            insetInlineStart / End values land in the visually-correct
-            corner under RTL and LTR.
-              deal  = low x + low y  → bottom + insetInlineStart
-              ↔ slate = high x + low y → bottom + insetInlineEnd
-              amber = low x + high y → top    + insetInlineStart
-              avoid = high x + high y → top    + insetInlineEnd
-        */}
+        {/* Corner pills — fixed LTR positions, Arabic text */}
         {xMid > 0 && yMid > 0 && (
           <>
-            <CornerPill text={pills.deal}    color="#047857" pos={{ bottom: 12, insetInlineStart: 16 }} />
-            <CornerPill text={pills.bottomS} color={SLATE_700} pos={{ bottom: 12, insetInlineEnd: 16 }} />
-            <CornerPill text={pills.topS}    color="#B45309" pos={{ top: 12, insetInlineStart: 16 }} />
-            <CornerPill text={pills.avoid}   color="#BE123C" pos={{ top: 12, insetInlineEnd: 16 }} />
+            <CornerPill text={pills.deal}    color="#047857" pos={{ bottom: 12, left:  16 }} />
+            <CornerPill text={pills.bottomR} color={SLATE_700} pos={{ bottom: 12, right: 16 }} />
+            <CornerPill text={pills.topL}    color="#B45309" pos={{ top: 12,    left:  16 }} />
+            <CornerPill text={pills.avoid}   color="#BE123C" pos={{ top: 12,    right: 16 }} />
           </>
         )}
 
-        {/* Off-chart indicator — bottom-right inside the frame (visual
-            "off-screen toward higher values" in RTL). */}
+        {/* Off-chart indicator — bottom-right inside the frame */}
         {offChartCount > 0 && (
           <span
             style={{
               position: 'absolute',
-              bottom: 8, insetInlineEnd: 24,
+              bottom: 8, right: 24,
               color: SLATE, fontSize: 11, fontWeight: 600,
               background: 'rgba(255,255,255,0.92)',
               padding: '2px 8px',
@@ -899,33 +927,34 @@ function HuntChart ({
               zIndex: 25,
             }}
           >
-            {offChartCount} {lang === 'ar' ? 'سيارة خارج المخطط →' : `cars off-chart →`}
+            {offChartCount} {lang === 'ar' ? 'سيارة خارج المخطط' : `cars off-chart`}
           </span>
+        )}
+
+        {/* Custom tooltip — looked up by hoverId from chart.byId, never
+            from a Recharts payload. Positioned in container-local coords
+            so we can guarantee it tracks the cursor and survives data
+            changes (hoverId is cleared whenever the rendered set
+            mutates, so a stale tooltip from a now-vanished dot is
+            impossible). */}
+        {hoverPoint && hoverXY && (
+          <ChartTooltip point={hoverPoint} xy={hoverXY} />
         )}
       </div>
 
       {/* X axis title below the frame */}
-      <div
-        className="flex"
-        style={{
-          color: NAVY_900, fontSize: 18, fontWeight: 800,
-          marginTop: 12,
-          justifyContent: 'center',
-        }}
-      >
+      <div className="flex" style={{
+        color: NAVY_900, fontSize: 18, fontWeight: 800,
+        marginTop: 12, justifyContent: 'center',
+      }}>
         {xTitle}
       </div>
     </div>
   )
 }
 
-// ── Corner pill helper ──────────────────────────────────────────────────────
-type PillPos = {
-  top?: number | string
-  bottom?: number | string
-  insetInlineStart?: number | string
-  insetInlineEnd?: number | string
-}
+// ─── Corner pill ────────────────────────────────────────────────────────────
+type PillPos = { top?: number; bottom?: number; left?: number; right?: number }
 function CornerPill ({ text, color, pos }: { text: string; color: string; pos: PillPos }) {
   return (
     <span
@@ -942,6 +971,9 @@ function CornerPill ({ text, color, pos }: { text: string; color: string; pos: P
         whiteSpace: 'nowrap',
         zIndex: 20,
         pointerEvents: 'none',
+        // Right-to-left text content under an LTR container needs an
+        // explicit direction hint to render correctly.
+        direction: 'rtl',
         ...pos,
       }}
     >
@@ -950,24 +982,30 @@ function CornerPill ({ text, color, pos }: { text: string; color: string; pos: P
   )
 }
 
-// ── Tooltip ──────────────────────────────────────────────────────────────────
-function ChartTooltip ({ active, payload }: { active?: boolean; payload?: Array<{ payload?: { listing: Listing } }> }) {
-  if (!active || !payload || !payload.length) return null
-  const l = payload[0]?.payload?.listing
-  if (!l) return null
+// ─── Custom tooltip (renders our own; we don't use Recharts <Tooltip>) ─────
+function ChartTooltip ({ point, xy }: { point: ChartPoint; xy: { x: number; y: number } }) {
+  const l = point.listing
   const photo = (l.photo_urls?.[0]) ?? null
+  // Offset so the tooltip doesn't sit on top of the cursor.
+  const left = Math.max(8, xy.x + 14)
+  const top  = Math.max(8, xy.y + 14)
   return (
     <div
       role="tooltip"
+      dir="rtl"
       style={{
+        position: 'absolute',
+        left, top,
         background: '#FFFFFF',
         border: `1px solid ${SLATE_200}`,
         borderRadius: 12,
-        boxShadow: '0 8px 24px rgba(15,23,42,0.10)',
+        boxShadow: '0 12px 28px rgba(15,23,42,0.18)',
         padding: 10,
         display: 'flex',
         gap: 10,
         maxWidth: 280,
+        zIndex: 40,
+        pointerEvents: 'none',
       }}
     >
       {photo && (
@@ -975,20 +1013,19 @@ function ChartTooltip ({ active, payload }: { active?: boolean; payload?: Array<
         <img
           src={photo}
           alt=""
-          width={60}
-          height={60}
+          width={60} height={60}
           style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
           referrerPolicy="no-referrer"
         />
       )}
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 12, color: NAVY, fontWeight: 800 }} dir="auto">
+        <div style={{ fontSize: 12, color: NAVY, fontWeight: 800 }}>
           {l.year} {l.make_ar ?? l.make_en} {l.model_ar ?? l.model_en}
         </div>
         <div style={{ fontSize: 13, color: NAVY, fontWeight: 900, marginTop: 2, direction: 'ltr', textAlign: 'right' }}>
           {l.price_sar?.toLocaleString()} <span style={{ fontSize: 10, color: SLATE, fontWeight: 600 }}>ريال</span>
         </div>
-        <div style={{ fontSize: 11, color: SLATE, marginTop: 2 }} dir="auto">
+        <div style={{ fontSize: 11, color: SLATE, marginTop: 2 }}>
           {l.mileage_km?.toLocaleString()} كم · {l.city_ar ?? l.city_en ?? '-'} · {l.source}
         </div>
       </div>
