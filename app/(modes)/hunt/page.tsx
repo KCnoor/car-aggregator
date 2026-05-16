@@ -1,60 +1,73 @@
 import { supabase, type Listing } from '@/lib/supabase'
-import HuntClient from './HuntClient'
+import HuntClient, { type SlotSpec } from './HuntClient'
 
 // الصياد — focused hunter mode at /hunt.
 //
-// URL params (shareable + cross-mode hand-off from الخطّابة later):
-//   ?models=toyota-camry,honda-accord    — pairs of "{make_slug}-{model_slug}", max 5
-//   ?years=2020-2024                     — inclusive range
+// URL format (each slot carries its own year window):
+//   ?models=toyota-camry,honda-accord
+//   ?years=2018-2022,2020-2024              ← parallel array, same index
 //
-// No bundles anymore (deliberately). Empty selection → empty state on
-// the client; user fills slots manually using the make→model picker.
+// Either array may be missing or short; defaults to 2020-2024 per slot.
+// Backward-compatible with the older single ?years=2020-2024 (used for
+// every slot when only one range is provided).
 
 export const dynamic = 'force-dynamic'
 
 const DEFAULT_YEAR_MIN = 2020
 const DEFAULT_YEAR_MAX = 2024
+const PER_SLOT_LIMIT = 200
 
-type ModelKey = { make: string; model: string }
-
-function parseModelToken (token: string): ModelKey | null {
+function parseModelToken (token: string): { make: string; model: string } | null {
   const dash = token.indexOf('-')
   if (dash <= 0) return null
   return { make: token.slice(0, dash), model: token.slice(dash + 1) }
 }
 
-function parseYearRange (raw?: string): [number, number] {
-  if (!raw) return [DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX]
-  const m = raw.match(/^(\d{4})-(\d{4})$/)
-  if (!m) return [DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX]
+function parseYearToken (raw: string | undefined, fallback: [number, number]): [number, number] {
+  if (!raw) return fallback
+  const m = raw.trim().match(/^(\d{4})-(\d{4})$/)
+  if (!m) return fallback
   const lo = Math.min(parseInt(m[1]), parseInt(m[2]))
   const hi = Math.max(parseInt(m[1]), parseInt(m[2]))
   return [lo, hi]
 }
 
-async function loadListings (selection: ModelKey[], yearMin: number, yearMax: number): Promise<Listing[]> {
-  if (selection.length === 0) return []
-  const makes  = [...new Set(selection.map(s => s.make))]
-  const models = [...new Set(selection.map(s => s.model))]
+function buildSpecs (modelsRaw?: string, yearsRaw?: string): SlotSpec[] {
+  if (!modelsRaw) return []
+  const tokens = modelsRaw.split(',').map(t => t.trim()).filter(Boolean)
+  const yearTokens = (yearsRaw ?? '').split(',').map(t => t.trim())
+  // If `yearsRaw` is one single range (no commas) treat it as the default for every slot.
+  const singleRange = yearTokens.length === 1
+    ? parseYearToken(yearTokens[0], [DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX])
+    : null
+
+  const out: SlotSpec[] = []
+  tokens.slice(0, 5).forEach((tok, i) => {
+    const mk = parseModelToken(tok)
+    if (!mk) return
+    const [lo, hi] = singleRange ?? parseYearToken(yearTokens[i], [DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX])
+    out.push({ make: mk.make, model: mk.model, yearMin: lo, yearMax: hi })
+  })
+  return out
+}
+
+async function loadSlotListings (spec: SlotSpec): Promise<Listing[]> {
   const { data, error } = await supabase.from('listings')
     .select('*')
     .eq('is_active', true)
     .neq('freshness_state', 'dead')
-    .in('make_slug', makes)
-    .in('model_slug', models)
-    .gte('year', yearMin).lte('year', yearMax)
+    .eq('make_slug', spec.make)
+    .eq('model_slug', spec.model)
+    .gte('year', spec.yearMin).lte('year', spec.yearMax)
     .gt('price_sar', 1000)
     .not('mileage_km', 'is', null)
     .order('deal_score', { ascending: false, nullsFirst: false })
-    .limit(800)
+    .limit(PER_SLOT_LIMIT)
   if (error) {
-    console.error('hunt: listings load failed:', error.message)
+    console.error(`hunt: slot load failed (${spec.make}/${spec.model}):`, error.message)
     return []
   }
-  const pairSet = new Set(selection.map(s => `${s.make}|${s.model}`))
-  return (data ?? []).filter((l: Listing) =>
-    pairSet.has(`${l.make_slug ?? ''}|${l.model_slug ?? ''}`)
-  ) as Listing[]
+  return (data ?? []) as Listing[]
 }
 
 export default async function HuntPage ({
@@ -63,16 +76,8 @@ export default async function HuntPage ({
   searchParams: Promise<{ models?: string; years?: string }>
 }) {
   const params = await searchParams
-  const models = (params.models ?? '')
-    .split(',')
-    .map(t => parseModelToken(t.trim()))
-    .filter(Boolean)
-    .slice(0, 5) as ModelKey[]
-  const [yearMin, yearMax] = parseYearRange(params.years)
+  const specs = buildSpecs(params.models, params.years)
 
-  // Canonical catalogue for the make→model picker. Restricted to entries
-  // that have at least one active listing so the picker doesn't surface
-  // makes the user can never get results for.
   const [canonicalMakesRes, canonicalModelsRes] = await Promise.all([
     supabase.from('canonical_makes')
       .select('canonical_make_slug, canonical_name_en, canonical_name_ar')
@@ -81,19 +86,19 @@ export default async function HuntPage ({
       .select('canonical_make_slug, canonical_model_slug, canonical_name_en, canonical_name_ar')
       .order('canonical_name_en'),
   ])
-  const canonicalMakes  = canonicalMakesRes.data  ?? []
-  const canonicalModels = canonicalModelsRes.data ?? []
 
-  const listings = await loadListings(models, yearMin, yearMax)
+  // Fire one query per filled slot in parallel. Each slot owns its own
+  // year window so we can't fold them into a single IN-clause anymore.
+  const perSlot = specs.length
+    ? await Promise.all(specs.map(loadSlotListings))
+    : []
 
   return (
     <HuntClient
-      initialModels={models}
-      initialYearMin={yearMin}
-      initialYearMax={yearMax}
-      initialListings={listings}
-      canonicalMakes={canonicalMakes}
-      canonicalModels={canonicalModels}
+      initialSpecs={specs}
+      initialPerSlot={perSlot}
+      canonicalMakes={canonicalMakesRes.data ?? []}
+      canonicalModels={canonicalModelsRes.data ?? []}
     />
   )
 }
