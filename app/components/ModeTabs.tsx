@@ -32,7 +32,7 @@ const MODES: Mode[] = [
     icon: '/modes/matchmaker.png',
   },
   {
-    href: '/analyze',
+    href: '/hunt',
     titleAr: 'الصياد',
     subtitleAr: 'تعرف وش تبي بس تدور اللقطة',
     icon: '/modes/hunter.png',
