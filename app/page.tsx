@@ -57,6 +57,20 @@ export default async function Home() {
   const sourceCounts: Record<string, number> = {}
   KNOWN_SOURCES.forEach((src, i) => { sourceCounts[src] = sourceCountRes[i].count ?? 0 })
 
+  // Canonical make/model catalogue — powers the filter dropdowns so they
+  // show one row per canonical make (no 'Mercedes' / 'Mercedes Benz' /
+  // 'Mercedes-Benz' triplicates) and clean per-make model lists.
+  const [canonicalMakesRes, canonicalModelsRes] = await Promise.all([
+    supabase.from('canonical_makes')
+      .select('canonical_make_slug, canonical_name_en, canonical_name_ar')
+      .order('canonical_name_en'),
+    supabase.from('canonical_models')
+      .select('canonical_make_slug, canonical_model_slug, canonical_name_en, canonical_name_ar')
+      .order('canonical_name_en'),
+  ])
+  const canonicalMakes  = canonicalMakesRes.data  ?? []
+  const canonicalModels = canonicalModelsRes.data ?? []
+
   return (
     <ListingsClient
       listings={listings}
@@ -64,6 +78,8 @@ export default async function Home() {
       newDealsCount={newCountRes.count ?? 0}
       newDealsSinceIso={since24h}
       sourceCounts={sourceCounts}
+      canonicalMakes={canonicalMakes}
+      canonicalModels={canonicalModels}
     />
   )
 }

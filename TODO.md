@@ -29,6 +29,36 @@ These are deferred items uncovered during the v2 refactor. Captured here for the
 
 - **Wreck pattern bug** in `lib/scoring/redflags.js`: `\bdamaged?\b` matches singular/past-tense but not plural "damages". Fix: `\bdamage(d|s)?\b`. Caught by audit; not yet applied. Low impact (1 false negative across 17k listings) but should be fixed.
 
+## Full vehicle catalogue (separate week-long project)
+
+The current `canonical_makes` / `canonical_models` tables (migrate-v10) are
+a lite reference layer: slug + EN/AR display names + alternate-name arrays
+for canonicalization. They solve the visible-dropdown duplication problem
+(no more 'Mercedes' / 'Mercedes Benz' / 'Mercedes-Benz' triplicates) but
+carry no structured vehicle metadata.
+
+A full `vehicle_catalogue` table would add per-(make, model, year, trim):
+- body_type, seats, doors
+- engine_size_l, fuel_type, hp, torque
+- drivetrain (FWD/RWD/AWD/4WD), transmission
+- MSRP at launch, depreciation curve points
+- trim levels per model-year
+
+Source plan: NHTSA vPIC API as primary (free, JSON, comprehensive for
+US-market models — covers most GCC trims), Hatla2ee or YallaMotor scraper
+for KSA-specific trims, manual fill for long-tail Chinese brands.
+
+Use cases the full catalogue unlocks:
+- Trim-level deal scoring (price vs. trim-specific baseline)
+- Depreciation curves per (make, model, year)
+- Catalogue enrichment for listings missing structured fields
+  (seat count, drivetrain, engine size — currently scrape-dependent)
+- Filter-by-feature (e.g. "AWD SUVs with ≥7 seats under 200k")
+
+Estimate: one focused week. Migration drops the lite tables and replaces
+with the full catalogue + a backfill pass against existing listings to
+attach catalogue_id where (make, model, year) matches.
+
 ## Dubizzle — structural compromise (decision point in 2-3 weeks)
 
 Dubizzle is structurally compromised — no JS-rendered images (placeholders

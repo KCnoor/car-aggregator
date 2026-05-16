@@ -167,18 +167,34 @@ function SiyaraAIWordmark() {
 // special-case anything.
 const RIBBON_MIN_LISTINGS = 5
 
+type CanonicalMake = {
+  canonical_make_slug: string
+  canonical_name_en: string
+  canonical_name_ar: string
+}
+type CanonicalModel = {
+  canonical_make_slug: string
+  canonical_model_slug: string
+  canonical_name_en: string
+  canonical_name_ar: string
+}
+
 export default function ListingsClient({
   listings,
   totalCount,
   newDealsCount = 0,
   newDealsSinceIso,
   sourceCounts = {},
+  canonicalMakes = [],
+  canonicalModels = [],
 }: {
   listings: Listing[]
   totalCount: number
   newDealsCount?: number
   newDealsSinceIso?: string
   sourceCounts?: Record<string, number>
+  canonicalMakes?: CanonicalMake[]
+  canonicalModels?: CanonicalModel[]
 }) {
   const [lang, setLang] = useState<Lang>('ar')
   const tr = translations[lang]
@@ -268,23 +284,62 @@ export default function ListingsClient({
   }
 
   // ── Derived lists ──────────────────────────────────────────────────────────
-  const makes = useMemo(() =>
-    [...new Set(listings.map(l => l.make_en).filter(Boolean))].sort() as string[]
-  , [listings])
+  // Filter dropdowns are driven by canonical_makes / canonical_models. We
+  // emit {value, label} pairs where value is always the canonical English
+  // name (matched against listings.make_en by the existing filter predicate)
+  // and label is the lang-appropriate canonical name shown to the user.
+  // Falls back to scraped-from-listings distincts when the canonical tables
+  // haven't been seeded yet, so the UI still renders pre-migration.
+  type Option = { value: string; label: string }
 
-  const models = useMemo(() => {
+  const makes: Option[] = useMemo(() => {
+    if (canonicalMakes.length) {
+      // Restrict to makes actually present in the corpus to avoid surfacing
+      // 80 catalogue entries when only 40 have listings.
+      const present = new Set(listings.map(l => l.make_en).filter(Boolean) as string[])
+      return canonicalMakes
+        .filter(m => present.has(m.canonical_name_en))
+        .map(m => ({
+          value: m.canonical_name_en,
+          label: lang === 'ar' ? m.canonical_name_ar : m.canonical_name_en,
+        }))
+    }
+    return [...new Set(listings.map(l => l.make_en).filter(Boolean) as string[])]
+      .sort()
+      .map(s => ({ value: s, label: s }))
+  }, [canonicalMakes, listings, lang])
+
+  const models: Option[] = useMemo(() => {
+    if (canonicalModels.length && make) {
+      const selected = canonicalMakes.find(m => m.canonical_name_en === make)
+      if (selected) {
+        const present = new Set(
+          listings
+            .filter(l => l.make_en === selected.canonical_name_en)
+            .map(l => l.model_en).filter(Boolean) as string[]
+        )
+        return canonicalModels
+          .filter(cm =>
+            cm.canonical_make_slug === selected.canonical_make_slug &&
+            present.has(cm.canonical_name_en))
+          .map(cm => ({
+            value: cm.canonical_name_en,
+            label: lang === 'ar' ? cm.canonical_name_ar : cm.canonical_name_en,
+          }))
+      }
+    }
     if (make) {
       return [...new Set(
-        listings.filter(l => l.make_en === make).map(l => l.model_en).filter(Boolean)
-      )].sort() as string[]
+        listings.filter(l => l.make_en === make).map(l => l.model_en).filter(Boolean) as string[]
+      )].sort().map(s => ({ value: s, label: s }))
     }
-    // top 30 by frequency across all makes
+    // No make selected: top 30 by frequency across all makes (legacy fallback).
     const cnt = new Map<string, number>()
     for (const l of listings) {
       if (l.model_en) cnt.set(l.model_en, (cnt.get(l.model_en) ?? 0) + 1)
     }
-    return [...cnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30).map(([m]) => m)
-  }, [listings, make])
+    return [...cnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30).map(([m]) => ({ value: m, label: m }))
+  }, [canonicalModels, canonicalMakes, listings, make, lang])
 
   const cityOptions = useMemo(() => {
     const map = new Map<string, { en: string; ar: string | null }>()
@@ -693,13 +748,15 @@ export default function ListingsClient({
 
             {/* ── Facets (RTL: right → left on screen) ── */}
             <Sel value={make} onChange={v => { setMake(v); setModel('') }}
-              placeholder={tr.allMakes} activeLabel={make}>
-              {makes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+              placeholder={tr.allMakes}
+              activeLabel={makes.find(m => m.value === make)?.label ?? make}>
+              {makes.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </Sel>
 
             <Sel value={model} onChange={setModel}
-              placeholder={tr.allModels} activeLabel={model}>
-              {models.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+              placeholder={tr.allModels}
+              activeLabel={models.find(m => m.value === model)?.label ?? model}>
+              {models.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </Sel>
 
             {/* Year From */}

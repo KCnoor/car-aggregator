@@ -39,6 +39,7 @@ const { createClient } = require('@supabase/supabase-js')
 const redflags = require('../lib/scoring/redflags')
 const norm     = require('../lib/scoring/normalize')
 const tiers    = require('../lib/scoring/tiers')
+const { loadCanonical } = require('../lib/scoring/canonicalize')
 
 const SUPABASE_URL     = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -56,6 +57,10 @@ const PAGE = 1000
 const UPDATE_CONCURRENCY = 20
 
 // ── Pass 1: INGEST raw_listings → listings ─────────────────────────────────
+
+// Canonical make/model resolver — loaded once at startup, passed into the
+// row builder so we don't re-fetch the seed for every raw row.
+let CANON = null
 
 function rawToListingRow (raw) {
   const sd = raw.structured_data ?? {}
@@ -127,6 +132,28 @@ function rawToListingRow (raw) {
 
   // Red flags computed from description + title + mileage.
   row.red_flags = redflags.detect(row)
+
+  // Canonicalize make/model against the canonical_makes / canonical_models
+  // catalogue. When mapped, we also overwrite make_en/make_ar/model_en/model_ar
+  // with the canonical labels so the filter dropdown (which renders one row
+  // per distinct make_en) stops showing 'Mercedes' / 'Mercedes Benz' / etc.
+  // as separate entries. Unmapped rows keep their scraper-captured labels and
+  // get needs_make_review=true.
+  if (CANON) {
+    const canon = CANON.resolve({
+      make_slug: row.make_slug, make_en: row.make_en, make_ar: row.make_ar,
+      model_slug: row.model_slug, model_en: row.model_en, model_ar: row.model_ar,
+    })
+    row.make_slug = canon.makeSlug
+    row.model_slug = canon.modelSlug
+    if (canon.makeNameEn)  row.make_en  = canon.makeNameEn
+    if (canon.makeNameAr)  row.make_ar  = canon.makeNameAr
+    if (canon.modelNameEn) row.model_en = canon.modelNameEn
+    if (canon.modelNameAr) row.model_ar = canon.modelNameAr
+    row.needs_make_review = canon.needsReview
+  } else {
+    row.needs_make_review = false
+  }
 
   return row
 }
@@ -286,6 +313,16 @@ function arraysEqual (a, b) {
 ;(async () => {
   console.log('Layer 2: normalize\n')
   const t0 = Date.now()
+
+  // Load canonical catalogue once — used by every rawToListingRow call.
+  // If the canonical_makes table is empty (pre-migration / pre-seed) we
+  // log and proceed without canonicalization rather than failing the run.
+  try {
+    CANON = await loadCanonical(sb)
+    console.log(`Canonical loaded: ${CANON.stats.makes} makes, ${CANON.stats.models} models`)
+  } catch (e) {
+    console.warn(`Canonical not available (skipping canonicalization): ${e.message}`)
+  }
 
   if (!FLAGS.backfillOnly) {
     console.log('--- Pass 1: INGEST raw_listings → listings ---')
