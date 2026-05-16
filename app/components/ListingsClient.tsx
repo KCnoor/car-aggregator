@@ -432,14 +432,13 @@ export default function ListingsClient({
       <Select value={value || ALL} onValueChange={v => onChange(v === ALL ? '' : (v ?? ''))}>
         <SelectTrigger
           dir={lang === 'ar' ? 'rtl' : 'ltr'}
-          className={`h-8 text-xs rounded-full border flex-shrink-0 transition-colors ${
-            isActive
-              ? 'font-semibold border-transparent text-[#0A1628]'
-              : 'bg-white border-border/70 text-foreground hover:bg-muted/50'
-          }`}
+          className="h-8 text-xs rounded-full border flex-shrink-0 transition-colors"
           style={{
             minWidth: minW,
-            background: isActive ? AMBER : undefined,
+            background: isActive ? 'rgba(255,107,74,0.10)' : 'var(--bg-card)',
+            borderColor:    isActive ? 'var(--accent-primary)' : 'var(--hairline)',
+            color:          isActive ? 'var(--accent-primary)' : 'var(--text-primary)',
+            fontWeight:     isActive ? 600 : 500,
           }}
         >
           <span className="truncate text-start">
@@ -458,7 +457,7 @@ export default function ListingsClient({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
 
       <VoiceAdvisor
         onApplyFilters={handleVoiceFilters}
@@ -467,28 +466,29 @@ export default function ListingsClient({
       />
 
       {/* ═══════════════════════════════════════════════════════════════════
-          HERO — search + source ribbon only.
-          Logo, language toggle and listings counter all live in the sticky
-          header at the top of the page now; the hero is a focused search
-          surface, not a marquee for stats.
+          CUT 3 — Search bar strip (Browse-only).
+          Sits below the global StickyHeader on a slate-50 surface. The
+          search card itself floats with a soft blue shadow.
       ═══════════════════════════════════════════════════════════════════ */}
-      <header className="relative overflow-hidden" style={{ background: HERO_BG }}>
-        <div className="absolute inset-0 opacity-[0.055] pointer-events-none"
-          style={{ backgroundImage: GEO_PATTERN, backgroundRepeat: 'repeat' }} />
-
-        {/* ── Search bar ── */}
-        <div className="relative max-w-screen-xl mx-auto px-4 pt-3 pb-0">
+      <div className="relative">
+        <div className="relative max-w-screen-xl mx-auto px-4 pt-4 pb-2">
           <form onSubmit={handleNlSearch}>
             <div
-              className="flex items-stretch overflow-hidden rounded-xl border focus-within:border-white/30 transition-colors"
-              style={{ height: 56, background: 'rgba(255,255,255,0.09)', borderColor: 'rgba(255,255,255,0.14)' }}
+              className="flex items-stretch overflow-hidden transition-colors"
+              style={{
+                height: 56,
+                background: 'var(--bg-card)',
+                border: '1px solid var(--hairline)',
+                borderRadius: 16,
+                boxShadow: 'var(--shadow-soft)',
+              }}
             >
               {/* بحث button — leading side in RTL (right) */}
               <button
                 type="submit"
                 disabled={nlLoading || !nlQuery.trim()}
-                className="shrink-0 px-5 text-sm font-bold transition-opacity disabled:opacity-40"
-                style={{ background: AMBER, color: HERO_BG }}
+                className="shrink-0 px-5 text-sm font-extrabold transition-opacity disabled:opacity-40"
+                style={{ background: 'var(--accent-primary)', color: '#FFFFFF' }}
               >
                 {nlLoading ? (
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -506,10 +506,11 @@ export default function ListingsClient({
                 value={nlQuery}
                 onChange={e => setNlQuery(e.target.value)}
                 dir="auto"
-                className="flex-1 bg-transparent text-white text-sm px-3 focus:outline-none placeholder:text-white/28 min-w-0"
+                className="flex-1 bg-transparent text-sm px-3 focus:outline-none min-w-0"
+                style={{ color: 'var(--text-primary)' }}
               />
 
-              {/* Mic — trailing side in RTL (left), amber circle with pulse */}
+              {/* Mic — trailing side (left), coral circle with pulse */}
               <button
                 type="button"
                 onClick={() => setVoiceOpen(true)}
@@ -517,11 +518,13 @@ export default function ListingsClient({
                 className="shrink-0 w-14 flex items-center justify-center"
               >
                 <span className="relative flex items-center justify-center">
-                  <span className="absolute w-9 h-9 rounded-full animate-ping opacity-15"
-                    style={{ background: AMBER }} />
-                  <span className="relative w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:opacity-90"
-                    style={{ background: AMBER + '28', border: `1.5px solid ${AMBER}70` }}>
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill={AMBER}>
+                  <span className="absolute w-9 h-9 rounded-full animate-ping opacity-25"
+                    style={{ background: 'var(--accent-primary)' }} />
+                  <span
+                    className="relative w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:opacity-90"
+                    style={{ background: 'var(--accent-primary)' }}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="#FFFFFF">
                       <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                       <path d="M19 10v2a7 7 0 0 1-14 0v-2H3v2a9 9 0 0 0 8 8.94V23h2v-2.06A9 9 0 0 0 21 12v-2h-2z"/>
                     </svg>
@@ -531,35 +534,34 @@ export default function ListingsClient({
             </div>
           </form>
 
-          {/* AI summary */}
-          <div className="mt-1.5 min-h-[16px] pb-0">
+          {/* AI summary / powered-by caption */}
+          <div className="mt-1.5 min-h-[16px] pb-0 text-center">
             {nlSummary ? (
-              <div className="flex items-center gap-2" dir="auto">
-                <span style={{ color: AMBER }}>✦</span>
-                <span className="text-white/55 text-[11px]">{nlSummary}</span>
-                <button onClick={clearNlSearch} className="text-[11px] underline" style={{ color: AMBER }}>
+              <div className="flex items-center justify-center gap-2" dir="auto">
+                <span style={{ color: 'var(--accent-primary)' }}>✦</span>
+                <span style={{ color: 'var(--text-secondary)', fontSize: 11 }}>{nlSummary}</span>
+                <button onClick={clearNlSearch} className="text-[11px] underline" style={{ color: 'var(--accent-primary)' }}>
                   {tr.nlClear}
                 </button>
               </div>
             ) : (
-              <p className="text-center text-[10px] text-white/22">{tr.nlPowered}</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 10 }}>
+                مدعوم بـ Claude AI · يدعم العربي والإنجليزي
+              </p>
             )}
           </div>
         </div>
 
-        {/* ── Source ribbon — slightly lighter navy strip ── */}
-        <div
-          className="mt-3 border-t"
-          style={{ background: 'rgba(255,255,255,0.035)', borderColor: 'rgba(255,255,255,0.07)' }}
-        >
+        {/* ── Source ribbon — white-card row on the page surface ── */}
+        <div className="border-t" style={{ borderColor: 'var(--hairline)', background: 'transparent' }}>
           <div className="max-w-screen-xl mx-auto px-4 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
-            {/* All pill */}
+            {/* All pill — coral when active */}
             <button
               onClick={() => setSource('')}
               className="flex-shrink-0 h-7 px-3.5 rounded-full border text-[11px] font-semibold transition-all whitespace-nowrap"
               style={!source
-                ? { background: AMBER, color: HERO_BG, borderColor: AMBER }
-                : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.14)' }
+                ? { background: 'var(--accent-primary)', color: '#FFFFFF', borderColor: 'var(--accent-primary)' }
+                : { background: 'var(--bg-card)', color: 'var(--text-secondary)', borderColor: 'var(--hairline)' }
               }
             >
               {lang === 'ar' ? 'الكل' : 'All'}
@@ -577,11 +579,15 @@ export default function ListingsClient({
                   aria-pressed={isActive}
                 >
                   <div
-                    className="flex items-center justify-center rounded-lg border-2 transition-all duration-200"
+                    className="flex items-center justify-center transition-all duration-200"
                     style={{
-                      background: 'white',
-                      borderColor: isActive ? AMBER : 'transparent',
-                      boxShadow: isActive ? `0 0 0 1px ${AMBER}` : 'none',
+                      background: 'var(--bg-card)',
+                      borderRadius: 16,
+                      border: '1px solid',
+                      borderColor: isActive ? 'var(--accent-primary)' : 'var(--hairline)',
+                      boxShadow: isActive
+                        ? '0 0 0 2px rgba(255,107,74,0.18), var(--shadow-soft)'
+                        : 'var(--shadow-soft)',
                       width: 100,
                       height: 60,
                     }}
@@ -599,15 +605,22 @@ export default function ListingsClient({
             })}
           </div>
         </div>
-      </header>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          FILTER BAR — sticky below the global header (64px mobile / 80px
-          desktop). Two rows of filters + active chips below.
+          FILTER BAR — sticky below the global header (152px on every
+          breakpoint here since both cuts are visible). Two rows of filter
+          chips + active chips below.
       ═══════════════════════════════════════════════════════════════════ */}
       <div
-        className="bg-background/96 backdrop-blur-sm border-b border-border sticky z-20 shadow-sm"
-        style={{ top: 'var(--hdr-h, 64px)' }}
+        className="border-b sticky z-20"
+        style={{
+          top: 'var(--hdr-h, 152px)',
+          background: 'rgba(248,250,252,0.96)',
+          backdropFilter: 'blur(6px)',
+          borderColor: 'var(--hairline)',
+          boxShadow: 'var(--shadow-soft)',
+        }}
       >
         <div className="max-w-screen-xl mx-auto px-3">
 

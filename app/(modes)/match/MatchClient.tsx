@@ -23,8 +23,8 @@ type Persona = {
   reasoning: (l: Listing) => string
 }
 
-const NAVY = '#0A1628'
-const GOLD = '#D8A66C'
+const NAVY = 'var(--text-primary)'   // slate-800 in new palette
+const GOLD = 'var(--accent-primary)' // assistance panel now uses coral, not gold
 
 // 9 personas. Gradient pairs match the brief exactly.
 const PERSONAS: Persona[] = [
@@ -210,7 +210,7 @@ export default function MatchClient ({
   }
 
   return (
-    <div dir="rtl" className="min-h-screen" style={{ background: '#FAF7F2' }}>
+    <div dir="rtl" className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
       {/* ── Top intro ── */}
       <section className="max-w-screen-xl mx-auto px-4 pt-16 pb-10 text-center">
         <div className="text-6xl leading-none" aria-hidden>☕</div>
@@ -293,13 +293,13 @@ export default function MatchClient ({
           <aside
             className="rounded-2xl p-5 sm:p-6 flex flex-col"
             style={{
-              background: `linear-gradient(180deg, rgba(216,166,108,0.10) 0%, rgba(216,166,108,0.04) 100%)`,
-              border: `1px solid ${GOLD}50`,
+              background: 'linear-gradient(180deg, rgba(255,107,74,0.08) 0%, rgba(255,107,74,0.03) 100%)',
+              border: '1px solid rgba(255,107,74,0.30)',
             }}
           >
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-              style={{ background: 'rgba(216,166,108,0.18)' }}
+              style={{ background: 'rgba(255,107,74,0.14)' }}
               aria-hidden
             >
               <Sparkles className="w-5 h-5" style={{ color: GOLD }} strokeWidth={1.8} />
@@ -319,7 +319,7 @@ export default function MatchClient ({
             <button
               onClick={() => setHelpOpen(true)}
               className="mt-auto w-full rounded-xl py-2.5 font-extrabold text-sm transition-opacity hover:opacity-90"
-              style={{ background: GOLD, color: NAVY, borderRadius: 12 }}
+              style={{ background: GOLD, color: '#FFFFFF', borderRadius: 12 }}
             >
               ابدأي معي
             </button>
@@ -446,7 +446,7 @@ export default function MatchClient ({
                     type="submit"
                     disabled={!helpText.trim() || helpStatus === 'sending'}
                     className="rounded-xl px-4 py-2 font-extrabold text-sm transition-opacity disabled:opacity-40"
-                    style={{ background: GOLD, color: NAVY, borderRadius: 12 }}
+                    style={{ background: GOLD, color: '#FFFFFF', borderRadius: 12 }}
                   >
                     {helpStatus === 'sending' ? '... جاري الإرسال' :
                      helpStatus === 'sent'    ? 'وصلتني ✓' : 'إرسال'}

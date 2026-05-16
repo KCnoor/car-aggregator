@@ -53,12 +53,14 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen" style={{ background: '#FAF7F2' }}>
-      {/* Hero */}
+    <div dir="rtl" className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
+      {/* Hero — sky-toned. The previous dark navy gradient is gone; the mode
+          accent now appears only as a tint near the bottom of the hero so
+          the four teaser pages still feel distinct. */}
       <section
         className="relative overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, #0A1628 0%, ${mode.accent}88 80%, #0A1628 100%)`,
+          background: `linear-gradient(180deg, #E0F2FE 0%, #DBEAFE 60%, ${mode.accent}15 100%)`,
         }}
       >
         <div className="max-w-screen-md mx-auto px-4 py-10 sm:py-14 text-center">
@@ -71,13 +73,22 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
           >
             {mode.emoji}
           </motion.div>
-          <p className="text-xs sm:text-sm font-semibold tracking-wide" style={{ color: 'rgba(255,255,255,0.65)' }}>
+          <p
+            className="text-xs sm:text-sm font-semibold tracking-wide"
+            style={{ color: mode.accent }}
+          >
             {mode.characterAr}
           </p>
-          <h1 className="mt-1 font-bold text-2xl sm:text-3xl text-white leading-tight">
+          <h1
+            className="mt-1 font-extrabold text-2xl sm:text-3xl leading-tight"
+            style={{ color: 'var(--text-primary)' }}
+          >
             {mode.titleAr}
           </h1>
-          <p className="mt-3 text-sm sm:text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>
+          <p
+            className="mt-3 text-sm sm:text-base leading-relaxed"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             {mode.taglineAr}
           </p>
         </div>
@@ -85,8 +96,8 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
 
       <section className="max-w-screen-md mx-auto px-4 py-8 sm:py-10">
         {/* Description */}
-        <div className="rounded-2xl p-5 sm:p-6 border" style={{ background: 'white', borderColor: 'rgba(10,22,40,0.08)' }}>
-          <p className="text-[14px] sm:text-[15px] leading-relaxed" style={{ color: 'rgba(10,22,40,0.85)' }}>
+        <div className="rounded-2xl p-5 sm:p-6 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--hairline)', boxShadow: 'var(--shadow-soft)' }}>
+          <p className="text-[14px] sm:text-[15px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
             {mode.descriptionAr}
           </p>
         </div>
@@ -108,12 +119,12 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
         {/* Waitlist form */}
         <div
           className="mt-5 rounded-2xl p-5 sm:p-6 border"
-          style={{ background: 'white', borderColor: 'rgba(10,22,40,0.10)' }}
+          style={{ background: 'var(--bg-card)', borderColor: 'var(--hairline)', boxShadow: 'var(--shadow-soft)' }}
         >
-          <h3 className="font-bold text-base" style={{ color: '#0A1628' }}>
+          <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
             كن أول من يجرب
           </h3>
-          <p className="mt-1.5 text-[13px]" style={{ color: 'rgba(10,22,40,0.62)' }}>
+          <p className="mt-1.5 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
             اشترك ونخبرك عند الإطلاق. إيميل أو رقم جوال — اللي يناسبك.
           </p>
 
@@ -127,9 +138,9 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
               placeholder="email@example.com"
               className="rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2"
               style={{
-                background: '#FAF7F2',
-                border: '1px solid rgba(10,22,40,0.12)',
-                color: '#0A1628',
+                background: 'var(--bg-page)',
+                border: '1px solid var(--hairline)',
+                color: 'var(--text-primary)',
               }}
               autoComplete="email"
             />
@@ -142,9 +153,9 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
               placeholder="+966 5xx xxx xxx"
               className="rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2"
               style={{
-                background: '#FAF7F2',
-                border: '1px solid rgba(10,22,40,0.12)',
-                color: '#0A1628',
+                background: 'var(--bg-page)',
+                border: '1px solid var(--hairline)',
+                color: 'var(--text-primary)',
               }}
               autoComplete="tel"
             />

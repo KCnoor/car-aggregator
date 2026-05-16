@@ -37,9 +37,10 @@
   /* Radius */
   --radius: 0.75rem;
 
-  /* Deal tier — sophisticated, desaturated */
-  --deal-great:      oklch(0.49 0.10 183);   /* #0F766E deep teal */
-  --deal-good:       oklch(0.67 0.17 162);   /* #10B981 clean emerald */
+  /* Deal tier — refreshed to the new sky palette. The top tier moves to
+     a brighter green so an excellent deal feels celebratory, not dour. */
+  --deal-great:      oklch(0.67 0.17 162);   /* #10B981 fresh emerald */
+  --deal-good:       oklch(0.61 0.15 162);   /* slightly deeper emerald */
   --deal-fair:       oklch(0.63 0.13 80);    /* #CA8A04 warm gold */
   --deal-expensive:  oklch(0.57 0.17 40);    /* #C2410C muted orange */
   --deal-overpriced: oklch(0.43 0.17 25);    /* #991B1B deep red */
@@ -60,6 +61,26 @@
   --sidebar-accent-foreground: oklch(0.20 0.06 60);
   --sidebar-border:            oklch(0.91 0.003 250);
   --sidebar-ring:              oklch(0.12 0.04 255);
+
+  /* ── CarSa "sky" palette (locked) ──────────────────────────────────────────
+     Layered on top of the shadcn defaults rather than replacing them so the
+     existing UI primitives (shadcn Select / Card / Badge) keep working while
+     surfaces explicitly opt-in to the new palette via inline `var(--…)` refs
+     or the `bg-page` / `accent-primary` utilities mapped below. */
+  --bg-hero: linear-gradient(180deg, #E0F2FE 0%, #DBEAFE 100%);
+  --bg-page: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --accent-primary:       #FF6B4A;
+  --accent-primary-hover: #E55839;
+  --accent-secondary:     #3B82F6;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --text-primary:   #1E293B;
+  --text-secondary: #64748B;
+  --hairline:       #E2E8F0;
+  --shadow-soft:   0 4px 12px rgba(59, 130, 246, 0.08);
+  --shadow-md:     0 8px 24px rgba(59, 130, 246, 0.12);
+  --shadow-active: 0 12px 32px rgba(255, 107, 74, 0.18);
 }
 
 /* ── Theme mapping ────────────────────────────────────────────────────────── */
@@ -137,12 +158,26 @@
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Card hover lift */
+/* Card hover lift — now uses the soft-blue shadow tint from the sky palette */
 .card-lift {
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 .card-lift:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 32px -4px rgba(10, 22, 40, 0.12),
-              0 4px 16px -2px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
 }
+
+/* Live-pulse dot animation used in the brand-strip counter. The dot itself
+   gets a coral fill; this rule animates the glow ring around it. */
+@keyframes pulse-ring {
+  0%   { transform: scale(0.85); opacity: 0.65; }
+  50%  { transform: scale(1.50); opacity: 0.00; }
+  100% { transform: scale(0.85); opacity: 0.00; }
+}
+.pulse-ring { animation: pulse-ring 2s ease-in-out infinite; }
+
+@keyframes pulse-core {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1.0; }
+}
+.pulse-core { animation: pulse-core 2s ease-in-out infinite; }

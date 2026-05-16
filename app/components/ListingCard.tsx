@@ -87,8 +87,13 @@ export default function ListingCard({
     >
       <Link href={`/listings/${listing.id}`} className="block">
         <Card
-          className="overflow-hidden border shadow-sm p-0 gap-0 bg-white"
-          style={{ borderRadius: 20, borderColor: 'rgba(0,0,0,0.06)' }}
+          className="overflow-hidden border p-0 gap-0"
+          style={{
+            borderRadius: 20,
+            borderColor: 'var(--hairline)',
+            background: 'var(--bg-card)',
+            boxShadow: 'var(--shadow-soft)',
+          }}
         >
           {/* ── Image + overlays (16:9) ── */}
           <div

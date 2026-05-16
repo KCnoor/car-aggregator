@@ -23,6 +23,18 @@ export default function ModesShell ({
   return (
     <LangProvider>
       <StickyHeader totalCount={totalCount} newDealsCount={newDealsCount} />
+
+      {/* Soft 40px fade where the sky header ends and the page surface
+          begins, so the content doesn't slam against the sky gradient. */}
+      <div
+        aria-hidden
+        className="w-full"
+        style={{
+          height: 40,
+          background: 'linear-gradient(180deg, #DBEAFE 0%, var(--bg-page) 100%)',
+        }}
+      />
+
       <AnimatePresence mode="wait">
         <motion.main
           key={pathname}
@@ -31,6 +43,7 @@ export default function ModesShell ({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           className="flex-1"
+          style={{ background: 'var(--bg-page)' }}
         >
           {children}
         </motion.main>
