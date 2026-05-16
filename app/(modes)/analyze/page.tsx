@@ -1,19 +1,19 @@
 import TeaserPage from '@/app/components/TeaserPage'
 
-export const metadata = { title: 'المحلّل — سيارة AI' }
+export const metadata = { title: 'الصياد — سيارة AI' }
 
-export default function AnalyzePage () {
+export default function HunterPage () {
   return (
     <TeaserPage
       mode={{
-        modeKey: 'analyzer',
-        emoji: '🔍',
-        characterAr: 'المحلّل',
-        titleAr: 'تحليل عميق للسوق',
-        taglineAr: 'افهم السعر وراء السعر — مقارنات ذكية، رسوم بيانية، وكشف الصفقات الحقيقية.',
-        descriptionAr: 'يعرض المحلّل خرائط فقاعية لكل (ماركة، موديل) بأبعاد السعر مقابل الممشى مع تظليل الصفقات الجيدة. يقارن سيارتك بآخر 50 صفقة مشابهة، يحسب نسبة الانخفاض عن المتوسط، ويوضح إذا كان السعر مبالغاً فيه أو فرصة حقيقية.',
-        accent: '#3B82B5',
-        bg: 'linear-gradient(135deg, rgba(59,130,181,0.14) 0%, rgba(59,130,181,0.04) 100%)',
+        modeKey: 'hunter',
+        emoji: '🎯',
+        characterAr: 'الصياد',
+        titleAr: 'تعرف وش تبي — بس تدور اللقطة',
+        taglineAr: 'حدد السيارة، المدينة، والميزانية، وأنا أرصد لك أحسن صفقة لحظة ما تنزل في السوق.',
+        descriptionAr: 'الصياد يرصد إعلانات السيارات لحظة بلحظة. حدد المعايير، اضبط التنبيهات، واستلم إشعار فوري لما تنزل صفقة تطابق طلبك — قبل ما تختفي من السوق.',
+        accent: '#10B981',
+        bg: 'linear-gradient(135deg, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0.04) 100%)',
         preview: 'analyzer',
       }}
     />

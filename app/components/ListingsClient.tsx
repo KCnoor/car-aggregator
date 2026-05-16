@@ -2,10 +2,10 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSearchParams } from 'next/navigation'
 import type { Listing } from '@/lib/supabase'
 import { translations, cityLabel, type Lang } from '@/lib/translations'
 import ListingCard from './ListingCard'
-import VoiceAdvisor from './VoiceAdvisor'
 import { useLang } from './LangContext'
 import {
   Select,
@@ -157,46 +157,28 @@ export default function ListingsClient({
   const [condition,    setCondition]    = useState('')
   const [source,       setSource]       = useState('')
   const [showContactForPrice, setShowContactForPrice] = useState(false)
-  const [voiceOpen,    setVoiceOpen]    = useState(false)
 
-  // AI-search state
-  const [nlQuery,   setNlQuery]   = useState('')
-  const [nlLoading, setNlLoading] = useState(false)
+  // AI-search state. The search input itself lives in <StickyHeader> now;
+  // this page reads the ?q URL param it sets and dispatches the existing
+  // /api/search pipeline. ?new24h=1 toggles the new-deals-today filter.
   const [nlSummary, setNlSummary] = useState('')
   const [aiFilters, setAiFilters] = useState<AIFilters>({})
-  const nlInputRef = useRef<HTMLInputElement>(null)
+  const lastAppliedQ = useRef<string>('')
 
   // Infinite scroll
   const [displayCount, setDisplayCount] = useState(INITIAL)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
-  const handleVoiceFilters = useCallback((f: {
-    make?: string; model?: string; city?: string
-    price_max?: number; price_min?: number; mileage_max?: number
-    year_min?: number; year_max?: number
-  }) => {
-    setAiFilters({
-      make: f.make, model: f.model, city: f.city,
-      maxPrice: f.price_max, minPrice: f.price_min,
-      maxMileage: f.mileage_max, minYear: f.year_min, maxYear: f.year_max,
-    })
-    if (f.make)  setMake(f.make)
-    if (f.model) setModel(f.model)
-    if (f.city)  setCity(f.city)
-    if (f.price_max)   setMaxPrice(String(f.price_max))
-    if (f.mileage_max) setMaxMileage(String(f.mileage_max))
-  }, [])
+  const searchParams = useSearchParams()
 
-  async function handleNlSearch(e: React.FormEvent) {
-    e.preventDefault()
-    if (!nlQuery.trim() || nlLoading) return
-    setNlLoading(true)
+  async function runSearch (query: string) {
+    if (!query.trim()) return
     setNlSummary('')
     try {
       const res = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: nlQuery }),
+        body: JSON.stringify({ query }),
       })
       const { filters, sort: aiSort } = await res.json() as { filters: AIFilters; sort: string | null }
       setAiFilters(filters)
@@ -211,15 +193,26 @@ export default function ListingsClient({
       setNlSummary(parts.length ? `${tr.nlShowing} ${parts.join(tr.separator)}` : tr.nlNoFilters)
     } catch {
       setNlSummary(tr.nlError)
-    } finally {
-      setNlLoading(false)
     }
   }
 
-  function clearNlSearch() {
-    setNlQuery(''); setAiFilters({}); setNlSummary('')
-    nlInputRef.current?.focus()
-  }
+  function clearNlSearch () { setAiFilters({}); setNlSummary('') }
+
+  // Sync ?q + ?new24h from the URL into in-page state. The header search
+  // pushes ?q=…; the live counter green pill pushes ?new24h=1.
+  useEffect(() => {
+    const q = searchParams.get('q') ?? ''
+    const trimmed = q.trim()
+    if (trimmed && trimmed !== lastAppliedQ.current) {
+      lastAppliedQ.current = trimmed
+      runSearch(trimmed)
+    } else if (!trimmed && lastAppliedQ.current) {
+      lastAppliedQ.current = ''
+      clearNlSearch()
+    }
+    if (searchParams.get('new24h') === '1' && !newDealsOnly) setNewDealsOnly(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   // ── Derived lists ──────────────────────────────────────────────────────────
   // Filter dropdowns are driven by canonical_makes / canonical_models. We
@@ -472,100 +465,31 @@ export default function ListingsClient({
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
+      {/* Search bar + microphone removed from this page — search now lives
+          in the global StickyHeader, and the voice concierge UI has been
+          retired (the /api/voice/* backend stays for future use). */}
 
-      <VoiceAdvisor
-        onApplyFilters={handleVoiceFilters}
-        externalOpen={voiceOpen}
-        onExternalOpenHandled={() => setVoiceOpen(false)}
-      />
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          CUT 3 — Search bar strip (Browse-only).
-          Sits below the global StickyHeader on a slate-50 surface. The
-          search card itself floats with a soft blue shadow.
-      ═══════════════════════════════════════════════════════════════════ */}
-      <div className="relative">
-        <div className="relative max-w-screen-xl mx-auto px-4 pt-4 pb-2">
-          <form onSubmit={handleNlSearch}>
-            <div
-              className="flex items-stretch overflow-hidden transition-colors"
-              style={{
-                height: 56,
-                background: 'var(--bg-card)',
-                border: '1px solid var(--hairline)',
-                borderRadius: 16,
-                boxShadow: 'var(--shadow-soft)',
-              }}
+      {/* AI search summary (rendered only while a query is active). */}
+      {nlSummary && (
+        <div className="max-w-screen-xl mx-auto px-4 pt-3">
+          <div
+            className="flex items-center justify-center gap-2"
+            dir="auto"
+          >
+            <span style={{ color: 'var(--accent-primary)' }}>✦</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{nlSummary}</span>
+            <button
+              onClick={clearNlSearch}
+              className="text-[12px] underline"
+              style={{ color: 'var(--accent-primary)' }}
             >
-              {/* بحث button — leading side in RTL (right) */}
-              <button
-                type="submit"
-                disabled={nlLoading || !nlQuery.trim()}
-                className="shrink-0 px-5 text-sm font-extrabold transition-opacity disabled:opacity-40"
-                style={{ background: 'var(--accent-primary)', color: '#FFFFFF' }}
-              >
-                {nlLoading ? (
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                  </svg>
-                ) : tr.nlSearch}
-              </button>
-
-              {/* Text input */}
-              <input
-                ref={nlInputRef}
-                type="text"
-                placeholder={tr.nlPlaceholder}
-                value={nlQuery}
-                onChange={e => setNlQuery(e.target.value)}
-                dir="auto"
-                className="flex-1 bg-transparent text-sm px-3 focus:outline-none min-w-0"
-                style={{ color: 'var(--text-primary)' }}
-              />
-
-              {/* Mic — trailing side (left), coral circle with pulse */}
-              <button
-                type="button"
-                onClick={() => setVoiceOpen(true)}
-                aria-label={lang === 'ar' ? 'مستشار سيارة AI الصوتي' : 'Voice search'}
-                className="shrink-0 w-14 flex items-center justify-center"
-              >
-                <span className="relative flex items-center justify-center">
-                  <span className="absolute w-9 h-9 rounded-full animate-ping opacity-25"
-                    style={{ background: 'var(--accent-primary)' }} />
-                  <span
-                    className="relative w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:opacity-90"
-                    style={{ background: 'var(--accent-primary)' }}
-                  >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="#FFFFFF">
-                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2H3v2a9 9 0 0 0 8 8.94V23h2v-2.06A9 9 0 0 0 21 12v-2h-2z"/>
-                    </svg>
-                  </span>
-                </span>
-              </button>
-            </div>
-          </form>
-
-          {/* AI summary / powered-by caption */}
-          <div className="mt-1.5 min-h-[16px] pb-0 text-center">
-            {nlSummary ? (
-              <div className="flex items-center justify-center gap-2" dir="auto">
-                <span style={{ color: 'var(--accent-primary)' }}>✦</span>
-                <span style={{ color: 'var(--text-secondary)', fontSize: 11 }}>{nlSummary}</span>
-                <button onClick={clearNlSearch} className="text-[11px] underline" style={{ color: 'var(--accent-primary)' }}>
-                  {tr.nlClear}
-                </button>
-              </div>
-            ) : (
-              <p style={{ color: 'var(--text-secondary)', fontSize: 10 }}>
-                مدعوم بـ Claude AI · يدعم العربي والإنجليزي
-              </p>
-            )}
+              {tr.nlClear}
+            </button>
           </div>
         </div>
+      )}
 
+      <div className="relative">
         {/* ── Source ribbon — white-card row on the page surface ── */}
         <div className="border-t" style={{ borderColor: 'var(--hairline)', background: 'transparent' }}>
           <div className="max-w-screen-xl mx-auto px-4 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
