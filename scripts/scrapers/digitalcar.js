@@ -109,33 +109,52 @@ async function extractListing (page, url, id) {
       .filter(Boolean)
     const carLd = ldObjects.find(o => /Car|Vehicle|Product/i.test(o['@type'] ?? '')) ?? null
     const text = document.body?.innerText ?? ''
-    function val (labels) {
+
+    // DigitalCar price is rendered as "82,510\nSAR" — number on its own line
+    // immediately followed by "SAR". Also handle the legacy "SAR XX,XXX" form.
+    let price = null
+    const m1 = text.match(/([\d,]{4,})\s*\n?\s*SAR/i)
+    if (m1) price = parseInt(m1[1].replace(/,/g, '')) || null
+    if (!price) {
+      const m2 = text.match(/(?:SAR|ر\.س|ريال)\s*([\d,]{4,})/i)
+      if (m2) price = parseInt(m2[1].replace(/,/g, '')) || null
+    }
+
+    // Title: the car name lives a few lines above the year in body text.
+    // We extract from the structured layout: lines preceding a 4-digit year token.
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+    let yearLineIdx = -1
+    for (let i = 0; i < lines.length; i++) {
+      if (/^20\d{2}$/.test(lines[i])) { yearLineIdx = i; break }
+    }
+    const titleParts = yearLineIdx > 1 ? lines.slice(yearLineIdx - 2, yearLineIdx + 1) : []
+    const titleBlock = titleParts.join(' ').trim() || document.querySelector('h1, h2')?.textContent?.trim() || null
+
+    function valNear (labels) {
+      // Find label, return the next non-label line.
       for (const lbl of labels) {
-        const re = new RegExp(`\\b${lbl}\\b\\s*[:\\n]?\\s*([^\\n]+)`, 'i')
-        const m = text.match(re)
-        if (m) return m[1].trim()
+        const idx = lines.indexOf(lbl)
+        if (idx >= 0 && lines[idx + 1]) return lines[idx + 1]
       }
       return null
     }
-    const priceMatch = text.match(/(?:SAR|ر\.س|ريال)\s*([\d,]+)/i)
-    const price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : null
-    const title = document.querySelector('h1, h2')?.textContent?.trim() ?? null
     const photos = [...new Set([...document.querySelectorAll('img[src]')].map(i => i.src)
       .filter(s => /digitalcar|cdn|cloudfront|amazonaws|s3/i.test(s) && /\.(jpe?g|png|webp)/i.test(s)))].slice(0, 20)
     return {
-      carLd, title, price, photos,
-      year: parseInt(val(['Year', 'Manufacturing Year', 'سنة الصنع'])) || null,
-      mileageRaw: val(['Mileage', 'Kilometers', 'الممشى']),
-      makeRaw: val(['Make', 'Brand', 'الماركة']),
-      modelRaw: val(['Model', 'الموديل']),
-      trimRaw: val(['Trim', 'Variant', 'الفئة']),
-      bodyRaw: val(['Body Type', 'Body', 'الشكل']),
-      fuelRaw: val(['Fuel Type', 'Fuel', 'نوع الوقود']),
-      transRaw: val(['Transmission', 'ناقل الحركة']),
-      colorRaw: val(['Color', 'Exterior Color', 'اللون']),
-      cityRaw: val(['City', 'Location', 'المدينة']),
-      seatsRaw: val(['Seats', 'عدد المقاعد']),
-      doorsRaw: val(['Doors', 'عدد الغمارات']),
+      carLd, title: titleBlock, price, photos,
+      titleParts,
+      year: yearLineIdx >= 0 ? parseInt(lines[yearLineIdx]) : null,
+      mileageRaw: valNear(['Mileage', 'Kilometers', 'الممشى', 'العداد']),
+      makeRaw: yearLineIdx >= 2 ? lines[yearLineIdx - 2] : valNear(['Make', 'Brand', 'الماركة']),
+      modelRaw: yearLineIdx >= 1 ? lines[yearLineIdx - 1] : valNear(['Model', 'الموديل']),
+      trimRaw: valNear(['Trim', 'Variant', 'الفئة']),
+      bodyRaw: valNear(['Body Type', 'Body', 'الشكل', 'النوع']),
+      fuelRaw: valNear(['Fuel Type', 'Fuel', 'نوع الوقود']),
+      transRaw: valNear(['Transmission', 'ناقل الحركة', 'الجير']),
+      colorRaw: valNear(['Color', 'Exterior Color', 'اللون']),
+      cityRaw: valNear(['City', 'Location', 'المدينة']),
+      seatsRaw: valNear(['Seats', 'عدد المقاعد']),
+      doorsRaw: valNear(['Doors', 'عدد الغمارات']),
     }
   }).catch(() => null)
 

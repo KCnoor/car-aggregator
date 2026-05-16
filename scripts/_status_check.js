@@ -17,7 +17,7 @@ try {
 const { createClient } = require('@supabase/supabase-js')
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 
-const SOURCES = ['syarah','motory','soum','yallamotor','gogomotor','saudisale']
+const SOURCES = ['syarah','motory','soum','yallamotor','gogomotor','saudisale','carswitch','digitalcar','dubizzle']
 const LOG_FILES = {
   syarah:     'logs/syarah-full-v2.log',
   motory:     'logs/motory-full.log',
@@ -25,6 +25,9 @@ const LOG_FILES = {
   yallamotor: 'logs/yallamotor-v2.log',
   gogomotor:  'logs/gogomotor-full.log',
   saudisale:  'logs/saudisale-full.log',
+  carswitch:  'logs/carswitch-v2.log',
+  digitalcar: 'logs/digitalcar-v2.log',
+  dubizzle:   'logs/dubizzle-full.log',
 }
 
 ;(async () => {

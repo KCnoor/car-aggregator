@@ -30,7 +30,18 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms))
 const rndDelay = () => sleep(MIN_DELAY + Math.random() * (MAX_DELAY - MIN_DELAY))
 const log = (...a) => process.stderr.write(`[dubizzle] ${a.join(' ')}\n`)
 
-const SEARCH_BASE = 'https://dubizzle.sa/en/vehicles/cars-for-sale/'
+const SEARCH_BASE = 'https://www.dubizzle.sa/en/vehicles/cars-for-sale/'
+// Per-make routes recover the long tail (main /cars-for-sale/ caps quickly).
+// Dubizzle's Riyadh route alone shows 16,356 ads; per-make sweep yields 2-3k
+// per major brand. Combined sweep covers the full ~17k inventory.
+const MAKES = [
+  'toyota','hyundai','kia','nissan','gmc','chevrolet','ford','lexus','honda',
+  'mitsubishi','bmw','mercedes-benz','jeep','land-rover','audi','dodge',
+  'cadillac','infiniti','genesis','mazda','haval','mg','geely','renault',
+  'volkswagen','porsche','peugeot','suzuki','subaru','volvo','jetour',
+  'changan','byd','dongfeng','ram','isuzu','jaguar','mini','lincoln',
+  'chery','exeed',
+]
 
 function canonicalFuel (raw) {
   if (!raw) return null
@@ -68,6 +79,30 @@ function isBlocked (status, bodyText) {
   return false
 }
 
+async function harvestUrlPage (page, url) {
+  try {
+    const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
+    const status = resp?.status() ?? 0
+    const body = await page.evaluate(() => document.body?.innerText ?? '').catch(() => '')
+    if (isBlocked(status, body)) {
+      blockedCount++
+      MIN_DELAY = Math.max(MIN_DELAY, 8000); MAX_DELAY = Math.max(MAX_DELAY, 12000)
+      await sleep(15000)
+      return { blocked: true, items: [] }
+    }
+    await sleep(2500)
+    const items = await page.evaluate(() =>
+      [...new Set([...document.querySelectorAll('a[href*="/ad/"]')]
+        .map(a => a.href)
+        .filter(h => /\/ad\/[a-z0-9-]+/i.test(h))
+        .map(h => h.split('?')[0]))]
+    )
+    return { blocked: false, items: items.filter(u => !/\/(motorcycle|boat|truck|spare-parts)/i.test(u)) }
+  } catch (e) {
+    return { blocked: false, items: [], error: e.message?.slice(0, 80) }
+  }
+}
+
 async function collectUrls (browser) {
   const ctx = await browser.newContext({
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -75,45 +110,38 @@ async function collectUrls (browser) {
   })
   const page = await ctx.newPage()
   const urls = new Map()
-  let consecutiveEmpty = 0
   const maxIds = STRESS ? 200 : (LIMIT ? LIMIT * 2 : Infinity)
-  for (let pageNum = 1; pageNum <= MAX_PAGES && urls.size < maxIds && consecutiveEmpty < 2; pageNum++) {
-    const url = pageNum === 1 ? SEARCH_BASE : `${SEARCH_BASE}?page=${pageNum}`
-    try {
-      const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
-      const status = resp?.status() ?? 0
-      const body = await page.evaluate(() => document.body?.innerText ?? '').catch(() => '')
-      if (isBlocked(status, body)) {
-        blockedCount++
-        log(`page ${pageNum}: BLOCKED (status ${status}); scaling delays`)
-        MIN_DELAY = 8000; MAX_DELAY = 12000
-        await sleep(15000)
-        consecutiveEmpty++
-        continue
-      }
-      await sleep(2500)
-      const items = await page.evaluate(() =>
-        [...new Set([...document.querySelectorAll('a[href*="/ad/"]')]
-          .map(a => a.href)
-          .filter(h => /\/ad\/[a-z0-9-]+/i.test(h))
-          .map(h => h.split('?')[0]))]
-      )
-      // Skip motorcycle / boat / truck / spare parts categories.
-      const filtered = items.filter(u => !/\/(motorcycle|boat|truck|spare-parts)/i.test(u))
+
+  async function sweepRoute (label, urlFn) {
+    let consecutiveEmpty = 0
+    for (let pg = 1; pg <= MAX_PAGES; pg++) {
+      if (urls.size >= maxIds) return
+      if (consecutiveEmpty >= 2) return
+      const url = urlFn(pg)
+      const { blocked, items, error } = await harvestUrlPage(page, url)
+      if (blocked) { consecutiveEmpty++; continue }
       const prev = urls.size
-      for (const u of filtered) {
+      for (const u of items) {
         const id = u.split('/').filter(Boolean).pop()
         if (id && !urls.has(id)) urls.set(id, u)
       }
       const added = urls.size - prev
-      log(`page ${pageNum}: +${added} new (total ${urls.size})`)
+      log(`${label} p${pg}: ${items.length} cards, +${added} new (total ${urls.size})`)
       if (added === 0) consecutiveEmpty++; else consecutiveEmpty = 0
-    } catch (e) {
-      log(`page ${pageNum} error: ${e.message?.slice(0, 80)}`)
-      consecutiveEmpty++
+      if (error) log(`  err: ${error}`)
+      await rndDelay()
     }
-    await rndDelay()
   }
+
+  // 1. Main listing route — first slice (caps ~150).
+  await sweepRoute('main', (pg) => pg === 1 ? SEARCH_BASE : `${SEARCH_BASE}?page=${pg}`)
+  // 2. Per-make sweep — recovers the long tail. Each make page has its own
+  //    pagination ceiling; together they cover the full inventory.
+  for (const make of MAKES) {
+    if (urls.size >= maxIds) break
+    await sweepRoute(make, (pg) => `${SEARCH_BASE}${make}/${pg === 1 ? '' : '?page=' + pg}`)
+  }
+
   await ctx.close()
   return [...urls.entries()].map(([id, url]) => ({ id, url }))
 }
@@ -127,41 +155,61 @@ async function extractListing (page, url, id) {
   } catch { return null }
   const data = await page.evaluate(() => {
     const text = document.body?.innerText ?? ''
-    function val (labels) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+    // Dubizzle renders specs as "Label\nValue" pairs (no colon).
+    function valNext (labels) {
       for (const lbl of labels) {
-        const re = new RegExp('\\b' + lbl + '\\b\\s*[:\\n]\\s*([^\\n]+)', 'i')
-        const m = text.match(re)
-        if (m) return m[1].trim()
+        const idx = lines.indexOf(lbl)
+        if (idx >= 0 && lines[idx + 1]) return lines[idx + 1]
       }
       return null
     }
-    const priceMatch = text.match(/(?:SAR|ر\.س)\s*([\d,]+)/i)
-    const price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : null
+    // Price: "SR 85,000" — note SR (Riyal abbreviation), not SAR.
+    let price = null
+    for (const ln of lines) {
+      const m = ln.match(/^(?:SR|SAR|ر\.س)\s+([\d,]+)$/i)
+      if (m) { price = parseInt(m[1].replace(/,/g, '')) || null; break }
+    }
+    if (!price) {
+      const m = text.match(/(?:SR|SAR)\s*([\d,]{3,})/i)
+      if (m) price = parseInt(m[1].replace(/,/g, '')) || null
+    }
     const title = document.querySelector('h1')?.textContent?.trim() ?? null
     const photos = [...new Set([...document.querySelectorAll('img[src]')].map(i => i.src)
       .filter(s => /dubizzle|opensooq|cdn|cloudfront/i.test(s)))].slice(0, 20)
     const sellerActiveMatch = text.match(/(\d+)\s+(?:active\s+ads|listings|other ads)/i)
     const sellerActive = sellerActiveMatch ? parseInt(sellerActiveMatch[1]) : null
     const sellerVerified = /verified\s*seller/i.test(text)
+
+    // City: "Riyadh, Riyadh" pattern — appears near top right after price/title.
+    let city = null
+    const cityMatch = text.match(/\n([A-Z][\w\s']+),\s*([A-Z][\w\s]+)\n/)
+    if (cityMatch) city = cityMatch[1].trim()
+
     return {
-      title, price, photos,
-      year: parseInt(val(['Year', 'Manufacturing Year'])) || null,
-      mileageRaw: val(['Mileage', 'Kilometers', 'Kms', 'Kilometres']),
-      makeRaw:    val(['Make', 'Brand']),
-      modelRaw:   val(['Model']),
-      trimRaw:    val(['Trim', 'Variant']),
-      bodyRaw:    val(['Body Type', 'Body']),
-      fuelRaw:    val(['Fuel Type', 'Fuel']),
-      transRaw:   val(['Transmission', 'Gearbox', 'Transmission Type']),
-      colorRaw:   val(['Exterior Color', 'Color']),
-      cityRaw:    val(['City', 'Location']),
-      neighborhoodRaw: val(['Neighborhood', 'Neighbourhood', 'Area']),
-      seatsRaw:   val(['Seats', 'Seating Capacity']),
-      doorsRaw:   val(['Doors', 'Number of doors']),
-      postedRaw:  val(['Posted on', 'Posted Date', 'Date Posted']),
+      title, price, photos, city,
+      year: parseInt(valNext(['Year', 'Manufacturing Year'])) || null,
+      mileageRaw: valNext(['Kilometers', 'Mileage', 'Kms', 'Kilometres']),
+      makeRaw:    valNext(['Brand', 'Make']),
+      modelRaw:   valNext(['Model']),
+      trimRaw:    valNext(['Version', 'Trim', 'Variant']),
+      bodyRaw:    valNext(['Body Type', 'Body']),
+      fuelRaw:    valNext(['Fuel Type', 'Fuel']),
+      transRaw:   valNext(['Transmission Type', 'Transmission', 'Gearbox']),
+      colorRaw:   valNext(['Color', 'Exterior Color']),
+      cityRaw:    valNext(['City', 'Location']),
+      neighborhoodRaw: valNext(['Neighborhood', 'Neighbourhood', 'Area']),
+      seatsRaw:   valNext(['Number of seats', 'Seats', 'Seating Capacity']),
+      doorsRaw:   valNext(['Number of doors', 'Doors']),
+      postedRaw:  valNext(['Posted on', 'Posted Date', 'Date Posted']),
+      conditionRaw: valNext(['Condition']),
       sellerActive,
       sellerVerified,
-      description: document.querySelector('[class*="description"], [class*="Description"]')?.textContent?.trim() ?? null,
+      description: (() => {
+        const descIdx = lines.indexOf('Description')
+        if (descIdx < 0) return null
+        return lines.slice(descIdx + 1, descIdx + 30).join(' ').slice(0, 1500)
+      })(),
     }
   }).catch(() => null)
   if (!data) return null
@@ -185,7 +233,7 @@ async function extractListing (page, url, id) {
       condition: 'used',
       price_sar: data.price,
       mileage_km: mileage && mileage > 0 ? mileage : null,
-      city_en: data.cityRaw,
+      city_en: data.cityRaw || data.city,
       city_ar: null,
       neighborhood: data.neighborhoodRaw,
       color_en: data.colorRaw,

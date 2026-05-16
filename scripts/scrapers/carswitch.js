@@ -136,77 +136,117 @@ async function collectUrls (browser) {
   return [...urls.entries()].map(([id, url]) => ({ id, url }))
 }
 
+// CarSwitch URL → { city, make, model, year, id }
+function parseDetailUrl (url) {
+  const m = url.match(/\/en\/([\w-]+)\/used-car\/([\w-]+)\/([\w-]+)\/(\d{4})\/(\d+)/)
+  if (!m) return null
+  return { city: m[1], make: m[2], model: m[3], year: parseInt(m[4]), id: m[5] }
+}
+
 // ── Phase 2: detail page extraction ────────────────────────────────────────
+// CarSwitch listing pages render specs as adjacent "label\nvalue" pairs
+// (not "Label: value"). The URL path holds canonical city/make/model/year/id.
 async function extractListing (page, url, id) {
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
-    await sleep(2500)
+    await sleep(4500)
   } catch {
     return null
   }
+  const urlMeta = parseDetailUrl(url)
+
   const data = await page.evaluate(() => {
     const text = (document.body.innerText || '')
-    // CarSwitch typically renders structured key-value pairs as labelled spans.
-    function valueAfter (labels) {
-      const lower = text.toLowerCase()
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+
+    function valNext (labels) {
       for (const lbl of labels) {
-        const idx = lower.indexOf(lbl.toLowerCase())
-        if (idx >= 0) {
-          const slice = text.slice(idx + lbl.length, idx + lbl.length + 60)
-          const cleaned = slice.replace(/^[:\s]+/, '').split('\n')[0].trim()
-          if (cleaned) return cleaned
-        }
+        const idx = lines.indexOf(lbl)
+        if (idx >= 0 && lines[idx + 1]) return lines[idx + 1]
       }
       return null
     }
-    function findPriceLabel () {
-      // Look for "Great price", "Good price", "Fair price", or "X% off" badge near the price.
-      const candidates = [...document.querySelectorAll('span, div, p, button')]
-        .map(el => el.textContent?.trim() ?? '')
-        .filter(t => /great\s*price|good\s*price|fair\s*price|\d+(\.\d+)?\s*%\s*off/i.test(t))
-      return candidates[0] ?? null
+
+    // Price: "SAR XX,XXX" pattern — pick the FIRST occurrence (cash/current price).
+    let price = null
+    for (const ln of lines) {
+      const m = ln.match(/^SAR\s+([\d,]+)$/)
+      if (m) { price = parseInt(m[1].replace(/,/g, '')) || null; break }
     }
-    function flag (regex) { return regex.test(text) }
-    // Price (first SAR amount near the top)
-    const priceMatch = text.match(/SAR\s*([\d,]+)/)
-    const price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : null
-    // Title (h1)
-    const title = document.querySelector('h1')?.textContent?.trim() ?? null
+    if (!price) {
+      const m = text.match(/SAR\s*([\d,]{4,})/)
+      if (m) price = parseInt(m[1].replace(/,/g, '')) || null
+    }
+
+    // Mileage: line like "633 KM"
+    let mileage = null
+    for (const ln of lines) {
+      const m = ln.match(/^(\d[\d,]*)\s*KM$/i)
+      if (m) { mileage = parseInt(m[1].replace(/,/g, '')) || null; break }
+    }
+
+    // City: "Al Fayhaa, Jeddah" line — comma-separated, second part is city.
+    let cityFromText = null
+    for (const ln of lines) {
+      const m = ln.match(/^[\w\s']+,\s*([A-Z][\w\s]+)$/)
+      if (m && /Riyadh|Jeddah|Dammam|Khobar|Mecca|Medina|Abha|Taif|Tabuk|Qassim|Hail/i.test(ln)) {
+        cityFromText = m[1].trim()
+        break
+      }
+    }
+
+    // Title: detect the line that combines make+model+engine; usually two lines
+    // ABOVE the year line.
+    let title = null
+    for (let i = 0; i < lines.length; i++) {
+      if (/^\d{4}$/.test(lines[i]) && lines[i - 1] && lines[i - 1].length > 5) {
+        title = lines[i - 1]
+        break
+      }
+    }
+    if (!title) title = document.querySelector('h1')?.textContent?.trim() ?? null
+
     // Photos
     const photos = [...new Set([...document.querySelectorAll('img[src]')].map(img => img.src)
       .filter(s => /carswitch|cdn/i.test(s) && /\.(jpe?g|png|webp)/i.test(s)))].slice(0, 20)
+
     // Monthly installment
-    const instMatch = text.match(/(?:installment|EMI|monthly)[^\d]{0,30}SAR\s*([\d,]+)/i)
+    const instMatch = text.match(/Installments:\s*\n?\s*SAR\s*([\d,]+)/i)
     const monthlyInstallment = instMatch ? parseInt(instMatch[1].replace(/,/g, '')) : null
+
+    // External price label (if any badge shown)
+    let labelText = null
+    for (const ln of lines) {
+      if (/^(Great|Good|Fair)\s*price$/i.test(ln) || /\d+\s*%\s*off/i.test(ln) || /^Price dropped$/i.test(ln)) {
+        labelText = ln; break
+      }
+    }
+
+    const trim = (() => {
+      // Trim line often appears right after "Saudi specs" + flags
+      const semiIdx = lines.findIndex(l => /^(Semi|Fully|Stripped)\s+Loaded$/i.test(l))
+      if (semiIdx >= 0) return lines[semiIdx]
+      return null
+    })()
+
     return {
-      title,
-      price,
-      year:           parseInt(valueAfter(['Year:', 'Manufacturing Year:'])) || null,
-      mileageRaw:     valueAfter(['Mileage:', 'Kilometers:']),
-      makeRaw:        valueAfter(['Make:', 'Brand:']),
-      modelRaw:       valueAfter(['Model:']),
-      trim:           valueAfter(['Trim:', 'Variant:']),
-      bodyRaw:        valueAfter(['Body Type:', 'Body:']),
-      fuelRaw:        valueAfter(['Fuel Type:', 'Fuel:']),
-      transRaw:       valueAfter(['Transmission:', 'Gearbox:']),
-      colorRaw:       valueAfter(['Color:', 'Exterior Color:']),
-      cityRaw:        valueAfter(['City:', 'Location:']),
-      seatsRaw:       valueAfter(['Seats:', 'Number of seats:']),
-      doorsRaw:       valueAfter(['Doors:', 'Number of doors:']),
-      labelText:      findPriceLabel(),
-      photos,
-      monthlyInstallment,
-      saudiSpecs:     flag(/saudi\s*spec/i),
-      loanAvailable:  flag(/\bloan\b|financing/i),
-      inspection:     flag(/inspection\s*report|inspected/i),
+      title, price, mileage, cityFromText, photos, monthlyInstallment, labelText, trim,
+      fuelRaw: valNext(['Fuel Type', 'Fuel']),
+      transRaw: valNext(['Transmission']),
+      driveRaw: valNext(['Drive Type']),
+      bodyRaw: valNext(['Body Type', 'Body']),
+      colorRaw: valNext(['Color', 'Exterior Color']),
+      seatsRaw: valNext(['Seats']),
+      doorsRaw: valNext(['Doors']),
+      saudiSpecs: /saudi\s*specs?/i.test(text),
+      loanAvailable: /\bloan\b|financing|installment/i.test(text),
+      inspection: /inspection\s*report|inspected/i.test(text),
+      firstOwner: /First owner:\s*Yes/i.test(text),
     }
   }).catch(() => null)
-  if (!data) return null
-  if (!data.price) return null
-  const make = data.makeRaw || null
-  const model = data.modelRaw || null
-  if (!make || !model) return null
-  const mileage = data.mileageRaw ? parseInt(data.mileageRaw.replace(/[^0-9]/g, '')) || null : null
+
+  if (!data || !data.price) return null
+
   return {
     source_id: id,
     source_url: url,
@@ -214,19 +254,20 @@ async function extractListing (page, url, id) {
       source_id: id,
       source_url: url,
       title: data.title,
-      make_en: make,  make_ar: null,
-      model_en: model, model_ar: null,
+      make_en: urlMeta?.make ?? null,    make_ar: null,
+      model_en: urlMeta?.model ?? null,  model_ar: null,
       trim: data.trim,
-      year: data.year,
+      year: urlMeta?.year ?? null,
       condition: 'used',
       price_sar: data.price,
-      mileage_km: mileage && mileage > 0 ? mileage : null,
-      city_en: data.cityRaw, city_ar: null,
+      mileage_km: data.mileage && data.mileage > 0 ? data.mileage : null,
+      city_en: data.cityFromText || urlMeta?.city || null,
+      city_ar: null,
       color_en: data.colorRaw, color_ar: null,
       fuel_type: canonicalFuel(data.fuelRaw),
       transmission: canonicalTrans(data.transRaw),
       body_type: canonicalBody(data.bodyRaw),
-      drive_type: null,
+      drive_type: data.driveRaw ? data.driveRaw.toLowerCase().replace(/\s+/g, '') : null,
       engine_size_l: null,
       doors: data.doorsRaw ? parseInt(data.doorsRaw) || null : null,
       seats: data.seatsRaw ? parseInt(data.seatsRaw) || null : null,
@@ -240,6 +281,7 @@ async function extractListing (page, url, id) {
       loan_available:      data.loanAvailable,
       monthly_installment: data.monthlyInstallment,
       inspection_report:   data.inspection,
+      first_owner:         data.firstOwner,
     },
   }
 }
