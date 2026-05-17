@@ -24,9 +24,9 @@ type AIFilters = {
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const INITIAL = 60
-const PAGE    = 40
-const ALL     = '__all__'
+// (INITIAL/PAGE legacy infinite-scroll counts removed when /browse switched
+// to server-side pagination — see goToPage / range() below.)
+const ALL = '__all__'
 
 const YEARS = Array.from({ length: 2026 - 2005 + 1 }, (_, i) => String(2026 - i))
 
@@ -113,7 +113,6 @@ export default function ListingsClient({
   currentPage = 1,
   totalPages = 1,
   pageSize = 50,
-  newDealsCount = 0,
   newDealsSinceIso,
   sourceCounts = {},
   canonicalMakes = [],
@@ -124,7 +123,6 @@ export default function ListingsClient({
   currentPage?: number
   totalPages?: number
   pageSize?: number
-  newDealsCount?: number
   newDealsSinceIso?: string
   sourceCounts?: Record<string, number>
   canonicalMakes?: CanonicalMake[]
@@ -150,7 +148,10 @@ export default function ListingsClient({
   const [fuel,         setFuel]         = useState('')
   const [condition,    setCondition]    = useState('')
   const [source,       setSource]       = useState('')
-  const [showContactForPrice, setShowContactForPrice] = useState(false)
+  // Currently no UI toggle exposes this — contact-for-price listings are
+  // always hidden. Left as a const so a future filter can re-introduce the
+  // toggle without restructuring the filter predicate below.
+  const showContactForPrice = false
 
   // AI-search state. The search input itself lives in <StickyHeader> now;
   // this page reads the ?q URL param it sets and dispatches the existing

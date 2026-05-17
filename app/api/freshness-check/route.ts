@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       verdict = 'stale'
       reason = `http_${status}`
     }
-  } catch (e) {
+  } catch {
     verdict = 'stale'
     reason = 'transport_error'
   } finally {

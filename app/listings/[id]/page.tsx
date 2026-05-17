@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { supabase, type Listing } from '@/lib/supabase'
 import ListingDetailClient from './ListingDetailClient'
 

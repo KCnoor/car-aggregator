@@ -78,7 +78,7 @@ export default function ModeTabs ({ className = '' }: { className?: string }) {
             role="tab"
             type="button"
             onClick={() => go(m.href)}
-            aria-pressed={isActive}
+            aria-selected={isActive}
             aria-current={isActive ? 'page' : undefined}
             whileHover={isActive ? undefined : { y: -1 }}
             whileTap={{ scale: 0.98 }}

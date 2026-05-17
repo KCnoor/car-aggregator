@@ -24,7 +24,7 @@ const reemKufi = Reem_Kufi({
 
 export const metadata: Metadata = {
   title: "سيارة AI — كل إعلانات السيارات في السعودية، من مصدر واحد",
-  description: "كل إعلانات السيارات في السعودية، من مصدر واحد — نجمع من ٩ مصادر (سيارة، سوم، حراج، موتري، يلا موتور، سعودي سيل، كار سويتش، GoGoMotor، Carly) في مكان واحد.",
+  description: "كل إعلانات السيارات في السعودية، من مصدر واحد — نجمع من ٩ مصادر (سيارة، سوم، موتري، يلا موتور، سعودي سيل، GoGoMotor، CarSwitch، Dubizzle، وDigitalCar) في مكان واحد.",
   icons: {
     icon: [
       { url: '/favicon.ico' },
