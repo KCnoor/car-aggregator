@@ -413,23 +413,26 @@ export default function HuntClient ({
   const hoverPoint = hoverId ? chart.byId.get(hoverId) ?? null : null
 
   return (
-    <div dir="rtl" className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
       {/* ── Intro + tips ── */}
       <section className="max-w-screen-xl mx-auto px-4" style={{ paddingTop: 40, paddingBottom: 24 }}>
         <div className="grid grid-cols-1 md:grid-cols-[55fr_45fr] gap-6">
           <div>
             <h1 className="leading-tight" style={{ color: NAVY_900, fontSize: 40, fontWeight: 900 }}>
-              الصياد
+              {lang === 'ar' ? 'الصياد' : 'The Hunter'}
             </h1>
             <p className="mt-3" style={{ color: SLATE_700, fontSize: 20, fontWeight: 600 }}>
-              تعرف وش تبي، بس تدور اللقطة.
+              {lang === 'ar'
+                ? 'تعرف وش تبي، بس تدور اللقطة.'
+                : "You know what you want — you're hunting for the catch."}
             </p>
             <p className="mt-2 max-w-prose" style={{ color: SLATE, fontSize: 16, lineHeight: 1.7 }}>
-              اختر حتى ٥ موديلات في الخانات تحت، وشوف على المخطط وين السيارات الأرخص
-              والممشى الأقل. حوم على نقطة لتفاصيلها، واضغط لتثبيت ما يصل إلى ٨ سيارات للمقارنة.
+              {lang === 'ar'
+                ? 'اختر حتى ٥ موديلات في الخانات تحت، وشوف على المخطط وين السيارات الأرخص والممشى الأقل. حوم على نقطة لتفاصيلها، واضغط لتثبيت ما يصل إلى ٨ سيارات للمقارنة.'
+                : 'Pick up to 5 models in the slots below and see on the chart where the cheapest, lowest-mileage cars sit. Hover a dot for details, click to pin up to 8 cars for comparison.'}
             </p>
           </div>
-          <UsageTips />
+          <UsageTips lang={lang} />
         </div>
       </section>
 
@@ -444,6 +447,7 @@ export default function HuntClient ({
               color={MODEL_COLORS[idx]}
               canonicalMakes={canonicalMakes}
               canonicalModels={canonicalModels}
+              lang={lang}
               onPickMake={make => setSlotMake(idx, make)}
               onPickModel={model => setSlotModel(idx, model)}
               onPickYears={(lo, hi) => setSlotYears(idx, lo, hi)}
@@ -456,7 +460,7 @@ export default function HuntClient ({
       {/* ── 4+ models soft warning ── */}
       {slotGroups.length >= 4 && !tooManyDismissed && (
         <section className="mx-auto px-4 pb-4" style={{ maxWidth: 1100 }}>
-          <TooManyModelsBanner onDismiss={dismissTooMany} />
+          <TooManyModelsBanner lang={lang} onDismiss={dismissTooMany} />
         </section>
       )}
 
@@ -476,13 +480,15 @@ export default function HuntClient ({
               top-right home.) */}
 
           {!hasAnyFullSlot ? (
-            <EmptyState />
+            <EmptyState lang={lang} />
           ) : chart.rendered.length < 1 ? (
             <div
               className="flex items-center justify-center text-center"
               style={{ height: 360, color: SLATE, fontSize: 14 }}
             >
-              ما لقينا سيارات في هذا المدى. وسّع السنوات أو غيّر الموديلات.
+              {lang === 'ar'
+                ? 'ما لقينا سيارات في هذا المدى. وسّع السنوات أو غيّر الموديلات.'
+                : "No cars found in this range. Widen the years or pick different models."}
             </div>
           ) : (
             <HuntChart
@@ -521,9 +527,13 @@ export default function HuntClient ({
           >
             <span>
               <span aria-hidden style={{ marginInlineEnd: 8 }}>👇</span>
-              {selectedListingIds.length > 0
-                ? <>السيارات للمقارنة ({selectedListingIds.length} من ٨)</>
-                : <>السيارات في المخطط ({chart.rendered.length} سيارة)</>}
+              {lang === 'ar'
+                ? (selectedListingIds.length > 0
+                    ? <>السيارات للمقارنة ({selectedListingIds.length} من ٨)</>
+                    : <>السيارات في المخطط ({chart.rendered.length} سيارة)</>)
+                : (selectedListingIds.length > 0
+                    ? <>Cars for comparison ({selectedListingIds.length} of 8)</>
+                    : <>Cars on the chart ({chart.rendered.length})</>)}
             </span>
             {selectedListingIds.length > 0 && (
               <button
@@ -536,13 +546,13 @@ export default function HuntClient ({
                   textDecoration: 'underline',
                 }}
               >
-                عرض الكل ↩
+                {lang === 'ar' ? 'عرض الكل ↩' : 'Show all ↩'}
               </button>
             )}
           </div>
 
           {/* Sort pill row — controls the order of cards in the strip. */}
-          <SortPills value={sortKey} onChange={setSortKey} />
+          <SortPills value={sortKey} onChange={setSortKey} lang={lang} />
 
           {selectedListingIds.length > 0 ? (
             // Pinned mode — horizontal scroll. 4 cards visible desktop,
@@ -567,7 +577,7 @@ export default function HuntClient ({
                         scrollSnapAlign: 'start',
                       }}
                     >
-                      <ListingCard listing={l} lang="ar" index={i} />
+                      <ListingCard listing={l} lang={lang} index={i} />
                     </div>
                   )
                 })}
@@ -625,21 +635,21 @@ export default function HuntClient ({
 }
 
 // ─── Sort pill row ─────────────────────────────────────────────────────────
-const SORT_PILLS: { key: SortKey; labelAr: string }[] = [
-  { key: 'score',   labelAr: 'أحسن صفقة' },
-  { key: 'price',   labelAr: 'الأرخص' },
-  { key: 'mileage', labelAr: 'الأقل ممشى' },
-  { key: 'year',    labelAr: 'الأحدث' },
+const SORT_PILLS: { key: SortKey; labelAr: string; labelEn: string }[] = [
+  { key: 'score',   labelAr: 'أحسن صفقة',  labelEn: 'Best deal' },
+  { key: 'price',   labelAr: 'الأرخص',     labelEn: 'Cheapest' },
+  { key: 'mileage', labelAr: 'الأقل ممشى', labelEn: 'Lowest mileage' },
+  { key: 'year',    labelAr: 'الأحدث',     labelEn: 'Newest' },
 ]
-function SortPills ({ value, onChange }: { value: SortKey; onChange: (k: SortKey) => void }) {
+function SortPills ({ value, onChange, lang }: { value: SortKey; onChange: (k: SortKey) => void; lang: 'ar' | 'en' }) {
   return (
     <div
-      dir="rtl"
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
       className="flex flex-wrap items-center gap-2"
       style={{ marginBottom: 12 }}
     >
       <span style={{ color: '#475569', fontSize: 14, fontWeight: 600, marginInlineEnd: 4 }}>
-        ترتيب حسب:
+        {lang === 'ar' ? 'ترتيب حسب:' : 'Sort by:'}
       </span>
       {SORT_PILLS.map(p => {
         const active = value === p.key
@@ -662,7 +672,7 @@ function SortPills ({ value, onChange }: { value: SortKey; onChange: (k: SortKey
               whiteSpace: 'nowrap',
             }}
           >
-            {p.labelAr}
+            {lang === 'ar' ? p.labelAr : p.labelEn}
           </button>
         )
       })}
@@ -671,7 +681,7 @@ function SortPills ({ value, onChange }: { value: SortKey; onChange: (k: SortKey
 }
 
 // ─── Banner ─────────────────────────────────────────────────────────────────
-function TooManyModelsBanner ({ onDismiss }: { onDismiss: () => void }) {
+function TooManyModelsBanner ({ onDismiss, lang }: { onDismiss: () => void; lang: 'ar' | 'en' }) {
   return (
     <div
       role="alert"
@@ -685,13 +695,14 @@ function TooManyModelsBanner ({ onDismiss }: { onDismiss: () => void }) {
     >
       <AlertCircle size={20} color="#D97706" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
       <p className="flex-1" style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.65 }}>
-        ملاحظة: نقترح مقارنة ٣ موديلات أو أقل من نفس الفئة. كل ما تضيف موديلات
-        مختلفة الحجم أو السعر، كل ما يصير المخطط أقل دقّة.
+        {lang === 'ar'
+          ? 'ملاحظة: نقترح مقارنة ٣ موديلات أو أقل من نفس الفئة. كل ما تضيف موديلات مختلفة الحجم أو السعر، كل ما يصير المخطط أقل دقّة.'
+          : 'Heads up: we suggest comparing 3 or fewer models from the same class. The more you add models that differ in size or price, the less precise the chart gets.'}
       </p>
       <button
         type="button"
         onClick={onDismiss}
-        aria-label="إغلاق"
+        aria-label={lang === 'ar' ? 'إغلاق' : 'Dismiss'}
         className="rounded-full w-7 h-7 inline-flex items-center justify-center hover:bg-amber-100 transition-colors flex-shrink-0"
         style={{ color: '#92400E', fontSize: 18, lineHeight: 1 }}
       >
@@ -702,11 +713,11 @@ function TooManyModelsBanner ({ onDismiss }: { onDismiss: () => void }) {
 }
 
 // ─── Tips panel ─────────────────────────────────────────────────────────────
-function UsageTips () {
+function UsageTips ({ lang }: { lang: 'ar' | 'en' }) {
   // Tip 4 uses single-click wording because that's the actual
   // behaviour — togglePin runs on every click. Tip 5 sets expectations
   // on the 8-car comparison cap so users don't feel boxed in.
-  const TIPS: { Icon: typeof Scale; text: string }[] = [
+  const TIPS_AR: { Icon: typeof Scale; text: string }[] = [
     { Icon: Scale,         text: 'قارن سيارات من نفس الفئة (مو رولز رويس مع كورولا)' },
     { Icon: Target,        text: 'النتيجة الأوضح بـ ٣ موديلات أو أقل' },
     { Icon: MousePointer2, text: 'حوم على نقطة لتفاصيل السيارة' },
@@ -714,13 +725,22 @@ function UsageTips () {
     { Icon: Layers,        text: 'يمكنك مقارنة حتى ٨ سيارات في وقت واحد' },
     { Icon: Sparkles,      text: 'انتبه وتأكد من اللقطات لا يكونوا قفطات 😉' },
   ]
+  const TIPS_EN: { Icon: typeof Scale; text: string }[] = [
+    { Icon: Scale,         text: 'Compare cars in the same class (not a Rolls-Royce against a Corolla)' },
+    { Icon: Target,        text: 'The picture is clearest with 3 models or fewer' },
+    { Icon: MousePointer2, text: 'Hover a dot to see the car details' },
+    { Icon: Pin,           text: 'Click a dot to pin the car into the comparison strip below' },
+    { Icon: Layers,        text: 'You can compare up to 8 cars at once' },
+    { Icon: Sparkles,      text: 'Eyeball the photos — make sure a "deal" is a deal, not a trap 😉' },
+  ]
+  const TIPS = lang === 'ar' ? TIPS_AR : TIPS_EN
   return (
     <aside
       className="rounded-2xl"
       style={{ background: SLATE_50, border: `1px solid ${SLATE_200}`, padding: 20 }}
     >
       <h3 className="mb-3" style={{ color: SLATE_700, fontSize: 14, fontWeight: 800 }}>
-        كيف تستخدم الصياد؟
+        {lang === 'ar' ? 'كيف تستخدم الصياد؟' : 'How to use the Hunter'}
       </h3>
       <ul className="flex flex-col gap-2.5" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {TIPS.map(({ Icon, text }, i) => (
@@ -739,15 +759,19 @@ function UsageTips () {
 }
 
 // ─── Empty state ────────────────────────────────────────────────────────────
-function EmptyState () {
+function EmptyState ({ lang }: { lang: 'ar' | 'en' }) {
   return (
     <div className="flex flex-col items-center justify-center text-center px-4" style={{ height: 360 }}>
       <Target size={72} strokeWidth={1.2} color={CORAL} style={{ opacity: 0.18, marginBottom: 14 }} />
       <p style={{ color: SLATE_700, fontSize: 17, fontWeight: 600 }}>
-        اختر ماركة وموديل في الخانات أعلاه لتشوف المخطط
+        {lang === 'ar'
+          ? 'اختر ماركة وموديل في الخانات أعلاه لتشوف المخطط'
+          : 'Pick a make and model in the slots above to see the chart'}
       </p>
       <p className="mt-1" style={{ color: SLATE, fontSize: 13 }}>
-        يمكنك اختيار حتى ٥ موديلات للمقارنة، كل واحد بنطاق سنوات خاص فيه
+        {lang === 'ar'
+          ? 'يمكنك اختيار حتى ٥ موديلات للمقارنة، كل واحد بنطاق سنوات خاص فيه'
+          : 'You can pick up to 5 models for comparison, each with its own year range'}
       </p>
     </div>
   )
@@ -756,7 +780,7 @@ function EmptyState () {
 // ─── Slot card ──────────────────────────────────────────────────────────────
 function SlotCard ({
   slotIndex, slot, color,
-  canonicalMakes, canonicalModels,
+  canonicalMakes, canonicalModels, lang,
   onPickMake, onPickModel, onPickYears, onClear,
 }: {
   slotIndex: number
@@ -764,6 +788,7 @@ function SlotCard ({
   color: string
   canonicalMakes: CanonicalMake[]
   canonicalModels: CanonicalModel[]
+  lang: 'ar' | 'en'
   onPickMake: (slug: string | null) => void
   onPickModel: (slug: string | null) => void
   onPickYears: (lo: number, hi: number) => void
@@ -798,14 +823,18 @@ function SlotCard ({
     >
       <div className="flex items-center justify-between">
         <span style={{ color: SLATE, fontSize: 13, fontWeight: 700 }}>
-          موديل {slotIndex + 1}
-          {slotIndex >= 3 && <span style={{ color: SLATE_400, fontWeight: 500 }}> (إضافي)</span>}
+          {lang === 'ar' ? `موديل ${slotIndex + 1}` : `Model ${slotIndex + 1}`}
+          {slotIndex >= 3 && (
+            <span style={{ color: SLATE_400, fontWeight: 500 }}>
+              {lang === 'ar' ? ' (إضافي)' : ' (extra)'}
+            </span>
+          )}
         </span>
         {fullyFilled && (
           <button
             type="button"
             onClick={onClear}
-            aria-label="مسح"
+            aria-label={lang === 'ar' ? 'مسح' : 'Clear'}
             className="inline-flex items-center justify-center rounded-full w-5 h-5 hover:bg-slate-100"
             style={{ color: SLATE, fontSize: 14 }}
           >×</button>
@@ -821,10 +850,10 @@ function SlotCard ({
           color: slot?.make ? NAVY : SLATE_400, width: '100%',
         }}
       >
-        <option value="">الماركة</option>
+        <option value="">{lang === 'ar' ? 'الماركة' : 'Make'}</option>
         {canonicalMakes.map(m => (
           <option key={m.canonical_make_slug} value={m.canonical_make_slug}>
-            {m.canonical_name_ar}
+            {lang === 'ar' ? m.canonical_name_ar : m.canonical_name_en}
           </option>
         ))}
       </select>
@@ -841,10 +870,10 @@ function SlotCard ({
           cursor: slot?.make ? 'pointer' : 'not-allowed',
         }}
       >
-        <option value="">الموديل</option>
+        <option value="">{lang === 'ar' ? 'الموديل' : 'Model'}</option>
         {modelsForMake.map(m => (
           <option key={m.canonical_model_slug} value={m.canonical_model_slug}>
-            {m.canonical_name_ar}
+            {lang === 'ar' ? m.canonical_name_ar : m.canonical_name_en}
           </option>
         ))}
       </select>
@@ -854,20 +883,22 @@ function SlotCard ({
           value={yearMin}
           onChange={e => onPickYears(parseInt(e.target.value), Math.max(yearMax, parseInt(e.target.value)))}
           disabled={!fullyFilled}
-          aria-label="من"
+          aria-label={lang === 'ar' ? 'من' : 'From'}
           style={{
             background: !fullyFilled ? SLATE_50 : '#FFFFFF',
             border: `1px solid ${SLATE_200}`, borderRadius: 8,
             padding: '4px 6px', fontSize: 12, fontWeight: 700, color: NAVY, flex: 1,
           }}
         >
-          {YEAR_OPTIONS.map(y => <option key={y} value={y}>من {y}</option>)}
+          {YEAR_OPTIONS.map(y => (
+            <option key={y} value={y}>{lang === 'ar' ? `من ${y}` : `From ${y}`}</option>
+          ))}
         </select>
         <select
           value={yearMax}
           onChange={e => onPickYears(Math.min(yearMin, parseInt(e.target.value)), parseInt(e.target.value))}
           disabled={!fullyFilled}
-          aria-label="إلى"
+          aria-label={lang === 'ar' ? 'إلى' : 'To'}
           style={{
             background: !fullyFilled ? SLATE_50 : '#FFFFFF',
             border: `1px solid ${SLATE_200}`, borderRadius: 8,
@@ -875,7 +906,7 @@ function SlotCard ({
           }}
         >
           {YEAR_OPTIONS.filter(y => y >= yearMin).map(y => (
-            <option key={y} value={y}>إلى {y}</option>
+            <option key={y} value={y}>{lang === 'ar' ? `إلى ${y}` : `To ${y}`}</option>
           ))}
         </select>
       </div>
@@ -1203,7 +1234,7 @@ function HuntChart ({
             mutates, so a stale tooltip from a now-vanished dot is
             impossible). */}
         {hoverPoint && hoverXY && (
-          <ChartTooltip point={hoverPoint} xy={hoverXY} />
+          <ChartTooltip point={hoverPoint} xy={hoverXY} lang={lang} />
         )}
       </div>
 
@@ -1253,7 +1284,7 @@ function HuntChart ({
               borderRadius: 4,
             }}
           >
-            سعر أرخص
+            {lang === 'ar' ? 'سعر أرخص' : 'Cheaper'}
           </span>
           <span
             style={{
@@ -1266,7 +1297,7 @@ function HuntChart ({
               borderRadius: 4,
             }}
           >
-            سعر أغلى
+            {lang === 'ar' ? 'سعر أغلى' : 'Pricier'}
           </span>
         </div>
       )}
@@ -1355,16 +1386,19 @@ function LegendEntry ({ text, fill, stroke }: { text: string; fill: string; stro
 // were replaced by the legend strip below the chart frame.)
 
 // ─── Custom tooltip (renders our own; we don't use Recharts <Tooltip>) ─────
-function ChartTooltip ({ point, xy }: { point: ChartPoint; xy: { x: number; y: number } }) {
+function ChartTooltip ({ point, xy, lang }: { point: ChartPoint; xy: { x: number; y: number }; lang: 'ar' | 'en' }) {
   const l = point.listing
   const photo = (l.photo_urls?.[0]) ?? null
   // Offset so the tooltip doesn't sit on top of the cursor.
   const left = Math.max(8, xy.x + 14)
   const top  = Math.max(8, xy.y + 14)
+  const make  = lang === 'ar' ? (l.make_ar  ?? l.make_en)  : (l.make_en  ?? l.make_ar)
+  const model = lang === 'ar' ? (l.model_ar ?? l.model_en) : (l.model_en ?? l.model_ar)
+  const city  = lang === 'ar' ? (l.city_ar ?? l.city_en ?? '-') : (l.city_en ?? l.city_ar ?? '-')
   return (
     <div
       role="tooltip"
-      dir="rtl"
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
       style={{
         position: 'absolute',
         left, top,
@@ -1392,13 +1426,13 @@ function ChartTooltip ({ point, xy }: { point: ChartPoint; xy: { x: number; y: n
       )}
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 12, color: NAVY, fontWeight: 800 }}>
-          {l.year} {l.make_ar ?? l.make_en} {l.model_ar ?? l.model_en}
+          {l.year} {make} {model}
         </div>
-        <div style={{ fontSize: 13, color: NAVY, fontWeight: 900, marginTop: 2, direction: 'ltr', textAlign: 'right' }}>
-          {l.price_sar?.toLocaleString()} <span style={{ fontSize: 10, color: SLATE, fontWeight: 600 }}>ريال</span>
+        <div style={{ fontSize: 13, color: NAVY, fontWeight: 900, marginTop: 2, direction: 'ltr', textAlign: lang === 'ar' ? 'right' : 'left' }}>
+          {l.price_sar?.toLocaleString()} <span style={{ fontSize: 10, color: SLATE, fontWeight: 600 }}>{lang === 'ar' ? 'ريال' : 'SAR'}</span>
         </div>
         <div style={{ fontSize: 11, color: SLATE, marginTop: 2 }}>
-          {l.mileage_km?.toLocaleString()} كم · {l.city_ar ?? l.city_en ?? '-'} · {l.source}
+          {l.mileage_km?.toLocaleString()} {lang === 'ar' ? 'كم' : 'km'} · {city} · {l.source}
         </div>
       </div>
     </div>

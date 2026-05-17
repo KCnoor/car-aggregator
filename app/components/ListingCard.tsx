@@ -24,17 +24,17 @@ const SOURCES: Record<string, { name: string; cls: string }> = {
 
 // ── Deal score helpers ────────────────────────────────────────────────────────
 // 4-tier rule (raw number lives on the detail page only):
-//   9.0+    صفقة ممتازة  emerald  #10B981
-//   8.0–8.9 صفقة جيدة   bright   #34D399
-//   7.0–7.9 سعر عادل   slate    #64748B
-//   6.0–6.9 سعر سوقي   slate-400 #94A3B8
+//   9.0+    صفقة ممتازة / Excellent deal  emerald  #10B981
+//   8.0–8.9 صفقة جيدة   / Good deal       bright   #34D399
+//   7.0–7.9 سعر عادل    / Fair price      slate    #64748B
+//   6.0–6.9 سعر سوقي    / Market price    slate-400 #94A3B8
 //   <6.0    no badge
-function dealConfig (score: number | null): { label: string; bg: string } | null {
+function dealConfig (score: number | null, lang: Lang): { label: string; bg: string } | null {
   if (score == null) return null
-  if (score >= 9.0) return { label: 'صفقة ممتازة', bg: '#10B981' }
-  if (score >= 8.0) return { label: 'صفقة جيدة',  bg: '#34D399' }
-  if (score >= 7.0) return { label: 'سعر عادل',   bg: '#64748B' }
-  if (score >= 6.0) return { label: 'سعر سوقي',   bg: '#94A3B8' }
+  if (score >= 9.0) return { label: lang === 'ar' ? 'صفقة ممتازة' : 'Excellent deal', bg: '#10B981' }
+  if (score >= 8.0) return { label: lang === 'ar' ? 'صفقة جيدة'   : 'Good deal',      bg: '#34D399' }
+  if (score >= 7.0) return { label: lang === 'ar' ? 'سعر عادل'    : 'Fair price',     bg: '#64748B' }
+  if (score >= 6.0) return { label: lang === 'ar' ? 'سعر سوقي'    : 'Market price',   bg: '#94A3B8' }
   return null
 }
 
@@ -70,7 +70,7 @@ export default function ListingCard({
   })()
   const photo = needsProxy ? `/api/img-proxy?url=${encodeURIComponent(rawPhoto!)}` : rawPhoto
   const src     = SOURCES[listing.source] ?? { name: listing.source, cls: 'bg-slate-600 text-white border-0' }
-  const deal = dealConfig(listing.deal_score)
+  const deal = dealConfig(listing.deal_score, lang)
   const hasBadge = !listing.contact_for_price && deal !== null
 
   return (

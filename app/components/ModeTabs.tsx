@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { useLang } from './LangContext'
 
 // Four mode tabs. Search lives as the 5th element next to this component
 // inside StickyHeader — see StickyHeader.tsx for the row layout.
@@ -14,7 +15,9 @@ import { motion } from 'framer-motion'
 type Mode = {
   href: string
   titleAr: string
+  titleEn: string
   subtitleAr: string
+  subtitleEn: string
   icon: string   // PNG path under public/
 }
 
@@ -22,25 +25,33 @@ const MODES: Mode[] = [
   {
     href: '/browse',
     titleAr: 'كل السوق',
+    titleEn: 'Browse All',
     subtitleAr: 'تصفّح كل الإعلانات',
+    subtitleEn: 'Browse all listings',
     icon: '/modes/all-market.png',
   },
   {
     href: '/match',
     titleAr: 'الخطّابة',
+    titleEn: 'Matchmaker',
     subtitleAr: 'ترشيح ذكي',
+    subtitleEn: 'Smart matching',
     icon: '/modes/matchmaker.png',
   },
   {
     href: '/hunt',
     titleAr: 'الصياد',
+    titleEn: 'Hunter',
     subtitleAr: 'تعرف وش تبي بس تدور اللقطة',
+    subtitleEn: 'You know what you want — hunt the catch',
     icon: '/modes/hunter.png',
   },
   {
     href: '/pulse',
     titleAr: 'نبض السوق',
+    titleEn: 'Market Pulse',
     subtitleAr: 'الأخبار والاتجاهات',
+    subtitleEn: 'News and trends',
     icon: '/modes/pulse.png',
   },
 ]
@@ -48,6 +59,7 @@ const MODES: Mode[] = [
 export default function ModeTabs ({ className = '' }: { className?: string }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { lang } = useLang()
   // Default to the first tab (كل السوق) when no route matches — handles
   // the brief flash between the / → /browse redirect and the first paint.
   const active =
@@ -61,9 +73,9 @@ export default function ModeTabs ({ className = '' }: { className?: string }) {
 
   return (
     <div
-      dir="rtl"
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
       role="tablist"
-      aria-label="أوضاع سيارة"
+      aria-label={lang === 'ar' ? 'أوضاع سيارة' : 'Siyara modes'}
       className={
         // 2×2 on mobile so all four modes are visible without scrolling.
         // Equal-width row on desktop (parent flex container assigns the width).
@@ -127,7 +139,7 @@ export default function ModeTabs ({ className = '' }: { className?: string }) {
                     fontWeight: 800,
                   }}
                 >
-                  {m.titleAr}
+                  {lang === 'ar' ? m.titleAr : m.titleEn}
                 </span>
                 <span
                   className="leading-tight hidden md:block truncate w-full text-end"
@@ -138,7 +150,7 @@ export default function ModeTabs ({ className = '' }: { className?: string }) {
                     marginTop: 2,
                   }}
                 >
-                  {m.subtitleAr}
+                  {lang === 'ar' ? m.subtitleAr : m.subtitleEn}
                 </span>
               </div>
             </div>

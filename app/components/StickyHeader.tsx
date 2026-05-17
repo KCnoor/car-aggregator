@@ -35,12 +35,13 @@ function PulseDot () {
 // left-border, the pulse dot, the active count, and a green '+N جديد
 // اليوم' pill that filters /browse to the last 24h on click.
 function LiveCounter ({
-  totalCount, newDealsCount, onNewClick, langLabel = 'سيارة من ٩ مصادر',
+  totalCount, newDealsCount, onNewClick, langLabel = 'سيارة من ٩ مصادر', lang,
 }: {
   totalCount: number
   newDealsCount: number
   onNewClick: () => void
   langLabel?: string
+  lang: 'ar' | 'en'
 }) {
   const [display, setDisplay] = useState(totalCount)
   useEffect(() => { setDisplay(totalCount) }, [totalCount])
@@ -85,7 +86,7 @@ function LiveCounter ({
         borderRight: `4px solid ${CORAL}`,
       }}
       role="status"
-      aria-label="عدد الإعلانات النشطة"
+      aria-label={lang === 'ar' ? 'عدد الإعلانات النشطة' : 'Active listings count'}
     >
       <PulseDot />
       <div className="flex flex-col leading-none min-w-0">
@@ -116,12 +117,14 @@ function LiveCounter ({
               borderRadius: 999,
               lineHeight: 1,
             }}
-            aria-label="إظهار آخر 24 ساعة فقط"
-            title="إظهار آخر 24 ساعة فقط"
+            aria-label={lang === 'ar' ? 'إظهار آخر 24 ساعة فقط' : 'Show only the last 24 hours'}
+            title={lang === 'ar' ? 'إظهار آخر 24 ساعة فقط' : 'Show only the last 24 hours'}
           >
             <span aria-hidden style={{ fontSize: 12 }}>↗</span>
             <span>{newDisplay}</span>
-            <span style={{ fontWeight: 700, opacity: 0.95 }}>جديد اليوم</span>
+            <span style={{ fontWeight: 700, opacity: 0.95 }}>
+              {lang === 'ar' ? 'جديد اليوم' : 'new today'}
+            </span>
           </button>
         </>
       )}
@@ -131,9 +134,9 @@ function LiveCounter ({
 
 // Compact mobile counter — same pulse + total + optional green pill.
 function MobileLiveCounter ({
-  totalCount, newDealsCount, onNewClick,
+  totalCount, newDealsCount, onNewClick, lang,
 }: {
-  totalCount: number; newDealsCount: number; onNewClick: () => void
+  totalCount: number; newDealsCount: number; onNewClick: () => void; lang: 'ar' | 'en'
 }) {
   return (
     <div className="sm:hidden flex items-center gap-1.5">
@@ -156,7 +159,7 @@ function MobileLiveCounter ({
             fontSize: 10, fontWeight: 800,
             padding: '4px 7px', lineHeight: 1,
           }}
-          aria-label="إظهار آخر 24 ساعة فقط"
+          aria-label={lang === 'ar' ? 'إظهار آخر 24 ساعة فقط' : 'Show only the last 24 hours'}
         >
           <span aria-hidden>↗</span>
           {newDealsCount >= 1000 ? '+1000' : `+${newDealsCount}`}
@@ -189,7 +192,7 @@ export default function StickyHeader ({
 
   return (
     <header
-      dir="rtl"
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
       className="sticky top-0 z-40 w-full"
       style={{
         background: 'var(--bg-hero)',
@@ -215,7 +218,7 @@ export default function StickyHeader ({
           <a
             href="/browse"
             className="shrink-0 inline-flex items-center"
-            aria-label="سيارة AI"
+            aria-label={lang === 'ar' ? 'سيارة AI' : 'Siyara AI'}
           >
             <span className="hidden sm:inline-block"><Logo size="lg" priority /></span>
             <span className="inline-block sm:hidden"><Logo size="sm" priority /></span>
@@ -227,11 +230,13 @@ export default function StickyHeader ({
               newDealsCount={newDealsCount}
               onNewClick={gotoLast24h}
               langLabel={lang === 'ar' ? 'سيارة من ٩ مصادر' : 'cars from 9 sources'}
+              lang={lang}
             />
             <MobileLiveCounter
               totalCount={totalCount}
               newDealsCount={newDealsCount}
               onNewClick={gotoLast24h}
+              lang={lang}
             />
             <button
               onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}

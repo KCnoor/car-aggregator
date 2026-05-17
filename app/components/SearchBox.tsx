@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useLang } from './LangContext'
 
 // Header search input — the 5th element in the mode tab strip.
 //
@@ -27,6 +28,7 @@ export default function SearchBox ({
 }) {
   const router = useRouter()
   const pathname = usePathname()
+  const { lang } = useLang()
   const [q, setQ] = useState(initialValue ?? '')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -44,10 +46,10 @@ export default function SearchBox ({
   return (
     <form
       onSubmit={submit}
-      dir="rtl"
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
       className={className}
       role="search"
-      aria-label="بحث ذكي عن سيارة"
+      aria-label={lang === 'ar' ? 'بحث ذكي عن سيارة' : 'Smart car search'}
     >
       <div
         className="flex items-stretch h-full w-full"
@@ -65,7 +67,9 @@ export default function SearchBox ({
           type="text"
           value={q}
           onChange={e => setQ(e.target.value)}
-          placeholder="ابحث عن سيارة، موديل، أو مدينة..."
+          placeholder={lang === 'ar'
+            ? 'ابحث عن سيارة، موديل، أو مدينة...'
+            : 'Search for a car, model, or city...'}
           dir="auto"
           className="bg-transparent focus:outline-none placeholder:text-slate-400"
           style={{
@@ -75,7 +79,7 @@ export default function SearchBox ({
             fontSize: 14,
             paddingInline: 16,
           }}
-          aria-label="بحث"
+          aria-label={lang === 'ar' ? 'بحث' : 'Search'}
         />
 
         {/* Submit button on the visual-left (last in DOM under RTL). 30%. */}
@@ -92,9 +96,9 @@ export default function SearchBox ({
             border: 0,
             // No own radius — the parent's overflow:hidden clips to 16px.
           }}
-          aria-label="بحث"
+          aria-label={lang === 'ar' ? 'بحث' : 'Search'}
         >
-          بحث
+          {lang === 'ar' ? 'بحث' : 'Search'}
         </button>
       </div>
     </form>

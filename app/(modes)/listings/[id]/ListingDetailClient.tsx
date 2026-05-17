@@ -36,12 +36,12 @@ const SOURCES: Record<string, { name: string; cls: string }> = {
 
 // Same 4-tier rule as ListingCard — keeps the badge style consistent
 // across grid and detail.
-function dealConfig (score: number | null): { label: string; bg: string } | null {
+function dealConfig (score: number | null, lang: 'ar' | 'en'): { label: string; bg: string } | null {
   if (score == null) return null
-  if (score >= 9.0) return { label: 'صفقة ممتازة', bg: '#10B981' }
-  if (score >= 8.0) return { label: 'صفقة جيدة',  bg: '#34D399' }
-  if (score >= 7.0) return { label: 'سعر عادل',   bg: '#64748B' }
-  if (score >= 6.0) return { label: 'سعر سوقي',   bg: '#94A3B8' }
+  if (score >= 9.0) return { label: lang === 'ar' ? 'صفقة ممتازة' : 'Excellent deal', bg: '#10B981' }
+  if (score >= 8.0) return { label: lang === 'ar' ? 'صفقة جيدة'   : 'Good deal',      bg: '#34D399' }
+  if (score >= 7.0) return { label: lang === 'ar' ? 'سعر عادل'    : 'Fair price',     bg: '#64748B' }
+  if (score >= 6.0) return { label: lang === 'ar' ? 'سعر سوقي'    : 'Market price',   bg: '#94A3B8' }
   return null
 }
 
@@ -80,7 +80,7 @@ export default function ListingDetailClient ({
   }
   const photos = (listing.photo_urls?.filter(Boolean) ?? []).map(proxyUrl)
   const src    = SOURCES[listing.source] ?? { name: listing.source, cls: 'bg-slate-600 text-white border-0' }
-  const deal   = dealConfig(listing.deal_score)
+  const deal   = dealConfig(listing.deal_score, lang)
 
   const title = `${listing.year} ${make} ${model}${listing.trim ? ` · ${listing.trim}` : ''}`
 

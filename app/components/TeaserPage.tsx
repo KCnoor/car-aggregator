@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useLang } from './LangContext'
 
 // Shared component for the two teaser modes (Analyzer + Pulse). Renders the
 // character + description + a static preview SVG + a waitlist form. v0
@@ -13,15 +14,21 @@ export type TeaserMode = {
   modeKey: string            // saved to waitlist.mode_interested
   emoji: string
   characterAr: string
+  characterEn: string
   titleAr: string
+  titleEn: string
   taglineAr: string
+  taglineEn: string
   descriptionAr: string
+  descriptionEn: string
   accent: string
   bg: string
   preview: 'analyzer' | 'pulse'
 }
 
 export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
+  const { lang } = useLang()
+  const isAr = lang === 'ar'
   const [email, setEmail]   = useState('')
   const [phone, setPhone]   = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -48,12 +55,12 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
       setStatus('sent'); setEmail(''); setPhone('')
     } catch (e: unknown) {
       setStatus('error')
-      setErrorMsg(e instanceof Error ? e.message : 'حصل خطأ')
+      setErrorMsg(e instanceof Error ? e.message : (isAr ? 'حصل خطأ' : 'Something went wrong'))
     }
   }
 
   return (
-    <div dir="rtl" className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
+    <div dir={isAr ? 'rtl' : 'ltr'} className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
       {/* Hero — sky-toned. The previous dark navy gradient is gone; the mode
           accent now appears only as a tint near the bottom of the hero so
           the four teaser pages still feel distinct. */}
@@ -77,19 +84,19 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
             className="text-xs sm:text-sm font-semibold tracking-wide"
             style={{ color: mode.accent }}
           >
-            {mode.characterAr}
+            {isAr ? mode.characterAr : mode.characterEn}
           </p>
           <h1
             className="mt-1 font-extrabold text-2xl sm:text-3xl leading-tight"
             style={{ color: 'var(--text-primary)' }}
           >
-            {mode.titleAr}
+            {isAr ? mode.titleAr : mode.titleEn}
           </h1>
           <p
             className="mt-3 text-sm sm:text-base leading-relaxed"
             style={{ color: 'var(--text-secondary)' }}
           >
-            {mode.taglineAr}
+            {isAr ? mode.taglineAr : mode.taglineEn}
           </p>
         </div>
       </section>
@@ -98,7 +105,7 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
         {/* Description */}
         <div className="rounded-2xl p-5 sm:p-6 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--hairline)', boxShadow: 'var(--shadow-soft)' }}>
           <p className="text-[14px] sm:text-[15px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-            {mode.descriptionAr}
+            {isAr ? mode.descriptionAr : mode.descriptionEn}
           </p>
         </div>
 
@@ -111,9 +118,9 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
           }}
         >
           <div className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: mode.accent }}>
-            معاينة
+            {isAr ? 'معاينة' : 'Preview'}
           </div>
-          {mode.preview === 'analyzer' ? <AnalyzerPreview accent={mode.accent} /> : <PulsePreview accent={mode.accent} />}
+          {mode.preview === 'analyzer' ? <AnalyzerPreview accent={mode.accent} lang={lang} /> : <PulsePreview accent={mode.accent} lang={lang} />}
         </div>
 
         {/* Waitlist form */}
@@ -122,10 +129,12 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
           style={{ background: 'var(--bg-card)', borderColor: 'var(--hairline)', boxShadow: 'var(--shadow-soft)' }}
         >
           <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
-            كن أول من يجرب
+            {isAr ? 'كن أول من يجرب' : 'Be the first to try it'}
           </h3>
           <p className="mt-1.5 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-            اشترك ونخبرك عند الإطلاق. إيميل أو رقم جوال — اللي يناسبك.
+            {isAr
+              ? 'اشترك ونخبرك عند الإطلاق. إيميل أو رقم جوال — اللي يناسبك.'
+              : "Sign up and we'll ping you at launch. Email or phone — whichever works for you."}
           </p>
 
           <form onSubmit={submit} className="mt-4 flex flex-col gap-3">
@@ -166,16 +175,18 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
                 className="rounded-xl px-5 py-2.5 font-bold text-sm transition-opacity disabled:opacity-40"
                 style={{ background: mode.accent, color: 'white' }}
               >
-                {status === 'sending' ? '... جاري الإرسال' : 'اشتراك'}
+                {status === 'sending'
+                  ? (isAr ? '... جاري الإرسال' : 'Sending…')
+                  : (isAr ? 'اشتراك' : 'Sign up')}
               </button>
               {status === 'sent' && (
                 <span className="text-[12px] font-semibold" style={{ color: mode.accent }}>
-                  وصلتنا بياناتك ✓ نراك في الإطلاق
+                  {isAr ? 'وصلتنا بياناتك ✓ نراك في الإطلاق' : "We've got your details ✓ See you at launch"}
                 </span>
               )}
               {status === 'error' && (
                 <span className="text-[12px] font-semibold text-red-700">
-                  {errorMsg || 'حصل خطأ، حاول مرة ثانية'}
+                  {errorMsg || (isAr ? 'حصل خطأ، حاول مرة ثانية' : 'Something went wrong — please try again')}
                 </span>
               )}
             </div>
@@ -189,10 +200,10 @@ export default function TeaserPage ({ mode }: { mode: TeaserMode }) {
 // ── Placeholder previews ─────────────────────────────────────────────────────
 // Inline SVG so we don't commit binary mockup files we'd swap later.
 
-function AnalyzerPreview ({ accent }: { accent: string }) {
+function AnalyzerPreview ({ accent, lang }: { accent: string; lang: 'ar' | 'en' }) {
   // Faux scatter / bubble chart: price vs. mileage, bubble size = deal score.
   return (
-    <svg viewBox="0 0 320 180" className="w-full h-auto block" aria-label="معاينة المحلّل">
+    <svg viewBox="0 0 320 180" className="w-full h-auto block" aria-label={lang === 'ar' ? 'معاينة المحلّل' : 'Analyzer preview'}>
       <rect x="0" y="0" width="320" height="180" fill="none" />
       <line x1="32" y1="155" x2="310" y2="155" stroke={accent} strokeOpacity="0.35" strokeWidth="1"/>
       <line x1="32" y1="155" x2="32"  y2="20"  stroke={accent} strokeOpacity="0.35" strokeWidth="1"/>
@@ -211,16 +222,16 @@ function AnalyzerPreview ({ accent }: { accent: string }) {
         <circle key={i} cx={b.cx} cy={b.cy} r={b.r} fill={accent} fillOpacity={0.30 + (i % 4) * 0.12} stroke={accent} strokeWidth="1"/>
       ))}
       {/* labels */}
-      <text x="32" y="172" fontSize="9" fill={accent} fillOpacity="0.7">الممشى →</text>
-      <text x="32" y="14"  fontSize="9" fill={accent} fillOpacity="0.7">السعر ↑</text>
+      <text x="32" y="172" fontSize="9" fill={accent} fillOpacity="0.7">{lang === 'ar' ? 'الممشى →' : 'Mileage →'}</text>
+      <text x="32" y="14"  fontSize="9" fill={accent} fillOpacity="0.7">{lang === 'ar' ? 'السعر ↑' : 'Price ↑'}</text>
     </svg>
   )
 }
 
-function PulsePreview ({ accent }: { accent: string }) {
+function PulsePreview ({ accent, lang }: { accent: string; lang: 'ar' | 'en' }) {
   // Faux dashboard: 3 stat tiles + sparkline.
   return (
-    <svg viewBox="0 0 320 180" className="w-full h-auto block" aria-label="معاينة نبض السوق">
+    <svg viewBox="0 0 320 180" className="w-full h-auto block" aria-label={lang === 'ar' ? 'معاينة نبض السوق' : 'Market Pulse preview'}>
       {/* stat tiles */}
       {[0, 110, 220].map((x, i) => (
         <g key={i}>
