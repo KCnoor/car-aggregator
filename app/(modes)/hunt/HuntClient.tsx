@@ -426,7 +426,7 @@ export default function HuntClient ({
             </p>
             <p className="mt-2 max-w-prose" style={{ color: SLATE, fontSize: 16, lineHeight: 1.7 }}>
               اختر حتى ٥ موديلات في الخانات تحت، وشوف على المخطط وين السيارات الأرخص
-              والممشى الأقل. حوم على نقطة لتفاصيلها، اضغط لتثبيتها.
+              والممشى الأقل. حوم على نقطة لتفاصيلها، واضغط لتثبيت ما يصل إلى ٨ سيارات للمقارنة.
             </p>
           </div>
           <UsageTips />
