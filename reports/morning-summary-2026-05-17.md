@@ -4,15 +4,17 @@
 
 1. **`/browse` filters never reach the server.** Every dropdown (city / make / price / year / …) mutates React state only; the URL never updates and the server only ships 50 rows per page. The "X results" counter and the filtered grid only reflect the current page slice. High-impact UX bug — fix is bounded but not auto-applied. Details in `reports/overnight-audit-2026-05-17.md`.
 2. **Listing-detail score block is now brand-consistent.** Replaced the gold-gradient 6-tier pill with the same 4-tier label-only pill used in `ListingCard`. Build clean.
-3. **Pipeline kicked off but slow.** `pipeline:refresh` started 04:55 KSA; at hand-off ~30 min in, still on `scrape:syarah` (the first of 9 sources). All evidence is healthy — no errors, ~2 k rows already pulled. Live log: `logs/pipeline-2026-05-17.log`.
+3. **Pipeline will likely still be running.** `pipeline:refresh` started 04:55 KSA. The scrape phase is two-pass per source: list-page crawl, then detail-scrape every URL. Syarah's list-crawl found 3,323 URLs and the detail-scrape rate is ~22 listings/min, so each source takes roughly 1.5–2.5 h. The full 9-source scrape alone is on track for ~12–18 h — well past the 6 h window. Expect to wake up with the scrape still mid-flight or only 2–3 sources past it; **the normalize / freshness / baselines / score stages won't have started** unless something is faster than I'm estimating. Live log: `logs/pipeline-2026-05-17.log`. No errors so far.
 
 ## Pipeline outcome
 
-- **Status:** Running at hand-off (single source so far). Likely to finish during the morning or shortly after; check `npm run pipeline:status` first thing.
+- **Status:** Almost certainly still running at hand-off. The detail-scrape rate (~22 listings/min) means each source takes 1.5–2.5 h. With 9 sources, the scrape stage alone is ~12–18 h. `pipeline_runs` will show `status='running'` on whichever source is in progress.
 - **Listings before:** 17,058 active.
 - **Sources with issues:** none yet.
 - **AI cost:** $0 so far (scoring stage hasn't run).
-- See `reports/pipeline-2026-05-17.md` for the live state.
+- **What to do if it's still running:** let it continue — partial scrape data is being written incrementally to `raw_listings` and is safe to keep. The normalize/baselines/score stages are idempotent and can be (re)run once the scrape finishes. If you need to free the machine, send SIGINT (`Ctrl-C` or `kill -INT 8642`) — the orchestrator catches it and leaves a clean `pipeline_runs` row.
+- **What to do once it lands:** `node scripts/pipeline-fill-report.js > reports/pipeline-2026-05-17.filled.md` to auto-generate the per-source / scoring / baseline summary.
+- See `reports/pipeline-2026-05-17.md` for the pre-refresh snapshot.
 
 ## What got fixed automatically
 
