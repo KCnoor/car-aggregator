@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { ArrowRight, ArrowLeft, ExternalLink } from 'lucide-react'
 import type { Listing } from '@/lib/supabase'
-import { translations, cityLabel, type Lang } from '@/lib/translations'
+import { translations, cityLabel } from '@/lib/translations'
+import { useLang } from '@/app/components/LangContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button, buttonVariants } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
   Carousel,
@@ -18,20 +18,24 @@ import {
 } from '@/components/ui/carousel'
 import ListingCard, { cardVariants } from '@/app/components/ListingCard'
 
+// Source badge palette — same set as ListingCard so the grid and detail
+// page paint the source identically.
 const SOURCES: Record<string, { name: string; cls: string }> = {
-  syarah:    { name: 'Syarah',     cls: 'bg-blue-600 text-white border-0' },
-  haraj:     { name: 'Haraj',      cls: 'bg-orange-500 text-white border-0' },
-  motory:    { name: 'Motory',     cls: 'bg-violet-600 text-white border-0' },
+  syarah:     { name: 'Syarah',      cls: 'bg-blue-600 text-white border-0' },
+  haraj:      { name: 'Haraj',       cls: 'bg-orange-500 text-white border-0' },
+  motory:     { name: 'Motory',      cls: 'bg-violet-600 text-white border-0' },
   soum:       { name: 'Soum',        cls: 'bg-green-600 text-white border-0' },
   gogomotor:  { name: 'GoGoMotor',   cls: 'bg-red-600 text-white border-0' },
   saudisale:  { name: 'Saudi Sale',  cls: 'bg-amber-500 text-white border-0' },
   yallamotor: { name: 'Yalla Motor', cls: 'bg-blue-700 text-white border-0' },
   carswitch:  { name: 'CarSwitch',   cls: 'bg-slate-900 text-white border-0' },
+  digitalcar: { name: 'DigitalCar',  cls: 'bg-rose-600 text-white border-0' },
+  dubizzle:   { name: 'Dubizzle',    cls: 'bg-red-700 text-white border-0' },
   carly:      { name: 'Carly',       cls: 'bg-emerald-500 text-white border-0' },
 }
 
 // Same 4-tier rule as ListingCard — keeps the badge style consistent
-// across grid and detail. The raw number stays on the detail page only.
+// across grid and detail.
 function dealConfig (score: number | null): { label: string; bg: string } | null {
   if (score == null) return null
   if (score >= 9.0) return { label: 'صفقة ممتازة', bg: '#10B981' }
@@ -43,24 +47,27 @@ function dealConfig (score: number | null): { label: string; bg: string } | null
 
 type Row = { label: string; value: string | null | undefined }
 
-function InfoRow({ label, value }: Row) {
+function InfoRow ({ label, value }: Row) {
   if (!value) return null
   return (
     <div className="flex justify-between items-start py-2.5">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-semibold text-foreground text-end max-w-[55%]">{value}</span>
+      <span style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 400 }}>{label}</span>
+      <span className="text-end max-w-[55%]" style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>{value}</span>
     </div>
   )
 }
 
-export default function ListingDetailClient({
+export default function ListingDetailClient ({
   listing,
   similar,
 }: {
   listing: Listing
   similar: Listing[]
 }) {
-  const [lang, setLang] = useState<Lang>('ar')
+  // Language is owned by the global LangContext (toggled in StickyHeader).
+  // No local state — toggling EN anywhere updates this page too.
+  const { lang } = useLang()
+  const router = useRouter()
   const tr    = translations[lang]
   const make  = lang === 'ar' ? (listing.make_ar  ?? listing.make_en)  : listing.make_en
   const model = lang === 'ar' ? (listing.model_ar ?? listing.model_en) : listing.model_en
@@ -77,35 +84,31 @@ export default function ListingDetailClient({
 
   const title = `${listing.year} ${make} ${model}${listing.trim ? ` · ${listing.trim}` : ''}`
 
-  return (
-    <div className="min-h-screen bg-background" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      {/* ── Nav bar ── */}
-      <nav className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d={lang === 'ar' ? 'M9 5l7 7-7 7' : 'M15 19l-7-7 7-7'} />
-            </svg>
-            <span className="text-sm font-medium">
-              {lang === 'ar' ? 'العودة للقائمة' : 'Back to listings'}
-            </span>
-          </Link>
-          <span className="inline-flex items-baseline gap-1 leading-none">
-            <span className="font-logo font-bold text-foreground text-xl tracking-wide">سيارة</span>
-            <span className="font-bold text-base tracking-tight" style={{ fontFamily: 'var(--font-geist), Geist, sans-serif', color: 'oklch(0.62 0.14 60)' }}>AI</span>
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
-            className="text-xs font-semibold"
-          >
-            {tr.toggleLang}
-          </Button>
-        </div>
-      </nav>
+  // Back-link uses router.back() so the user returns to wherever they came
+  // from (browse / match / hunt). If there's no history (direct hit, new
+  // tab) we fall back to /browse.
+  function goBack () {
+    if (typeof window !== 'undefined' && window.history.length > 1) router.back()
+    else router.push('/browse')
+  }
+  const BackIcon = lang === 'ar' ? ArrowRight : ArrowLeft
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
+  return (
+    <div style={{ background: 'var(--bg-page)' }}>
+      <div className="max-w-5xl mx-auto px-4 py-6">
+
+        {/* Back-link — single inline row, lives inside the content gutter
+            now that the (modes) shell paints the StickyHeader on top. */}
+        <button
+          type="button"
+          onClick={goBack}
+          className="inline-flex items-center gap-1.5 mb-5 transition-opacity hover:opacity-70"
+          style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600 }}
+        >
+          <BackIcon size={16} strokeWidth={2} />
+          <span>{lang === 'ar' ? 'العودة للقائمة' : 'Back to listings'}</span>
+        </button>
+
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
 
           {/* ── Left column ── */}
@@ -114,14 +117,14 @@ export default function ListingDetailClient({
             {/* Photo carousel */}
             {photos.length > 0 ? (
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-                <Carousel className="w-full rounded-2xl overflow-hidden shadow-md">
+                <Carousel className="w-full overflow-hidden shadow-md" style={{ borderRadius: 20 }}>
                   <CarouselContent>
                     {photos.map((url, i) => (
                       <CarouselItem key={i}>
-                        <div className="aspect-[16/10] bg-muted">
+                        <div className="aspect-[16/10]" style={{ background: 'var(--hairline)' }}>
                           <img
                             src={url}
-                            alt={`${make} ${model} — صورة ${i + 1}`}
+                            alt={`${make} ${model} — ${lang === 'ar' ? `صورة ${i + 1}` : `photo ${i + 1}`}`}
                             className="w-full h-full object-cover"
                             loading={i === 0 ? 'eager' : 'lazy'}
                             referrerPolicy="no-referrer"
@@ -137,13 +140,13 @@ export default function ListingDetailClient({
                     </>
                   )}
                 </Carousel>
-                <p className="text-xs text-muted-foreground text-center mt-1.5">
+                <p className="text-center mt-1.5" style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
                   {photos.length} {lang === 'ar' ? 'صورة' : 'photos'}
                 </p>
               </motion.div>
             ) : (
-              <div className="aspect-[16/10] bg-muted rounded-2xl flex items-center justify-center">
-                <svg className="w-12 h-12 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="aspect-[16/10] flex items-center justify-center" style={{ background: 'var(--hairline)', borderRadius: 20 }}>
+                <svg className="w-12 h-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--text-secondary)' }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                     d="M3 9l2-4h14l2 4M3 9v9a1 1 0 001 1h1a1 1 0 001-1v-1h12v1a1 1 0 001 1h1a1 1 0 001-1V9M3 9h18"/>
                 </svg>
@@ -153,19 +156,22 @@ export default function ListingDetailClient({
             {/* Title + badges */}
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <Badge className={`text-[11px] font-bold px-2 py-0.5 ${src.cls}`}>{src.name}</Badge>
+                <Badge className={`px-2 py-0.5 ${src.cls}`} style={{ fontSize: 12, fontWeight: 800 }}>{src.name}</Badge>
                 {listing.condition === 'new' && (
-                  <Badge variant="secondary" className="text-[11px]">
+                  <Badge variant="secondary" style={{ fontSize: 12 }}>
                     {lang === 'ar' ? 'جديد' : 'New'}
                   </Badge>
                 )}
               </div>
-              <h1 className="text-2xl font-black text-foreground leading-snug" dir="ltr">{title}</h1>
+              <h1 dir="ltr" style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 800, lineHeight: 1.3 }}>{title}</h1>
             </motion.div>
 
             {/* Specs card */}
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <Card className="rounded-2xl border border-border/60 shadow-sm p-0">
+              <Card
+                className="p-0"
+                style={{ background: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--hairline)', boxShadow: 'var(--shadow-soft)' }}
+              >
                 <CardContent className="px-5 py-1">
                   <InfoRow label={lang === 'ar' ? 'الماركة' : 'Make'} value={lang === 'ar' ? listing.make_ar : listing.make_en} />
                   <Separator />
@@ -203,12 +209,15 @@ export default function ListingDetailClient({
             {/* Description */}
             {listing.description_ar && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                <Card className="rounded-2xl border border-border/60 shadow-sm p-0">
+                <Card
+                  className="p-0"
+                  style={{ background: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--hairline)', boxShadow: 'var(--shadow-soft)' }}
+                >
                   <CardContent className="px-5 py-4">
-                    <h2 className="text-sm font-bold text-foreground mb-2">
+                    <h2 className="mb-2" style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 800 }}>
                       {lang === 'ar' ? 'وصف الإعلان' : 'Description'}
                     </h2>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line" dir="auto">
+                    <p className="whitespace-pre-line" dir="auto" style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 400, lineHeight: 1.65 }}>
                       {listing.description_ar}
                     </p>
                   </CardContent>
@@ -220,26 +229,29 @@ export default function ListingDetailClient({
           {/* ── Right column (price + deal score + CTA) ── */}
           <div className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-              <Card className="rounded-2xl border border-border/60 shadow-md p-0">
+              <Card
+                className="p-0"
+                style={{ background: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--hairline)', boxShadow: 'var(--shadow-md)' }}
+              >
                 <CardContent className="px-5 py-5 flex flex-col gap-4">
-                  {/* Price */}
+                  {/* Price — locked at 32/800 (one notch under the previous
+                       4xl/black, matches the locked typography scale). */}
                   <div>
                     {listing.contact_for_price || listing.price_sar == null ? (
-                      <p className="text-base font-semibold text-muted-foreground">{tr.contactForPrice}</p>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: 16, fontWeight: 600 }}>{tr.contactForPrice}</p>
                     ) : (
                       <div dir="ltr">
-                        <span className="text-4xl font-black text-foreground tracking-tight">
+                        <span className="tracking-tight tabular-nums" style={{ color: 'var(--text-primary)', fontSize: 32, fontWeight: 800 }}>
                           {listing.price_sar.toLocaleString()}
                         </span>
-                        <span className="text-lg font-medium text-muted-foreground ms-2">{tr.sar}</span>
+                        <span className="ms-2" style={{ color: 'var(--text-secondary)', fontSize: 16, fontWeight: 600 }}>{tr.sar}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Deal score block — flat pill matches ListingCard tier
-                       style. The raw number stays on this page even when
-                       no tier label fits (score < 6.0), so the detail page
-                       always exposes the underlying value. */}
+                       style. Raw number stays detail-only and is shown
+                       even when no tier label fits (score < 6.0). */}
                   {!listing.contact_for_price && listing.deal_score !== null && (
                     <div className="flex items-center gap-3">
                       {deal && (
@@ -257,15 +269,15 @@ export default function ListingDetailClient({
                         </span>
                       )}
                       <div className="flex flex-col leading-tight">
-                        <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                        <span className="tabular-nums" style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 800 }}>
                           {listing.deal_score.toFixed(1)}
                         </span>
                         {listing.score_source === 'ai_valuation' ? (
-                          <span className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
                             {lang === 'ar' ? 'تحليل ذكي للسوق' : 'AI market analysis'}
                           </span>
                         ) : listing.score_comparables != null ? (
-                          <span className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
                             {lang === 'ar'
                               ? `مبني على ${listing.score_comparables} سيارة مشابهة`
                               : `Based on ${listing.score_comparables} comps`}
@@ -277,9 +289,9 @@ export default function ListingDetailClient({
 
                   {/* Low price warning */}
                   {listing.low_price_warning && (
-                    <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
-                      <span className="text-base">⚠️</span>
-                      <p className="text-xs font-medium text-amber-800 leading-snug">{tr.lowPriceWarning}</p>
+                    <div className="flex items-start gap-2" style={{ background: '#FEF3C7', border: '1px solid #FCD34D', borderRadius: 12, padding: '10px 12px' }}>
+                      <span style={{ fontSize: 16 }}>⚠️</span>
+                      <p style={{ color: '#92400E', fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>{tr.lowPriceWarning}</p>
                     </div>
                   )}
 
@@ -298,20 +310,26 @@ export default function ListingDetailClient({
                           keepalive: true,
                         }).catch(() => { /* fire-and-forget */ })
                       }}
-                      className={buttonVariants({ variant: 'default', size: 'lg' }) + ' w-full rounded-xl font-bold text-sm justify-center'}
+                      className="w-full inline-flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+                      style={{
+                        background: 'var(--accent-primary)',
+                        color: '#FFFFFF',
+                        fontSize: 14,
+                        fontWeight: 800,
+                        padding: '12px 16px',
+                        borderRadius: 12,
+                      }}
                     >
                       {lang === 'ar'
                         ? `فتح الإعلان على ${SOURCES[listing.source]?.name ?? listing.source}`
                         : `Open on ${SOURCES[listing.source]?.name ?? listing.source}`}
-                      <svg className="w-4 h-4 ms-2 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                      </svg>
+                      <ExternalLink size={16} strokeWidth={2} className="opacity-80" />
                     </a>
                   )}
 
                   {/* Scraped date */}
                   {listing.scraped_at && (
-                    <p className="text-[11px] text-muted-foreground text-center">
+                    <p className="text-center" style={{ color: 'var(--text-secondary)', fontSize: 11 }}>
                       {lang === 'ar' ? 'آخر تحديث: ' : 'Last updated: '}
                       {new Date(listing.scraped_at).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-GB')}
                     </p>
@@ -330,7 +348,7 @@ export default function ListingDetailClient({
             transition={{ delay: 0.3 }}
             className="mt-12"
           >
-            <h2 className="text-lg font-bold text-foreground mb-5">
+            <h2 className="mb-5" style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 800 }}>
               {lang === 'ar' ? `سيارات ${make} ${model} مشابهة` : `Similar ${make} ${model} listings`}
             </h2>
             <motion.div
