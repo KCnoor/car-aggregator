@@ -27,7 +27,9 @@ export default async function Home ({
   const offset = (requestedPage - 1) * PAGE_SIZE
   const pageEnd = offset + PAGE_SIZE - 1
 
-  const [pageRes, totalRes, newCountRes] = await Promise.all([
+  // The new-deals-today counter lives in StickyHeader (fed from the parent
+  // (modes)/layout.tsx). No need to re-query it here.
+  const [pageRes, totalRes] = await Promise.all([
     supabase.from('listings').select('*')
       .eq('is_active', true)
       .neq('freshness_state', 'dead')
@@ -36,10 +38,6 @@ export default async function Home ({
     supabase.from('listings').select('*', { count: 'exact', head: true })
       .eq('is_active', true)
       .neq('freshness_state', 'dead'),
-    supabase.from('listings').select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-      .neq('freshness_state', 'dead')
-      .gte('first_seen_at', since24h),
   ])
 
   if (pageRes.error) console.error('Failed to fetch listings:', pageRes.error.message)
@@ -75,7 +73,6 @@ export default async function Home ({
       currentPage={currentPage}
       totalPages={totalPages}
       pageSize={PAGE_SIZE}
-      newDealsCount={newCountRes.count ?? 0}
       newDealsSinceIso={since24h}
       sourceCounts={sourceCounts}
       canonicalMakes={canonicalMakesRes.data ?? []}

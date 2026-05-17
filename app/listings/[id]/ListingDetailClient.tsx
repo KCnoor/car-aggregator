@@ -30,13 +30,15 @@ const SOURCES: Record<string, { name: string; cls: string }> = {
   carly:      { name: 'Carly',       cls: 'bg-emerald-500 text-white border-0' },
 }
 
-function dealConfig(score: number | null) {
-  if (score === null) return { label: '—', bg: 'bg-muted', text: 'text-muted-foreground' }
-  if (score >= 9) return { label: 'صفقة ممتازة', bg: 'bg-deal-great',     text: 'text-white' }
-  if (score >= 7) return { label: 'صفقة جيدة',  bg: 'bg-deal-good',      text: 'text-white' }
-  if (score >= 5) return { label: 'سعر عادل',   bg: 'bg-deal-fair',      text: 'text-white' }
-  if (score >= 3) return { label: 'سعر مرتفع',  bg: 'bg-deal-expensive', text: 'text-white' }
-  return           { label: 'سعر مبالغ',        bg: 'bg-deal-overpriced',text: 'text-white' }
+// Same 4-tier rule as ListingCard — keeps the badge style consistent
+// across grid and detail. The raw number stays on the detail page only.
+function dealConfig (score: number | null): { label: string; bg: string } | null {
+  if (score == null) return null
+  if (score >= 9.0) return { label: 'صفقة ممتازة', bg: '#10B981' }
+  if (score >= 8.0) return { label: 'صفقة جيدة',  bg: '#34D399' }
+  if (score >= 7.0) return { label: 'سعر عادل',   bg: '#64748B' }
+  if (score >= 6.0) return { label: 'سعر سوقي',   bg: '#94A3B8' }
+  return null
 }
 
 type Row = { label: string; value: string | null | undefined }
@@ -234,24 +236,36 @@ export default function ListingDetailClient({
                     )}
                   </div>
 
-                  {/* Deal score block */}
-                  {!listing.contact_for_price && listing.deal_score !== null && (
-                    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl ${deal.bg}`}>
-                      <span className={`text-3xl font-black leading-none ${deal.text}`}>
-                        {listing.deal_score.toFixed(1)}
+                  {/* Deal score block — flat pill matches ListingCard tier
+                       style. Raw score shows alongside, only on this page. */}
+                  {!listing.contact_for_price && listing.deal_score !== null && deal && (
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="inline-flex items-center rounded-full text-white shadow-sm"
+                        style={{
+                          background: deal.bg,
+                          padding: '8px 14px',
+                          fontSize: 14,
+                          fontWeight: 800,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {deal.label}
                       </span>
-                      <div>
-                        <p className={`text-sm font-bold ${deal.text}`}>{deal.label}</p>
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                          {listing.deal_score.toFixed(1)}
+                        </span>
                         {listing.score_source === 'ai_valuation' ? (
-                          <p className={`text-xs opacity-80 ${deal.text}`}>
+                          <span className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
                             {lang === 'ar' ? 'تحليل ذكي للسوق' : 'AI market analysis'}
-                          </p>
+                          </span>
                         ) : listing.score_comparables != null ? (
-                          <p className={`text-xs opacity-80 ${deal.text}`}>
+                          <span className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
                             {lang === 'ar'
                               ? `مبني على ${listing.score_comparables} سيارة مشابهة`
                               : `Based on ${listing.score_comparables} comps`}
-                          </p>
+                          </span>
                         ) : null}
                       </div>
                     </div>

@@ -28,7 +28,8 @@ type Persona = {
 const NAVY = 'var(--text-primary)'   // slate-800 in new palette
 const GOLD = 'var(--accent-primary)' // assistance panel now uses coral, not gold
 
-// 9 personas. Gradient pairs match the brief exactly.
+// 7 personas (post-trim: city_only merged into first_car, investment dropped).
+// Gradient pairs match the brief exactly.
 const PERSONAS: Persona[] = [
   {
     key: 'big_family', emoji: '👨‍👩‍👧‍👦', titleAr: 'عائلة كبيرة',

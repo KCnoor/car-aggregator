@@ -24,9 +24,9 @@ type AIFilters = {
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const INITIAL = 60
-const PAGE    = 40
-const ALL     = '__all__'
+// (INITIAL/PAGE legacy infinite-scroll counts removed when /browse switched
+// to server-side pagination — see goToPage / range() below.)
+const ALL = '__all__'
 
 const YEARS = Array.from({ length: 2026 - 2005 + 1 }, (_, i) => String(2026 - i))
 
@@ -113,7 +113,6 @@ export default function ListingsClient({
   currentPage = 1,
   totalPages = 1,
   pageSize = 50,
-  newDealsCount = 0,
   newDealsSinceIso,
   sourceCounts = {},
   canonicalMakes = [],
@@ -124,7 +123,6 @@ export default function ListingsClient({
   currentPage?: number
   totalPages?: number
   pageSize?: number
-  newDealsCount?: number
   newDealsSinceIso?: string
   sourceCounts?: Record<string, number>
   canonicalMakes?: CanonicalMake[]
