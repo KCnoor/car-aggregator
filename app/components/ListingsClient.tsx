@@ -148,7 +148,10 @@ export default function ListingsClient({
   const [fuel,         setFuel]         = useState('')
   const [condition,    setCondition]    = useState('')
   const [source,       setSource]       = useState('')
-  const [showContactForPrice, setShowContactForPrice] = useState(false)
+  // Currently no UI toggle exposes this — contact-for-price listings are
+  // always hidden. Left as a const so a future filter can re-introduce the
+  // toggle without restructuring the filter predicate below.
+  const showContactForPrice = false
 
   // AI-search state. The search input itself lives in <StickyHeader> now;
   // this page reads the ?q URL param it sets and dispatches the existing
