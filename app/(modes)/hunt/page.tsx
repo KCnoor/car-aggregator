@@ -56,6 +56,10 @@ async function loadSlotListings (spec: SlotSpec): Promise<Listing[]> {
   // 0 / 1 km are seller "didn't fill it in" placeholders;
   // values > 600k are almost always typos (entered in km when meant in
   // miles, or extra zero) and they nuke chart scale on small samples.
+  //
+  // Price floor 15,000 SAR — site-wide junk filter; see (modes)/layout.tsx.
+  // Earlier the floor here was 1,000, which let typos and motorcycle
+  // entries through and distorted the deal-zone on the scatter chart.
   const { data, error } = await supabase.from('listings')
     .select('*')
     .eq('is_active', true)
@@ -63,7 +67,7 @@ async function loadSlotListings (spec: SlotSpec): Promise<Listing[]> {
     .eq('make_slug', spec.make)
     .eq('model_slug', spec.model)
     .gte('year', spec.yearMin).lte('year', spec.yearMax)
-    .gt('price_sar', 1000)
+    .gte('price_sar', 15000)
     .gt('mileage_km', 100)
     .lte('mileage_km', 600_000)
     .order('deal_score', { ascending: false, nullsFirst: false })

@@ -29,15 +29,22 @@ export default async function Home ({
 
   // The new-deals-today counter lives in StickyHeader (fed from the parent
   // (modes)/layout.tsx). No need to re-query it here.
+  //
+  // PRICE_FLOOR_SAR — see (modes)/layout.tsx note: listings under 15k SAR
+  // are filtered out at the display layer because they're almost always
+  // typos, motorcycle entries, or "contact me" placeholder prices.
+  const PRICE_FLOOR_SAR = 15000
   const [pageRes, totalRes] = await Promise.all([
     supabase.from('listings').select('*')
       .eq('is_active', true)
       .neq('freshness_state', 'dead')
+      .gte('price_sar', PRICE_FLOOR_SAR)
       .order('deal_score', { ascending: false, nullsFirst: false })
       .range(offset, pageEnd),
     supabase.from('listings').select('*', { count: 'exact', head: true })
       .eq('is_active', true)
-      .neq('freshness_state', 'dead'),
+      .neq('freshness_state', 'dead')
+      .gte('price_sar', PRICE_FLOOR_SAR),
   ])
 
   if (pageRes.error) console.error('Failed to fetch listings:', pageRes.error.message)
@@ -52,6 +59,7 @@ export default async function Home ({
     KNOWN_SOURCES.map(src =>
       supabase.from('listings').select('*', { count: 'exact', head: true })
         .eq('source', src).eq('is_active', true).neq('freshness_state', 'dead')
+        .gte('price_sar', PRICE_FLOOR_SAR)
     )
   )
   const sourceCounts: Record<string, number> = {}

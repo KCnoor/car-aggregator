@@ -34625,5 +34625,2970 @@
     "estimated_fair_price_sar": 49500,
     "confidence": "high",
     "reasoning_ar": "2026 Yaris 6k km, Mecca +5% premium. Market median 47.7k SAR; asking 57k is ~19% over."
+  },
+  "unknown|unknown|2021|100-150k|unknown": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "VW Teramont 2021, 130k km, silver auto. Conservative markup for 5-yr-old German SUV in Hufuf market."
+  },
+  "aston-martin|unknown|2015|100-150k|riyadh": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "Aston Martin Rapide S 2015, 100k km, Riyadh. Luxury sports sedan; listing price ~47% below market. Conservative estimate ~385k SAR."
+  },
+  "audi|a8|2016|50-75k|riyadh": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 A8 at 64k km is low-mileage; Riyadh +5%. Price 16% below median; conservative adjustment upward."
+  },
+  "audi|a8|2022|0-25k|unknown": {
+    "estimated_fair_price_sar": 186000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 A8 low mileage; median context 186k SAR. Listed 18% high; A8 luxury sedan pricing varies widely by trim/options. Conservative anchor to market median."
+  },
+  "audi|a8|2018|100-150k|riyadh": {
+    "estimated_fair_price_sar": 142000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 A8, 113k km, Riyadh. Market median 134k SAR (n=5). Listed at 155k is 16% above. Conservative adjustment for luxury sedan depreciation and mileage."
+  },
+  "audi|a8|2022|25-50k|mecca": {
+    "estimated_fair_price_sar": 210000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 A8, low mileage, Mecca listing. Market median 186k SAR (2020 data); newer model year, low km justify premium. 210k within fair range."
+  },
+  "audi|a8|2023|25-50k|unknown": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 A8 low mileage; median 160k SAR for all A8s. Luxury sedan, 39k km supports premium. Conservative adjustment for trim uncertainty."
+  },
+  "audi|a8|2023|50-75k|mecca": {
+    "estimated_fair_price_sar": 280000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 A8 is luxury sedan; 53k km is low. Mecca +5% premium. Market median appears skewed by older/higher-mileage units."
+  },
+  "audi|a8|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 A8 low mileage premium; median 160k reflects older stock. Riyadh +5%."
+  },
+  "audi|a8|2022|25-50k|riyadh": {
+    "estimated_fair_price_sar": 215000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 A8 w/ low mileage (27k km) in Riyadh. Market median 186k SAR, but sample small (n=5). Luxury sedan, premium trim variance high. Riyadh +5-10% premium applies. Conservative upward adjustment to 215k SAR justified."
+  },
+  "audi|a8|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 A8 luxury sedan, low mileage, Riyadh premium. Context median too broad."
+  },
+  "audi|a8|2023|50-75k|unknown": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 A8 w/ 51k km; median 160k SAR across A8s. Premium trim likely; conservative upward adjustment for low mileage."
+  },
+  "audi|a8|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "low",
+    "reasoning_ar": "2026 A8 luxury sedan; Riyadh premium +5–10%; market context baseline too broad (any year). Conservative."
+  },
+  "baic|unknown|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 52900,
+    "confidence": "low",
+    "reasoning_ar": "BAIC 2026 new car, CVT, Riyadh. Model unspecified. Chinese brand, limited Saudi market data."
+  },
+  "baic|unknown|2023|50-75k|jeddah": {
+    "estimated_fair_price_sar": 72000,
+    "confidence": "medium",
+    "reasoning_ar": "BAIC BJ40 Plus 2023, 60k km, Jeddah. Chinese compact SUV; priced below Japanese equiv. Listing at 78k slightly high for segment."
+  },
+  "baic|x35|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 48000,
+    "confidence": "medium",
+    "reasoning_ar": "BAIC X35 2025, Riyadh. Chinese make, entry-level SUV. Limited market data. Slight Riyadh premium applied."
+  },
+  "baic|x55|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 72000,
+    "confidence": "medium",
+    "reasoning_ar": "BAIC X55 2025 in Riyadh. Chinese brand, new model year. Conservative valuation for emerging Chinese marque."
+  },
+  "baic|x7|2022|0-25k|riyadh": {
+    "estimated_fair_price_sar": 72000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 BAIC X7, very low mileage, Riyadh premium. Chinese brand valued 30-40% below Japanese equivalent. Fair range 68k-76k SAR."
+  },
+  "baic|x7|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 75000,
+    "confidence": "low",
+    "reasoning_ar": "BAIC X7 2025 niche Chinese brand. Limited market data. Riyadh premium applied."
+  },
+  "bentley|bentayga|2018|25-50k|jeddah": {
+    "estimated_fair_price_sar": 850000,
+    "confidence": "low",
+    "reasoning_ar": "Bentayga 2018 low mileage; luxury SUV premium; listing significantly underpriced vs market"
+  },
+  "bentley|mulsanne|2020|0-25k|taif": {
+    "estimated_fair_price_sar": 1550000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 Bentley Mulsanne, 20k km, white auto. Ultra-luxury sedan; Taif interior discount ~3–5%. Conservative estimate for low-mileage example."
+  },
+  "bmw|4-series|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 BMW 4 Series, 20km, Riyadh. Price 35% below market; luxury sedan with ultra-low mileage commands premium."
+  },
+  "bmw|5-series|2014|150k+|dammam-eastern-region": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2014 BMW 5-Series at 300k km is well-used. Market median 237k SAR for any year; high mileage warrants 40–50% discount from median. Dammam location neutral. 40k SAR is significantly below fair range."
+  },
+  "bmw|7-series|2012|150k+|riyadh-riyadh": {
+    "estimated_fair_price_sar": 38000,
+    "confidence": "medium",
+    "reasoning_ar": "2012 BMW 7-Series, 219k km (high mileage), Riyadh. Listed 35k vs 41.5k median. Conservative adjustment for age, mileage, and luxury deprecation."
+  },
+  "bmw|7-series|2018|50-75k|riyadh": {
+    "estimated_fair_price_sar": 125000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 BMW 7 Series, 61k km, Riyadh. Market median 105k SAR (2016 data, outdated). Luxury EU depreciation steep; 2018 model ~8yr old. Riyadh +5%. Listed 140k SAR is ~33% above median—high but plausible for low-mileage 7-series. Conservative estimate 125k SAR balances age, mileage, location."
+  },
+  "bmw|7-series|2018|150k+|riyadh": {
+    "estimated_fair_price_sar": 105000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 BMW 7S, 158k km, Riyadh. Market median 105k SAR. High mileage typical for luxury sedan. Price conservative."
+  },
+  "bmw|7-series|2018|150k+|eastern-province": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 BMW 7 Series, 154k km (medium-high), Eastern Province. Market median 105k SAR (n=7, 2016 comparables). High mileage and luxury depreciation warrant discount vs median."
+  },
+  "bmw|7-series|2018|100-150k|mecca": {
+    "estimated_fair_price_sar": 105000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 BMW 7 Series, 121k km, medium mileage wear. Market median 105k SAR; listing 19% above. Conservative estimate aligns with median."
+  },
+  "bmw|7-series|2018|100-150k|riyadh": {
+    "estimated_fair_price_sar": 105000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 BMW 7 Series, 117k km, matches median. Luxury depreciation+mileage offset premium brand. Riyadh +5% minimal impact."
+  },
+  "bmw|7-series|2019|50-75k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 BMW 7-Series V6 Twin Turbo, 65k km, Riyadh. Market median 234.8k SAR. Listed at 160k is 32% below median—likely dealer clearance or negotiation anchor. Fair price ~245k SAR."
+  },
+  "bmw|7-series|2026|0-25k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 BMW 7-Series ultra-low mileage, Riyadh premium (+5%), listed 15.5% above median. Conservative adjustment for luxury variance."
+  },
+  "bmw|7-series|2026|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 425000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 735i new, Riyadh premium +5%. Market median 405k for 2024–2025 models with mileage; new condition justifies modest uplift."
+  },
+  "bmw|i-series|2019|50-75k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 BMW i Series, 73k km, Riyadh. Electric/hybrid premium; conservative given luxury EV market volatility."
+  },
+  "bmw|i-series|2015|150k+|riyadh": {
+    "estimated_fair_price_sar": 55000,
+    "confidence": "medium",
+    "reasoning_ar": "2015 BMW i-Series, 198k km, Riyadh. High mileage; electric/hybrid premium degraded."
+  },
+  "bmw|i-series|2016|25-50k|eastern-province": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "medium",
+    "reasoning_ar": "BMW i Series 2016, low mileage (36k km), Eastern Province. Conservative EV pricing."
+  },
+  "bmw|i-series|2019|50-75k|jeddah": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 BMW i3/i8 w/ 53k km in Jeddah. EV/luxury niche; listing ~19% above fair"
+  },
+  "bmw|i-series|2022|0-25k|riyadh": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "medium",
+    "reasoning_ar": "BMW i Series 2022, very low mileage (16k km), Riyadh. Premium EV pricing"
+  },
+  "bmw|m-series|2020|50-75k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 335000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 BMW M-Series, 63k km, Riyadh. Listed 7% below median (345k). Conservative adjustment for used luxury sports car market."
+  },
+  "byd|atto-3|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 78000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 BYD Atto 3, ~680 km, Riyadh. Chinese EV priced 5-10% below market norm"
+  },
+  "byd|qin-plus|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 72000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 BYD Qin Plus, Riyadh, 100km. Chinese brand discount ~15–20% vs Japanese equivalent. Riyadh premium +5–10%. New condition supports higher end."
+  },
+  "changan|cs35-plus|2021|100-150k|riyadh": {
+    "estimated_fair_price_sar": 62000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 CS35 Plus, 141k km (medium wear). Chinese brand; median 66.9k SAR across years. Listed 40k is ~40% below median—likely underpriced or distressed. Riyadh +5% premium applies to fair value."
+  },
+  "changan|cs35-plus|2022|75-100k|riyadh": {
+    "estimated_fair_price_sar": 62000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Changan CS35 Plus, 99k km, Riyadh. Listed 40k SAR vs median 61k SAR. Likely underpriced; mileage is reasonable."
+  },
+  "changan|cs35-plus|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 58000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 CS35 Plus, low mileage, Riyadh premium applied. Listed 24% below median; conservative estimate near market."
+  },
+  "changan|cs35-plus|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 58000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 CS35 Plus, 104k km, Riyadh. Chinese make trades lower. Below median by ~5%."
+  },
+  "changan|eado-plus|2023|75-100k|riyadh": {
+    "estimated_fair_price_sar": 68000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Eado Plus, 75k km, Riyadh. Context median 67.7k SAR (n=8). Price 34k SAR is ~50% below market—likely data error or severe undisclosure."
+  },
+  "changan|eado-plus|2023|100-150k|riyadh": {
+    "estimated_fair_price_sar": 54000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Eado Plus, 105k km, Riyadh. Chinese make; market median 67.7k SAR but sample small (n=8). Mileage medium-high; price listed 33k SAR appears 50% below median. Conservative estimate ~80% of median."
+  },
+  "changan|eado-plus|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 68500,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Changan Eado Plus, Riyadh. Market median 67.7k SAR across 8 samples. Listed 5% above median; Chinese sedan pricing stable. Mileage unknown is minor flag."
+  },
+  "chevrolet|unknown|2024|unknown|jubail": {
+    "estimated_fair_price_sar": 55000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Chevrolet Groove (compact sedan/hatch) CVT, silver, new. Jubail coastal premium ~3%. Conservative for American compact."
+  },
+  "chevrolet|captiva|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Captiva in Riyadh; listing 38% above median. Market context from 2023 is dated; 2024 model commands ~12% premium. Riyadh adds ~7%. Adjusted fair price ~52k SAR."
+  },
+  "chevrolet|equinox|2019|150k+|riyadh": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 Equinox, 151k km (medium-high wear). Riyadh +5%. Chevrolet midsize SUV holds value moderately. Listed low by ~10%."
+  },
+  "chevrolet|impala|2017|50-75k|riyadh": {
+    "estimated_fair_price_sar": 62000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 Chevy Impala, low mileage (68k km), Riyadh premium +5%. Fair value ~62k SAR."
+  },
+  "chevrolet|impala|2017|150k+|riyadh": {
+    "estimated_fair_price_sar": 58000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 Impala, 159k km (medium-high), Riyadh +5%. American sedan, fair demand. Conservative."
+  },
+  "chevrolet|impala|2017|75-100k|riyadh": {
+    "estimated_fair_price_sar": 68000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 Impala, 86k km, Riyadh. US sedan, moderate demand. Slight upside vs listing."
+  },
+  "chevrolet|malibu|2020|100-150k|riyadh": {
+    "estimated_fair_price_sar": 42000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 Malibu, 113k km, Riyadh. Market median 40k SAR (5 samples, 2018 scope). Riyadh +5–10% premium. Medium mileage slight discount. Listed 53k is 33% above median—overpriced."
+  },
+  "chevrolet|malibu|2022|75-100k|riyadh": {
+    "estimated_fair_price_sar": 32000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Malibu, 96k km, Riyadh. Listing 2.2x market median—significant outlier. Fair ~32k SAR."
+  },
+  "chevrolet|malibu|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 32000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Malibu, 105k km, Riyadh. Listed 63k SAR vs median 28.9k. Overpriced by >2x; mileage/condition likely weak. Fair ~32k SAR."
+  },
+  "chevrolet|malibu|2022|25-50k|riyadh": {
+    "estimated_fair_price_sar": 42000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Malibu low mileage but listed 2.5x median. Market context suggests 28-42k SAR range. Riyadh +5-10% premium applied."
+  },
+  "chevrolet|silverado|2017|25-50k|riyadh": {
+    "estimated_fair_price_sar": 61000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 Silverado, low mileage, Riyadh premium. Listed 8% below median; fair value near market."
+  },
+  "chevrolet|spark|2018|50-75k|riyadh": {
+    "estimated_fair_price_sar": 26500,
+    "confidence": "high",
+    "reasoning_ar": "2018 Spark, 62k km, Riyadh. Entry-level hatchback, well-maintained mileage. Listed slightly low."
+  },
+  "chevrolet|spark|2021|150k+|unknown": {
+    "estimated_fair_price_sar": 28500,
+    "confidence": "medium",
+    "reasoning_ar": "2021 Spark, 180k km, automatic, Hafar Al-Batin. Typical range 27-31k SAR."
+  },
+  "chevrolet|suburban|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 148000,
+    "confidence": "high",
+    "reasoning_ar": "2022 Suburban, 129.7k km, Riyadh. Median 149k SAR (n=5). Slight discount justified by mid-range mileage."
+  },
+  "chevrolet|traverse|2023|100-150k|riyadh": {
+    "estimated_fair_price_sar": 72000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Traverse, 128k km, Riyadh premium +5%. Listed 34% above median; overpriced."
+  },
+  "dongfeng|unknown|2026|unknown|jeddah": {
+    "estimated_fair_price_sar": 47850,
+    "confidence": "medium",
+    "reasoning_ar": "2026 DongFeng SHINE new, auto, Jeddah. Chinese brand, reasonable entry-level pricing."
+  },
+  "dongfeng|mage|2025|50-75k|riyadh": {
+    "estimated_fair_price_sar": 48000,
+    "confidence": "low",
+    "reasoning_ar": "DongFeng Mage 2025, 72k km in Riyadh. Chinese brand, entry-level sedan. Limited market data."
+  },
+  "dongfeng|shine|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 DongFeng Shine, 908km, Riyadh. Listed 26% below median. Chinese brand priced conservatively vs Japanese; new condition supports premium within segment. Estimate ~5% below median given brand positioning."
+  },
+  "ford|unknown|2017|150k+|riyadh": {
+    "estimated_fair_price_sar": 32000,
+    "confidence": "medium",
+    "reasoning_ar": "Ford Focus 2017, 190k km, automatic, Riyadh. High mileage reduces value; ~5-10% below baseline."
+  },
+  "ford|f-150|2017|150k+|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "high",
+    "reasoning_ar": "2017 F-150, 150k km, Riyadh. Market median 188.9k SAR across model. Listed at 155k is 18% below median—conservative but reasonable given age/mileage."
+  },
+  "ford|f-150|2018|100-150k|eastern-province": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "high",
+    "reasoning_ar": "2018 F-150, 119k km (medium mileage), Eastern Province. Median 188.9k SAR across 11 samples. Listed 225k is ~19% above market—overpriced."
+  },
+  "ford|f-150|2019|150k+|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "high",
+    "reasoning_ar": "2019 F-150 at 200k km is high-mileage; median 188.9k SAR anchors estimate; Riyadh +5% premium applied; conservative discount for age/mileage yields ~165k SAR fair value."
+  },
+  "ford|f-150|2020|100-150k|mecca": {
+    "estimated_fair_price_sar": 189000,
+    "confidence": "high",
+    "reasoning_ar": "2020 F-150, 106k km, medium mileage. Market median 188.9k SAR across F-150s. Listed 16% above median; conservative alignment."
+  },
+  "ford|f-150|2019|100-150k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "high",
+    "reasoning_ar": "2019 F-150, 105k km, Riyadh. Listed at 50k SAR is ~73% below market median (188.9k). F-150 strong demand in KSA; 2019 with 105k km should command 180-190k SAR. Likely typo or urgent sale."
+  },
+  "ford|f-150|2020|100-150k|riyadh": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "high",
+    "reasoning_ar": "2020 F-150, 102k km, Riyadh. Market median 188.9k SAR (n=11). Listed at 215k is 13.8% above median. Conservative adjustment for mileage and Riyadh premium yields ~195k SAR."
+  },
+  "ford|f-150|2021|50-75k|mecca": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 F-150, 63k km in Mecca. Market median 188.9k SAR. Price 280k is ~48% high."
+  },
+  "ford|f-150|2021|150k+|eastern-province": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 F-150 with 220k km is high-mileage but Ford trucks retain value well. Listed 32% below median; appears underpriced but mileage warrants caution."
+  },
+  "ford|f-150|2021|100-150k|riyadh": {
+    "estimated_fair_price_sar": 188000,
+    "confidence": "high",
+    "reasoning_ar": "2021 F-150 at 120k km is medium-wear. Listed at 135k SAR is 29% below median of 188.9k SAR. Riyadh location supports premium. Conservative estimate anchors to market median."
+  },
+  "ford|f-150|2022|25-50k|riyadh": {
+    "estimated_fair_price_sar": 218000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 F-150 low mileage; median 204k, Riyadh +5-8%, conservative adjustment"
+  },
+  "ford|f-150|2021|50-75k|eastern-province": {
+    "estimated_fair_price_sar": 189000,
+    "confidence": "high",
+    "reasoning_ar": "2021 F-150, 53k km, Eastern Province. Market median 188.9k SAR (n=11). Price 5.8% above median; justified by low mileage. Fair price ~189k SAR."
+  },
+  "ford|f-150|2022|50-75k|madinah-al-madinah": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 F-150 3.5L V6 4WD, 72k km, Madinah. Listed price 85.6k is ~58% below market median 204k SAR. Mileage low-medium; specs strong. Market context n=6 suggests 185k fair price; listing appears significantly underpriced."
+  },
+  "ford|f-150|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 218000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 F-150, 108k km, Riyadh. Market median 204k SAR; listing 32% over. Conservative adjustment upward for Riyadh premium (~5%) and mainstream model yields ~218k SAR fair estimate."
+  },
+  "ford|f-150|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "low",
+    "reasoning_ar": "2023 F-150 in Riyadh typically 180–210k SAR. Listing 510k SAR is 2.5x market—likely data error or premium spec not disclosed."
+  },
+  "ford|f-150|2023|25-50k|riyadh": {
+    "estimated_fair_price_sar": 280000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 F-150 low mileage, Riyadh premium +8%. Market median 204k from n=6 suggests undersampling; F-150s command premium. Listed 340k appears high."
+  },
+  "ford|f-150|2023|50-75k|riyadh": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 F-150 w/ 68k km in Riyadh; listing 76% above median. Market context suggests ~204k SAR baseline, but Riyadh +5-10% premium and F-150 command applies. Conservative estimate ~245k SAR given source_tier=3 uncertainty."
+  },
+  "ford|f-150|2023|50-75k|mecca": {
+    "estimated_fair_price_sar": 198000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 F-150 64k km in Mecca; median 204k SAR from n=6. 18% below median suggests underpricing; conservative upward adj to 198k."
+  },
+  "ford|f-150|2023|0-25k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 F-150 V8 4x4 in Riyadh, 16k km. Listed 450k vs median 204k; median reflects older/higher-mileage mix. New F-150s command premium; comparable 2025 Raptor R lists 578k. Adjust for lower trim (XLT vs Raptor), condition excellent. Fair ~520k SAR."
+  },
+  "ford|ranger|2023|25-50k|riyadh": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "low",
+    "reasoning_ar": "2023 Ranger w/ 31k km should be 85-105k SAR; listing 200k SAR is 2.1x market median. Likely data error or premium trim misaligned with context."
+  },
+  "foton|unknown|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "Foton Tunland 2024, new, manual, Riyadh. Chinese brand entry-level pickup. Conservative pricing given limited market data."
+  },
+  "foton|unknown|2026|unknown|jeddah": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Foton Tunland new; Chinese brand entry pricing; Jeddah +5%; SAR 51.2k aligned"
+  },
+  "gac|unknown|2026|unknown|jeddah": {
+    "estimated_fair_price_sar": 78000,
+    "confidence": "low",
+    "reasoning_ar": "2026 GAC Empow new, auto, dark gray. Chinese brand, limited comps. Price reasonable for segment."
+  },
+  "gac|gs8|2021|100-150k|khobar": {
+    "estimated_fair_price_sar": 128550,
+    "confidence": "medium",
+    "reasoning_ar": "GAC GS8 2021, 120k km, median 128.5k SAR from 7 comps. Listing 2.0% above median."
+  },
+  "geely|azkarra|2023|100-150k|riyadh": {
+    "estimated_fair_price_sar": 62000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Geely Azkarra, 100k km, Riyadh. Chinese SUV priced ~10% above typical market."
+  },
+  "geely|coolray|2023|75-100k|riyadh": {
+    "estimated_fair_price_sar": 46000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Geely Coolray, 84.6k km, Riyadh. Market median 46k SAR aligns with listing 41.5k; slight discount reasonable."
+  },
+  "geely|coolray|2023|100-150k|riyadh": {
+    "estimated_fair_price_sar": 45000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Geely Coolray, 123k km, Riyadh. Listed 4.3% below median; mileage slightly elevated."
+  },
+  "geely|gx3-pro|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 42000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Geely GX3 Pro in Riyadh; Chinese compact SUV. Price slightly high."
+  },
+  "geely|emgrand|2027|unknown|riyadh": {
+    "estimated_fair_price_sar": 56000,
+    "confidence": "medium",
+    "reasoning_ar": "2027 Geely Emgrand, Riyadh. Listed 9% below median. Chinese brand discount applies."
+  },
+  "geely|gx3-pro|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 42500,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Geely GX3 Pro, nearly new, Riyadh. Chinese compact SUV priced reasonably."
+  },
+  "geely|mongaro|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 78000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Geely Monjaro new/low-mileage, Riyadh +5-8% premium. Chinese makes ~40% cheaper than Japanese equivalents. Fair SAR 75-82k."
+  },
+  "geely|mongaro|2023|75-100k|riyadh": {
+    "estimated_fair_price_sar": 68000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Geely Monjaro, 90k km, Riyadh. Chinese SUV, ~10-15% below Japanese equivalent. Listed at 72.1k SAR—slightly high."
+  },
+  "geely|okavango|2023|50-75k|riyadh": {
+    "estimated_fair_price_sar": 72000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Geely Okavango, ~60k km, Riyadh. Chinese SUV; comparable Japanese models ~40% higher. Conservative adjustment upward."
+  },
+  "geely|tugella|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 82000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Geely Tugella, low mileage, Riyadh. ~6% below median; Chinese make discounts apply."
+  },
+  "geely|tugella|2023|75-100k|riyadh": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Geely Tugella, 97k km, Riyadh. Market median 52.5k SAR. Listed 6.7% above median; mileage slightly elevated for model year. Conservative estimate."
+  },
+  "genesis|g-series|2013|50-75k|mecca": {
+    "estimated_fair_price_sar": 62000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70/GV70 2013, 52k km, Mecca. Japanese luxury, good condition."
+  },
+  "genesis|g-series|2018|100-150k|riyadh": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70 (2018) with 133k km in Riyadh. Mid-range luxury sedan, moderate mileage. Premium over Japanese equivalents but below full luxury tier."
+  },
+  "genesis|g-series|2010|150k+|eastern-province": {
+    "estimated_fair_price_sar": 18000,
+    "confidence": "low",
+    "reasoning_ar": "2010 Genesis G-series, 350k+ km (very high), Eastern Province. Heavy mileage red flag."
+  },
+  "genesis|g-series|2021|50-75k|riyadh": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70/G80 2021, 70k km, Riyadh premium. Listed low vs market."
+  },
+  "genesis|g-series|2022|25-50k|riyadh": {
+    "estimated_fair_price_sar": 280000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70/G80 2022, low mileage, Riyadh premium. Price slightly soft."
+  },
+  "genesis|g-series|2022|75-100k|mecca": {
+    "estimated_fair_price_sar": 135000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70/G80 2022, 80k km mid-mileage. Luxury sedan; conservative Saudi pricing ~130–140k SAR range."
+  },
+  "genesis|g-series|2023|75-100k|qassim": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70/G80 2023, 94k km, Qassim. Mid-range luxury; conservative estimate."
+  },
+  "genesis|g-series|2022|25-50k|mecca": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Genesis G70/G80 w/ 35k km in Mecca. Low mileage supports premium. Genesis luxury sedan market in SA commands 160–180k SAR range. Listed 15% below fair value—likely motivated seller. Medium confidence due to G Series ambiguity (G70 vs G80)."
+  },
+  "genesis|g-series|2023|0-25k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70/G80 2023 with 1k km in Mecca; luxury sedan premium; listing underpriced"
+  },
+  "genesis|g-series|2023|25-50k|riyadh": {
+    "estimated_fair_price_sar": 105000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70/G80 2023, low mileage, Riyadh premium. Price appears 16% undervalued."
+  },
+  "genesis|g-series|2023|unknown|riyadh": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70/G80 2023 in Riyadh; luxury sedan, limited mileage data; slightly underpriced"
+  },
+  "genesis|g-series|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "low",
+    "reasoning_ar": "Genesis G70/G80 2024 in Riyadh; luxury sedan. Unknown mileage risk; price appears 15-20% high."
+  },
+  "genesis|g-series|2024|unknown|mecca": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Genesis G-Series (likely G70/G80) in Mecca. Genesis commands premium over Hyundai; listing appears underpriced by ~12%."
+  },
+  "genesis|g-series|2024|50-75k|mecca": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Genesis G Series, 53k km, Mecca. Korean luxury, strong retention. Price modest."
+  },
+  "genesis|g-series|2024|25-50k|mecca": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G80/G70 2024, low mileage, Mecca. Listed 12% below market."
+  },
+  "genesis|g-series|2025|unknown|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G Series 2025 is premium Korean; limited market context; Mecca has typical pricing; conservative estimate."
+  },
+  "genesis|g-series|2025|0-25k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Genesis G70/G80 entry luxury sedan, ~2k km, Mecca +3-5%. Fair ~185k."
+  },
+  "genesis|g-series|2025|25-50k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70/G80 2025, low mileage, Riyadh premium +5%. Conservative luxury pricing."
+  },
+  "genesis|g-series|2025|50-75k|riyadh": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G Series 2025, 58k km, Riyadh. Premium Korean luxury brand, mid-range trim assumed. Listing appears slightly underpriced."
+  },
+  "genesis|g-series|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 340000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70 2025, ~500km is new. Riyadh premium +5-8%. Conservative luxury estimate."
+  },
+  "genesis|g-series|2026|unknown|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Genesis G Series (likely G70/G80) in Mecca. Premium Korean luxury, newer model year. Price reasonable but slightly high for market."
+  },
+  "genesis|g-series|2026|0-25k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Genesis G Series (likely G70/G80) in Riyadh. Low mileage premium. Genesis prices vary widely by trim; luxury sedan baseline ~180–200k SAR. Listed price ~12% above midpoint; conservative anchor applied."
+  },
+  "genesis|g-series|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "low",
+    "reasoning_ar": "Genesis G70/G80 2026 model new/near-new; Riyadh premium +5–8%; luxury brand volatility; mileage unknown inflates uncertainty."
+  },
+  "genesis|g-series|2026|0-25k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis G70/G80 2026, 7k km, Mecca. New luxury sedan; conservative vs list."
+  },
+  "genesis|gv-series|2021|150k+|riyadh": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV 2021, 197k km (high mileage), Riyadh +5%. Conservative valuation."
+  },
+  "genesis|gv-series|2022|75-100k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70 2022, 96k km, Riyadh. Korean luxury, good condition. Slight underpricing."
+  },
+  "genesis|gv-series|2022|50-75k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70 2022, 57.5k km, Mecca location. Mid-range luxury SUV."
+  },
+  "genesis|gv-series|2021|75-100k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70 (2021) in Riyadh; 94k km is medium-low. Korean luxury, well-retained. Riyadh premium applies."
+  },
+  "genesis|gv-series|2023|25-50k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70/GV60 2023, 40k km, Riyadh. Luxury Korean brand; lower than BMW/MB but above mainstream Japanese. Conservative estimate."
+  },
+  "genesis|gv-series|2023|unknown|mecca": {
+    "estimated_fair_price_sar": 280000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70/80 2023 in Mecca; luxury SUV, reasonable mileage assumed. Price below market."
+  },
+  "genesis|gv-series|2023|0-25k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70/GV80 2023, 3k km, Mecca. Premium Korean luxury, lower than BMW/Merc but high-value retention. Price seems ~8% above fair."
+  },
+  "genesis|gv-series|2023|100-150k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70/GV80 2023 in Riyadh; 121k km is medium mileage. Listed price 24% below fair market. Genesis luxury positioning justifies premium over Hyundai."
+  },
+  "genesis|gv-series|2023|25-50k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70 2023, low mileage, Mecca. Premium brand but newer model; conservative pricing."
+  },
+  "genesis|gv-series|2023|50-75k|riyadh": {
+    "estimated_fair_price_sar": 175000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70 2023, 52k km, Riyadh. Premium Korean luxury; conservative relative to similar BMW/Merc trim."
+  },
+  "genesis|gv-series|2024|25-50k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Genesis GV Series, 37k km, Mecca. Luxury Korean brand, relatively low mileage. Slightly underpriced vs market."
+  },
+  "genesis|gv-series|2023|75-100k|mecca": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70/GV60 2023, 93k km. Premium Korean brand; retail~210k SAR. Mecca+slight discount for mileage."
+  },
+  "genesis|gv-series|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Genesis GV Series, low mileage, Riyadh. Luxury Korean brand, fair market positioning."
+  },
+  "genesis|gv-series|2026|0-25k|riyadh": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Genesis GV70/GV60 in Riyadh, ultra-low mileage. Premium luxury sedan positioning. Conservative estimate given model ambiguity."
+  },
+  "genesis|gv-series|2024|0-25k|unknown": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Genesis GV70/GV60 base model, very low mileage. Premium Korean luxury sedan segment, ~10% below luxury EU/Japanese competitors in Saudi market."
+  },
+  "genesis|gv-series|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV luxury SUV, 2026 model, Riyadh premium. Unknown mileage suggests new/nearly new. Mid-range for segment."
+  },
+  "genesis|gv70|2023|50-75k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "Genesis GV70 2023, 50k km, Riyadh. Luxury Korean brand; listing significantly underpriced vs market comps."
+  },
+  "gmc|acadia|2012|150k+|riyadh": {
+    "estimated_fair_price_sar": 35000,
+    "confidence": "medium",
+    "reasoning_ar": "2012 GMC Acadia, 200k km, Riyadh. At mileage threshold, SUV format commands premium. Conservative estimate."
+  },
+  "gmc|sierra|2013|150k+|unknown": {
+    "estimated_fair_price_sar": 92000,
+    "confidence": "medium",
+    "reasoning_ar": "2013 Sierra at 200k km is high-mileage; median is 192k SAR across all years. City location (Madinah) neutral. Price 40% below median suggests undervaluation or hidden issues."
+  },
+  "great-wall|tank|2026|0-25k|unknown": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "low",
+    "reasoning_ar": "2026 Great Wall Tank, very low mileage. Chinese brand SUV; limited Saudi market data. Conservative estimate."
+  },
+  "haval|jolion-pro|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 89000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Haval Jolion Pro, Riyadh. New/low mileage, Chinese compact SUV. Listed ~5.6% below est. fair value; typical for Haval positioning vs Japanese rivals."
+  },
+  "haval|v7|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 135000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Haval V7 new/low-mileage in Riyadh. Chinese brand priced ~10-15% below Japanese equiv. Slight Riyadh premium applied."
+  },
+  "hongqi|unknown|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 78000,
+    "confidence": "medium",
+    "reasoning_ar": "Hongqi HS5 2023, low mileage, Riyadh; Chinese luxury sedan, conservative valuation"
+  },
+  "hyundai|unknown|2023|25-50k|riyadh": {
+    "estimated_fair_price_sar": 125000,
+    "confidence": "high",
+    "reasoning_ar": "2023 Hyundai Santa Fe, 30k km, Riyadh. Mainstream model, low mileage. Fair range 120–135k SAR."
+  },
+  "hyundai|azera|2026|unknown|jeddah": {
+    "estimated_fair_price_sar": 172000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Hyundai Azera new, Jeddah. Listed 150650 SAR vs median 172000 SAR (5-sample). Likely promotional/dealer pricing. Conservative estimate anchors to market median."
+  },
+  "hyundai|creta|2020|75-100k|dammam": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 Creta, 80k km, Dammam. Market median 58.8k SAR. Listed price 45k is 23% below median—likely underpriced for condition/mileage combo."
+  },
+  "hyundai|elantra|2018|150k+|dammam": {
+    "estimated_fair_price_sar": 28000,
+    "confidence": "high",
+    "reasoning_ar": "2018 Elantra, 221k km (high mileage), Dammam. Market median 32.5k SAR; mileage penalty ~13-15% applies. Conservative estimate."
+  },
+  "hyundai|elantra|2019|150k+|riyadh": {
+    "estimated_fair_price_sar": 47000,
+    "confidence": "high",
+    "reasoning_ar": "2019 Elantra, 159k km (medium mileage), Riyadh +5%. Listing SAR 47.5k vs median SAR 46k. Fair."
+  },
+  "hyundai|grand-i10|2025|0-25k|unknown": {
+    "estimated_fair_price_sar": 34000,
+    "confidence": "high",
+    "reasoning_ar": "2025 Grand i10, 15km. Market median 33k SAR (n=18). New/near-new premium ~3-5%. Price 51.8k is 57% above median—unrealistic."
+  },
+  "hyundai|santa-fe|2021|75-100k|riyadh": {
+    "estimated_fair_price_sar": 74500,
+    "confidence": "high",
+    "reasoning_ar": "2021 Hyundai Santa Fe, 81.7k km, Riyadh. Median 73.5k SAR (n=8). Listed 74.9k is 1.9% above median, within fair range."
+  },
+  "hyundai|santa-fe|2024|25-50k|riyadh": {
+    "estimated_fair_price_sar": 104500,
+    "confidence": "high",
+    "reasoning_ar": "2024 Hyundai Santa Fe, low mileage, Riyadh. Matches median 103.5k SAR; slight Riyadh premium justified."
+  },
+  "hyundai|santa-fe|2022|75-100k|riyadh": {
+    "estimated_fair_price_sar": 105000,
+    "confidence": "high",
+    "reasoning_ar": "2022 Hyundai Santa Fe, 99.5k km, Riyadh. Market median 103.5k SAR (n=6). Price listed 31% below median—likely underpriced or needs inspection."
+  },
+  "hyundai|santa-fe|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 101000,
+    "confidence": "high",
+    "reasoning_ar": "2022 Hyundai Santa Fe, 104.6k km, Riyadh. Below median by ~19%. Conservative adjustment upward given mainstream model and solid market data."
+  },
+  "hyundai|santa-fe|2022|50-75k|riyadh": {
+    "estimated_fair_price_sar": 110000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Santa Fe, 70k km, Riyadh +5%. Market median 103.5k, listing 22% high."
+  },
+  "hyundai|santa-fe|2024|50-75k|riyadh": {
+    "estimated_fair_price_sar": 109500,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Hyundai Santa Fe, 68.8k km, Riyadh. Sample median 103.5k; Riyadh +7% lift applied."
+  },
+  "hyundai|santa-fe|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 82500,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Santa Fe in Riyadh; listed 95% above median. New/nearly-new command premium but 128.8k SAR is excessive vs market context and typical 2026 Hyundai pricing in KSA."
+  },
+  "hyundai|venue|2026|unknown|jeddah": {
+    "estimated_fair_price_sar": 48000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Hyundai Venue new, Jeddah +5%. Market median 50k SAR; listing 35% above."
+  },
+  "infiniti|qx-series|2014|150k+|jeddah": {
+    "estimated_fair_price_sar": 5000,
+    "confidence": "low",
+    "reasoning_ar": "2014 Infiniti QX, 271k km, very high mileage + age. Fair value ~5–8k SAR"
+  },
+  "infiniti|qx-series|2016|75-100k|jeddah": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 Infiniti QX, 90k km, Jeddah. Market median 175k but sample mixed years. Conservative adjustment for age, mileage."
+  },
+  "infiniti|qx-series|2016|100-150k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 QX, 148k km, Riyadh. Below median by ~44%. Age+mileage justify discount, but 44% seems steep for mainstream luxury SUV."
+  },
+  "infiniti|qx-series|2019|25-50k|riyadh": {
+    "estimated_fair_price_sar": 172000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 Infiniti QX, 31k km, Riyadh. Below median by ~17%. Low mileage supports premium, but QX segment niche. Conservative upward adjustment."
+  },
+  "infiniti|qx-series|2016|100-150k|mecca": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 Infiniti QX, 130k km (medium mileage). Mecca location. Market median 175k SAR; listing 80k is 54% below. QX premium segment, depreciation significant at 8 years old. Conservative estimate ~145k SAR (±15% of median, adjusted for age/mileage)."
+  },
+  "infiniti|qx-series|2019|100-150k|riyadh": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 Infiniti QX, 122k km, Riyadh. Listed 63% below median. High mileage + luxury depreciation justify discount, but 65k is outlier low."
+  },
+  "infiniti|qx-series|2022|unknown|riyadh": {
+    "estimated_fair_price_sar": 175000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Infiniti QX, Riyadh. Market median 175k SAR. Unknown mileage is risk."
+  },
+  "infiniti|qx-series|2020|25-50k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 QX low mileage, but well below median. Riyadh +5%. Conservative anchor."
+  },
+  "infiniti|qx-series|2019|75-100k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 QX, 89.5k km, Riyadh. Below median (175.5k) but reasonable for mileage/age. Conservative uplift from listing."
+  },
+  "infiniti|qx-series|2022|25-50k|mecca": {
+    "estimated_fair_price_sar": 182000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Infiniti QX, low mileage, Mecca. Median 175.5k SAR; listed 190k. Adjust +3.7% for premium Japanese luxury, low km. Conservative estimate."
+  },
+  "infiniti|qx-series|2022|0-25k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 QX80, 4k km, Riyadh. Listed 220k vs median 175.5k. Slightly optimistic but justified by low mileage and Riyadh premium."
+  },
+  "infiniti|qx-series|2023|25-50k|unknown": {
+    "estimated_fair_price_sar": 182000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Infiniti QX, low mileage (42k km), listed 7% above median. Fair value ~182k SAR."
+  },
+  "infiniti|qx-series|2025|0-25k|eastern-province": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 QX is premium; 10k km supports higher valuation. Listing 36% above median suggests overpricing in Eastern Province market."
+  },
+  "infiniti|qx-series|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 280000,
+    "confidence": "low",
+    "reasoning_ar": "2025 Infiniti QX is premium SUV; listing price 2.5x median suggests error or ultra-high trim. Conservative estimate aligns with luxury segment."
+  },
+  "infiniti|qx-series|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Infiniti QX is luxury SUV; Riyadh premium applies. Listed price ~2.2x median suggests overvaluation or premium trim. Conservative estimate 1.6x baseline."
+  },
+  "infiniti|qx-series|2023|unknown|riyadh": {
+    "estimated_fair_price_sar": 176000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Infiniti QX, Riyadh. Market median 175.5k SAR (n=9). Price 179k slightly above. Conservative adjustment to 176k."
+  },
+  "infiniti|qx-series|2025|unknown|unknown": {
+    "estimated_fair_price_sar": 176000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Infiniti QX near market median; luxury brand, mileage unknown adds uncertainty."
+  },
+  "infiniti|qx-series|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "low",
+    "reasoning_ar": "2026 Infiniti QX premium SUV, Riyadh location premium. Context median outdated (2024 data). Conservative estimate."
+  },
+  "isuzu|unknown|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 132500,
+    "confidence": "medium",
+    "reasoning_ar": "Isuzu MU-X 2024 new auto in Riyadh. Price aligns with regional market; dealer sourced, verified."
+  },
+  "isuzu|d-max|2022|75-100k|riyadh": {
+    "estimated_fair_price_sar": 58000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 D-Max, 94k km, Riyadh. Market median 58k SAR from 5 samples. Listed 8% below median; reasonable given mileage."
+  },
+  "jetour|unknown|2026|unknown|jeddah": {
+    "estimated_fair_price_sar": 139150,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Jetour T2 new, automatic, Jeddah. Chinese brand prices stable; Jeddah +5-10% vs interior. Fair range 135k-145k SAR."
+  },
+  "jetour|dashing|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 78000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Jetour Dashing, low mileage, Riyadh. Context median 80.5k; listing 11% below."
+  },
+  "jetour|x70|2023|50-75k|riyadh": {
+    "estimated_fair_price_sar": 50200,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Jetour X70, 71k km, Riyadh. Median 50k SAR (n=5). Price near market."
+  },
+  "kgm|tivoli|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 KGM Tivoli, very low mileage, Riyadh premium +5%. Chinese brand discount vs Japanese equivalent."
+  },
+  "kgm|tivoli|2023|25-50k|jeddah": {
+    "estimated_fair_price_sar": 48000,
+    "confidence": "medium",
+    "reasoning_ar": "KGM Tivoli 2023, low mileage, Jeddah premium +5-8%. Listed price ~12% below fair."
+  },
+  "kgm|torres|2023|25-50k|riyadh": {
+    "estimated_fair_price_sar": 128000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Ssangyong Torres, 36k km, Riyadh. Korean SUV segment ~120–135k SAR. Conservative mid-range."
+  },
+  "kia|carens|2024|unknown|jeddah": {
+    "estimated_fair_price_sar": 74500,
+    "confidence": "high",
+    "reasoning_ar": "2024 Kia Carens, Jeddah, automatic. Listed 76.7k vs median 73.6k. New car, mainstream model, Jeddah premium applies. Fair price ~74.5k."
+  },
+  "kia|carens|2026|unknown|jeddah": {
+    "estimated_fair_price_sar": 76500,
+    "confidence": "high",
+    "reasoning_ar": "2026 Kia Carens, new, automatic, Jeddah. Aligns with market median (73.6k SAR) plus Jeddah premium (~5%) and new-car positioning."
+  },
+  "kia|cerato|2023|150k+|riyadh": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Cerato, 173k km (high), Riyadh +5%. Below median; mileage is concerning."
+  },
+  "kia|cerato|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 82000,
+    "confidence": "high",
+    "reasoning_ar": "2025 Kia Cerato auto, Riyadh, new condition. Market median 55k SAR (2024 data); 2025 model commands ~50% premium. Listed 85k SAR is reasonable."
+  },
+  "kia|k8|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "high",
+    "reasoning_ar": "2025 Kia K8, low mileage, Riyadh premium applied. Strong Korean brand value."
+  },
+  "kia|rio|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 33500,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Kia Rio, 116k km, Riyadh. Listed 12% above median; mileage medium-high."
+  },
+  "kia|sportage|2017|150k+|riyadh": {
+    "estimated_fair_price_sar": 42000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 Kia Sportage, 170k km (high mileage), Riyadh +5%. Market median 32.5k for 2016 baseline; 2017 +30%, mileage penalty -15%, Riyadh +5% = ~42k. Listing 31% above estimate—overpriced."
+  },
+  "lamborghini|huracan|2015|25-50k|riyadh": {
+    "estimated_fair_price_sar": 850000,
+    "confidence": "medium",
+    "reasoning_ar": "2015 Huracán, 30k km, Riyadh. Conservative luxury sports car valuation."
+  },
+  "lamborghini|huracan|2016|50-75k|mecca": {
+    "estimated_fair_price_sar": 750000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 Huracán, 55k km, good condition. Luxury supercar premium applied."
+  },
+  "lamborghini|huracan|2018|25-50k|riyadh": {
+    "estimated_fair_price_sar": 1320000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 Huracán, low mileage, Riyadh premium. Exotic depreciation & market liquidity applied."
+  },
+  "lamborghini|huracan|2022|0-25k|riyadh": {
+    "estimated_fair_price_sar": 1480000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Huracán, low mileage, Riyadh. Exotic supercar pricing volatile; conservative estimate."
+  },
+  "lamborghini|huracan|2022|0-25k|mecca": {
+    "estimated_fair_price_sar": 1750000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Huracán, 9k km, Mecca. Premium supercar; conservative mid-range."
+  },
+  "lamborghini|huracan|2020|25-50k|riyadh": {
+    "estimated_fair_price_sar": 950000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 Huracán, 40k km, Riyadh. Lamborghini supercars command premium; listing appears underpriced vs market"
+  },
+  "lamborghini|huracan|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 1150000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Huracán, ultra-low mileage, Riyadh premium. Luxury exotic—wide trim variance."
+  },
+  "land-rover|defender|2024|100-150k|riyadh": {
+    "estimated_fair_price_sar": 295000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Defender, 100k km, Riyadh premium +5%. Context median 290k; listing 4.8% above."
+  },
+  "land-rover|defender|2024|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "high",
+    "reasoning_ar": "2024 Defender 90 SE new, Riyadh premium +5%, aligns with median 290k SAR market."
+  },
+  "land-rover|defender|2026|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Defender 110 SE X Dynamic; Riyadh premium +5%; comparable listings 430-432k SAR suggest 355k is underpriced"
+  },
+  "land-rover|x-dynamic|2026|0-25k|unknown": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "low",
+    "reasoning_ar": "2026 Land Rover rare model; minimal mileage; European luxury premium in Saudi market"
+  },
+  "land-rover|rover|2025|0-25k|unknown": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "low",
+    "reasoning_ar": "2025 Land Rover, very low mileage. Model 'Rover' unclear; likely Range Rover or Discovery. Conservative estimate given ambiguity."
+  },
+  "land-rover|rover|2026|0-25k|unknown": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "low",
+    "reasoning_ar": "2026 Land Rover Rover (likely Range Rover) at 23km is new. Listed price 735k SAR appears high for Saudi market; conservative estimate 480-560k SAR range."
+  },
+  "lexus|es|2013|100-150k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 48500,
+    "confidence": "medium",
+    "reasoning_ar": "2013 ES350, 140k km, Riyadh. Similar comps 47-50k SAR. Mileage medium-high for age."
+  },
+  "lexus|es|2012|150k+|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2012 ES, 200k km (high mileage), Riyadh. Market median 173k SAR for any ES year. At 50k asking, significantly undervalued; likely reflects age/mileage. Conservative fair estimate ~165k SAR."
+  },
+  "lexus|es|2013|150k+|riyadh": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2013 ES, 177k km, Riyadh. Market median 173k SAR across all years; 2013 at high mileage warrants 45-50% discount. Listed 65k is ~30% below fair range."
+  },
+  "lexus|es|2017|150k+|riyadh-riyadh": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 ES350, 224k km (very high), Riyadh +5%. Luxury depreciation + mileage severity outweighs asking price understatement."
+  },
+  "lexus|gx|2010|150k+|dammam": {
+    "estimated_fair_price_sar": 45000,
+    "confidence": "medium",
+    "reasoning_ar": "2010 Lexus GX, 460k km (very high), Dammam. Severe mileage heavily discounts premium brand value."
+  },
+  "lexus|gx|2015|150k+|dammam": {
+    "estimated_fair_price_sar": 45000,
+    "confidence": "medium",
+    "reasoning_ar": "2015 Lexus GX at 400k km is very high mileage. Fair value ~45–55k SAR."
+  },
+  "lexus|gx|2010|25-50k|dammam": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2010 Lexus GX, low mileage (46k km), Dammam. GX is premium SUV; age offsets condition. Conservative premium estimate."
+  },
+  "lexus|gx|2024|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 475000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Lexus GX 460 V6 TT, Riyadh premium (+5%), luxury SUV. Mileage unknown is concern; assume low. Fair range 460–490k SAR."
+  },
+  "lexus|is|2020|25-50k|dammam-eastern-region": {
+    "estimated_fair_price_sar": 135000,
+    "confidence": "high",
+    "reasoning_ar": "2020 Lexus IS350 F-Sport, low mileage (40k km), fully loaded. Median 144k SAR; listing 39k is severely underpriced."
+  },
+  "lexus|gx|2026|unknown|jeddah-makkah": {
+    "estimated_fair_price_sar": 370000,
+    "confidence": "low",
+    "reasoning_ar": "2026 Lexus GX is premium SUV; 66 miles is new. US pricing ($78k) converts ~$292k SAR, but Saudi markup typically 20-30% above US. Jeddah adds ~5-7%. Listed price seems undervalued."
+  },
+  "lexus|is|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Lexus IS, 17k km, Riyadh. Low mileage premium ~15% over median."
+  },
+  "lexus|is|2020|100-150k|riyadh": {
+    "estimated_fair_price_sar": 138000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 Lexus IS, 104k km, Riyadh. Market median 144k SAR. Listing 41% below median—likely underpriced or condition issue not disclosed."
+  },
+  "lexus|is|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Lexus IS, low mileage, Riyadh premium. Listed 68% above median; likely older/higher-mileage sample. Conservative upside justified."
+  },
+  "lexus|lc|2016|75-100k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 LC with 97k km in Riyadh. Lexus luxury coupe; listing ~19% below fair. Medium confidence."
+  },
+  "lexus|lc|2024|0-25k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "high",
+    "reasoning_ar": "2024 Lexus LC, 10k km, Riyadh, full spec, dealer warranty. Fair."
+  },
+  "lexus|ls|2013|150k+|riyadh-riyadh": {
+    "estimated_fair_price_sar": 45000,
+    "confidence": "medium",
+    "reasoning_ar": "Lexus LS 460 2013 with 300k km is very high mileage. V8 luxury sedan; fair floor ~45k SAR in Riyadh despite condition."
+  },
+  "lexus|ls|2016|150k+|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 Lexus LS, 253k km (high), Riyadh. Luxury sedan, significant mileage wear."
+  },
+  "lexus|ls|2018|75-100k|riyadh": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 Lexus LS, 90k km, Riyadh. Luxury sedan; listing underpriced ~25%."
+  },
+  "lexus|ls|2021|50-75k|al-baha-al-baha": {
+    "estimated_fair_price_sar": 120000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 Lexus LS 72k km in AL Baha; listed 58k seems 50%+ underpriced vs market"
+  },
+  "lexus|lx|2009|150k+|dammam": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "low",
+    "reasoning_ar": "2009 LX, 375k km (very high), Dammam. Listed 90k SAR vs median 341k (older/higher miles). Conservative discount applied."
+  },
+  "lexus|lx|2010|150k+|dammam": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2010 LX with 400k km is well-worn; steep depreciation. Median across all LX years is 341k SAR, but mileage >300k km is a major red flag. Conservative adjustment downward."
+  },
+  "lexus|lx|2011|150k+|dammam": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2011 LX, 470k km is very high mileage (red flag). Median 341k SAR for any-year LX; this older unit with extreme wear justifies steep discount. Conservative 28% below median."
+  },
+  "lexus|lx|2013|150k+|dammam": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2013 LX, 460k km (very high), Dammam. Market median 155k for 2014 models. Heavy mileage depreciation applied."
+  },
+  "lexus|lx|2012|150k+|dammam": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2012 LX, 228k km (high mileage), Dammam. Median 155k SAR is 2014 data; older/higher-mileage models trade lower. Conservative 15% discount applied."
+  },
+  "lexus|lx|2016|100-150k|riyadh": {
+    "estimated_fair_price_sar": 220000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 Lexus LX, 140k km, Riyadh. Premium SUV; median 194k for 2015 scope."
+  },
+  "lexus|lx|2016|150k+|riyadh": {
+    "estimated_fair_price_sar": 205000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 Lexus LX, 188k km, Riyadh. High mileage reduces value; premium brand holds better. 5% above median justified."
+  },
+  "lexus|lx|2016|150k+|dammam": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "low",
+    "reasoning_ar": "2016 Lexus LX at 287k km exceeds 300k threshold; severe mileage penalty applies"
+  },
+  "lexus|lx|2018|150k+|riyadh-riyadh": {
+    "estimated_fair_price_sar": 275000,
+    "confidence": "high",
+    "reasoning_ar": "2018 Lexus LX, 181k km, Riyadh. Aligned with market median (272k SAR). High mileage offset by Saudi full-option status."
+  },
+  "lexus|lx|2017|150k+|dammam": {
+    "estimated_fair_price_sar": 194000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 Lexus LX, 190k km, matches median (194k SAR). High mileage softens premium brand value slightly."
+  },
+  "lexus|lx|2018|75-100k|riyadh": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "high",
+    "reasoning_ar": "2018 Lexus LX, 93k km, Riyadh. Median 272k SAR; listing 295k is 8.5% above. Riyadh +5-10% premium applies; medium mileage is neutral. Conservative upward adjustment to 285k SAR."
+  },
+  "lexus|lx|2018|unknown|hail-hail": {
+    "estimated_fair_price_sar": 280000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 LX 570 Prestige, unknown mileage, listed 100k SAR is ~63% below market median 272k SAR. LX 570 is premium SUV; listing price implausibly low. Adjusted to market median with conservative downward adjustment for unknown mileage."
+  },
+  "lexus|lx|2024|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 510000,
+    "confidence": "high",
+    "reasoning_ar": "2024 Lexus LX600 F Sport, 16k km, Riyadh. Premium trim with full specs. Above median but justified by low mileage and F Sport variant."
+  },
+  "lexus|lx|2024|0-25k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 485000,
+    "confidence": "high",
+    "reasoning_ar": "2024 Lexus LX600, 18.6k km, Riyadh. Premium SUV, low mileage. Market median 470k SAR; listing 495k slightly above."
+  },
+  "lexus|lx|2024|75-100k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 465000,
+    "confidence": "high",
+    "reasoning_ar": "2024 Lexus LX, 87k km, Riyadh. Market median 470k SAR. Price 440k is 6.4% below median—reasonable negotiation room for used luxury SUV."
+  },
+  "lexus|lx|2024|25-50k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 465000,
+    "confidence": "high",
+    "reasoning_ar": "2024 Lexus LX, 27k km, Riyadh. Market median 470k SAR. Low mileage supports mid-range positioning. Aligned with comparable luxury SUV segment."
+  },
+  "lexus|lx|2024|0-25k|madinah-al-madinah": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "high",
+    "reasoning_ar": "2024 LX600 AWD low mileage, full opts. Listed 34% below median. Conservative +8% upside vs context."
+  },
+  "lexus|lx|2024|50-75k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 LX 600 F-Sport, 54k km, Riyadh. Listed 235k SAR is 50% below market median (470k). Similar 2023 model at 195k SAR suggests data noise. Fair estimate ~420k SAR (±10% of median)."
+  },
+  "lexus|lx|2026|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 545000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Lexus LX flagship SUV; listing 13.5% above median. Conservative adjustment for new model year, unknown mileage, Riyadh premium (+7%)."
+  },
+  "lexus|nx|2018|150k+|jeddah-makkah": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 NX300 Turbo, 182k km (high), first owner, full agency service. Listed 97k SAR vs median 192.6k SAR suggests significant underpricing. Conservative adjustment for age and mileage yields ~155k SAR fair value."
+  },
+  "lexus|rx|2011|150k+|al-baha-al-baha": {
+    "estimated_fair_price_sar": 189000,
+    "confidence": "low",
+    "reasoning_ar": "2011 RX at 202k km severely underpriced vs market. High mileage, older model, Al Baha location explain discount but 11255 SAR is implausibly low."
+  },
+  "lexus|rx|2013|unknown|al-methnab-al-qassim": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "low",
+    "reasoning_ar": "Listing price 24640 SAR is ~87% below median; mileage unknown raises concerns. Likely data error or severe damage not disclosed."
+  },
+  "lexus|rx|2013|50-75k|al-hajrah-al-baha": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "high",
+    "reasoning_ar": "2013 RX350, 64k km, low mileage. Listed price 18400 SAR is severely underpriced vs median 199400 SAR. Likely data entry error or urgent sale. Fair market ~195k SAR."
+  },
+  "lucid|air|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "low",
+    "reasoning_ar": "2024 Lucid Air ultra-luxury EV; low mileage; limited Saudi market data; conservative estimate"
+  },
+  "lucid|air|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "low",
+    "reasoning_ar": "2024 Lucid Air is ultra-luxury EV; Riyadh premium applies. Listed price ~28% below est. fair range."
+  },
+  "lucid|air|2025|unknown|mecca": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Lucid Air is ultra-luxury EV; 250k SAR is ~52% below market. Conservative estimate."
+  },
+  "lucid|air|2024|0-25k|mecca": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "low",
+    "reasoning_ar": "2024 Lucid Air ultra-low mileage; luxury EV niche; limited Saudi comps"
+  },
+  "lucid|air|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "low",
+    "reasoning_ar": "2025 Lucid Air ultra-luxury EV; low mileage. Saudi market data sparse; conservative estimate based on global positioning and Riyadh premium."
+  },
+  "lynk-co|and-co-01|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 78000,
+    "confidence": "low",
+    "reasoning_ar": "Lynk & Co 01 (2024) is niche Chinese brand in SA market. Limited comps."
+  },
+  "lynk-co|900|2025|unknown|unknown": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "low",
+    "reasoning_ar": "Lynk & Co 900 (2025) is niche Chinese premium; limited Saudi market data"
+  },
+  "mazda|6|2018|150k+|riyadh": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 Mazda 6, 207k km (very high mileage), Riyadh. Below median but justified by age/km."
+  },
+  "mazda|cx-3|2023|100-150k|riyadh": {
+    "estimated_fair_price_sar": 62000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Mazda CX-3, 103k km, Riyadh. Below-market; CX-3 typically 60–68k SAR."
+  },
+  "mazda|cx-3|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 58000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Mazda CX-3, 114k km, Riyadh. Mid-market compact SUV; asking low."
+  },
+  "mazda|cx-3|2023|50-75k|riyadh": {
+    "estimated_fair_price_sar": 62000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Mazda CX-3, 54k km, Riyadh. Listed low; CX-3 typically 60–65k SAR."
+  },
+  "mazda|cx-3|2023|75-100k|riyadh": {
+    "estimated_fair_price_sar": 62000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Mazda CX-3, 79k km, Riyadh. Listed low; fair ~62k SAR given"
+  },
+  "mazda|cx-30|2022|50-75k|riyadh": {
+    "estimated_fair_price_sar": 68000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Mazda CX-30, 57.7k km, Riyadh. Japanese compact SUV, solid demand. Price ~10% below market."
+  },
+  "mazda|cx-30|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 58000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Mazda CX-30, 110k km, Riyadh. Compact SUV, reliable Japanese make. Price slightly below market."
+  },
+  "mazda|cx-30|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 92000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Mazda CX-30, ~100km, Riyadh. Mainstream compact crossover; slight premium for new model year and low mileage."
+  },
+  "mazda|cx-5|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 102000,
+    "confidence": "high",
+    "reasoning_ar": "2025 CX-5, low mileage, Riyadh premium +5%. Market median 105k; listing 19% below median suggests good value or possible negotiation room."
+  },
+  "mazda|cx-5|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 115000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 CX-5 Riyadh. Market median 105k SAR (7 samples). Riyadh +5-10% premium applies. Unknown mileage is risk; assume low-mid. Listed 128k is ~22% above median—overpriced."
+  },
+  "mazda|cx-9|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 115000,
+    "confidence": "high",
+    "reasoning_ar": "2023 Mazda CX-9, low mileage, Riyadh. Median 110k SAR; 12.7% above baseline justified by low km and city premium."
+  },
+  "mazda|cx-9|2023|100-150k|riyadh": {
+    "estimated_fair_price_sar": 108000,
+    "confidence": "high",
+    "reasoning_ar": "2023 Mazda CX-9, 111k km, Riyadh. Market median 110k SAR (n=9). Price 15% below median; mileage mid-range justified modest discount."
+  },
+  "mercedes-benz|unknown|2010|150k+|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2010 G-Class AMG, 200k km (high mileage), Riyadh +5%. Conservative luxury pricing."
+  },
+  "mercedes-benz|unknown|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 A-Class, 40km, Riyadh. Listed 19% below market; likely to sell quickly."
+  },
+  "mercedes-benz|B|2021|50-75k|jeddah": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 Mercedes-B, 60k km, Jeddah. B-class compact sedan holds value moderately. Listed at 145k appears slightly underpriced; fair range ~165-180k SAR."
+  },
+  "mercedes-benz|unknown|2023|75-100k|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 S-Class, 80k km, Riyadh. Listed low vs typical market; S-Class premiums command 500k+ SAR."
+  },
+  "mercedes-benz|unknown|2020|100-150k|riyadh": {
+    "estimated_fair_price_sar": 135000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 Mercedes C-Class, 100k km, Riyadh. Listing underpriced ~15%; Mercedes luxury sedan typically 130-150k SAR at this age/mileage in Riyadh market."
+  },
+  "mercedes-benz|a-class|2014|150k+|riyadh": {
+    "estimated_fair_price_sar": 55000,
+    "confidence": "medium",
+    "reasoning_ar": "2014 A-Class, 242k km, high mileage depreciates heavily. Mercedes luxury base model, Riyadh +5%. Listed well below median."
+  },
+  "mercedes-benz|a-class|2019|100-150k|eastern-province": {
+    "estimated_fair_price_sar": 115000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 A-Class, 104k km, Eastern Province. Below median (130k) but reasonable for mileage and location. Conservative upside."
+  },
+  "mercedes-benz|a-class|2020|50-75k|mecca": {
+    "estimated_fair_price_sar": 115000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 A-Class, 53.8k km, below-market at 90k. Fair ~115k SAR; Mecca inland location may justify slight discount vs Riyadh."
+  },
+  "mercedes-benz|a-class|2020|25-50k|mecca": {
+    "estimated_fair_price_sar": 128000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 A-Class, 49k km, low mileage. Market median 130k; listing 93k is 28% below. Conservative upward adjustment warranted."
+  },
+  "mercedes-benz|a-class|2016|75-100k|riyadh": {
+    "estimated_fair_price_sar": 132000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 A-Class, 90k km, Riyadh. Below median (140.8k SAR) but reasonable for age/mileage. Conservative estimate."
+  },
+  "mercedes-benz|a-class|2023|unknown|riyadh": {
+    "estimated_fair_price_sar": 150000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 A-Class, Riyadh premium +5%, median 147.5k SAR. Listed 160k is 8.5% high."
+  },
+  "mercedes-benz|a-class|2022|unknown|riyadh": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 A-Class in Riyadh; listing 68% above median. Conservative premium for year/city."
+  },
+  "mercedes-benz|a-class|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 A-Class, low mileage, Riyadh premium +5-8%. Listed 25% above median; conservative adjustment to +12% fair range."
+  },
+  "mercedes-benz|a-class|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 A-Class new/near-new; Riyadh +5%; market median 147.5k; luxury entry premium justified."
+  },
+  "mercedes-benz|a-class|2026|unknown|mecca": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 A-Class new/near-new; Mecca +2% vs baseline. Listed 25% above median; conservative premium justified but overstated."
+  },
+  "mercedes-benz|a-class|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 A-Class, Riyadh premium +5-8%. Market median 147.5k; new model yr commands +10-15% uplift. Listing 34% above median—high for segment."
+  },
+  "mercedes-benz|a-class|2026|0-25k|mecca": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 A-Class, very low mileage, new. Market median 147.5k SAR; Mecca ~2-3% above national avg. Listing 35% above median—high for entry luxury."
+  },
+  "mercedes-benz|a-class|2026|0-25k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 A-Class, 230km, Riyadh. New car premium + low mileage. Context median 147.5k is 2024 data; newer year and Riyadh location justify uplift. Listed 183k is 24% above median—modest overpricing likely."
+  },
+  "mercedes-benz|amg-gt|2019|100-150k|riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 AMG GT, 108k km, Riyadh. Luxury sports car; 345k SAR is below market."
+  },
+  "mercedes-benz|amg-gt|2020|25-50k|riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 AMG GT, 38k km, Riyadh. Conservative luxury valuation; listed price appears significantly undervalued."
+  },
+  "mercedes-benz|amg-gt|2020|50-75k|unknown": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 AMG GT, 62k km. Luxury sports car; conservative valuation given market volatility"
+  },
+  "mercedes-benz|amg-gt|2019|75-100k|eastern-province": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 AMG GT, 85k km, Eastern Province. Premium sports car; listed 31% below typical fair range."
+  },
+  "mercedes-benz|amg-gt|2020|75-100k|mecca": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 AMG GT, 99k km, Mecca. Mercedes luxury sports car; conservative pricing for used luxury with wear."
+  },
+  "mercedes-benz|amg-gt|2022|0-25k|jeddah": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 AMG GT, 10k km, Jeddah location. Conservative luxury valuation."
+  },
+  "mercedes-benz|amg-gt|2022|50-75k|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 AMG GT, 61k km, Riyadh. Conservative luxury pricing; listing ~26% below fair estimate."
+  },
+  "mercedes-benz|amg-gt|2021|0-25k|riyadh": {
+    "estimated_fair_price_sar": 1420000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 AMG GT, low mileage, Riyadh premium applied. Mercedes luxury variance high."
+  },
+  "mercedes-benz|amg-gt|2021|25-50k|riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 AMG GT, low mileage (36k km), Riyadh premium. Listed significantly below market."
+  },
+  "mercedes-benz|amg-gt|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 1180000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 AMG GT, 500 km, Riyadh. Conservative luxury pricing; new stock."
+  },
+  "mercedes-benz|amg-gt|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 720000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 AMG GT, 9k km, Riyadh. Low mileage premium offset by market positioning."
+  },
+  "mercedes-benz|bmw-4-series-coupe|2020|75-100k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "low",
+    "reasoning_ar": "Listing conflates Mercedes & BMW makes; likely E-Class Coupe 2020. 80k km, Riyadh premium applies. Price reasonable but make mismatch creates uncertainty."
+  },
+  "mercedes-benz|c-class|2008|50-75k|mecca": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "2008 C-Class, 58k km, Mecca. Below median (163k) but 16yr age justified. Conservative luxury pricing."
+  },
+  "mercedes-benz|c-class|2012|150k+|riyadh": {
+    "estimated_fair_price_sar": 65000,
+    "confidence": "medium",
+    "reasoning_ar": "2012 C-Class, 196k km, high mileage depreciates heavily; Riyadh +5%; well below median."
+  },
+  "mercedes-benz|c-class|2015|150k+|riyadh": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2015 C-Class, 199.5k km, high mileage reduces value. Mercedes luxury baseline ~165k SAR; age+mileage discount ~40%. Riyadh +5%."
+  },
+  "mercedes-benz|c-class|2015|100-150k|eastern-province": {
+    "estimated_fair_price_sar": 98000,
+    "confidence": "medium",
+    "reasoning_ar": "2015 C-Class, 128k km, Eastern Province. Market median 163.9k SAR across all years; 2015 trades 35-40% below newer models. Conservative mid-range estimate."
+  },
+  "mercedes-benz|c-class|2014|150k+|mecca": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2014 C-Class, 185k km, high mileage depreciates heavily. Market median 163k SAR for any-year C-Class suggests older models trade lower. Listed price 40k SAR is severely undervalued."
+  },
+  "mercedes-benz|c-class|2017|100-150k|riyadh": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 C-Class, 129k km, Riyadh. Market median 90k SAR (sample 5). Listed 42% above; conservative estimate 5% above median given age, mileage, luxury depreciation."
+  },
+  "mercedes-benz|c-class|2017|50-75k|riyadh": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 C-Class, 70k km, Riyadh premium +5%. Above median but within range."
+  },
+  "mercedes-benz|c-class|2017|100-150k|eastern-province": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "low",
+    "reasoning_ar": "2017 C-Class, 129k km, Eastern Province. Market median 90k SAR for 2018 comps suggests overpriced listing. Conservative European luxury valuation."
+  },
+  "mercedes-benz|c-class|2017|150k+|riyadh": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 C-Class, 176k km (high mileage), Riyadh +5%. Context median 90k; list 120k is 33% above."
+  },
+  "mercedes-benz|c-class|2020|25-50k|mecca": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 C-Class, 42k km, low mileage. Market median 165k SAR. Listed 140k is ~15% below—conservative but plausible for quick sale."
+  },
+  "mercedes-benz|c-class|2020|150k+|eastern-province": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 C-Class, 223k km (high mileage), Eastern Province. Below median due to mileage wear."
+  },
+  "mercedes-benz|c-class|2017|75-100k|mecca": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "low",
+    "reasoning_ar": "2017 C-Class, 90k km. Market median SAR 90k (n=5, 2018 data). Price SAR 170k is 89% above median—likely overpriced or different trim/condition not captured."
+  },
+  "mercedes-benz|c-class|2022|0-25k|riyadh": {
+    "estimated_fair_price_sar": 180000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 C-Class, low mileage, but asking 42% above median. Riyadh +5%, adjust down significantly."
+  },
+  "mercedes-benz|c-class|2020|100-150k|eastern-province": {
+    "estimated_fair_price_sar": 142000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 C-Class 138k km; listing 33% below median. Conservative adj for mileage/age; Eastern Province discount ~5%."
+  },
+  "mercedes-benz|c-class|2022|unknown|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 C-Class in Riyadh; listing 75% above median. Conservative luxury pricing, Riyadh premium +5-10%. Unknown mileage is risk."
+  },
+  "mercedes-benz|c-class|2020|75-100k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 C-Class, 90k km, Riyadh. Listed 27% below median. Conservative anchor to market context."
+  },
+  "mercedes-benz|c-class|2022|50-75k|riyadh": {
+    "estimated_fair_price_sar": 172000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 C-Class, 65k km, Riyadh premium +5%. Median 165k SAR; listing 175k slightly high."
+  },
+  "mercedes-benz|c-class|2022|0-25k|eastern-province": {
+    "estimated_fair_price_sar": 168000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 C-Class, low mileage (24k km), Eastern Province. Median SAR165k; listing SAR169k is within 2.4% of market. Conservative markup justified."
+  },
+  "mercedes-benz|c-class|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 C-Class, low mileage, Riyadh premium. Listed 49% above median; conservative upward adjust for year/condition."
+  },
+  "mercedes-benz|c-class|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 235000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 C-Class, Riyadh premium +5%, mileage unknown; listed 18% above median"
+  },
+  "mercedes-benz|c-class|2024|0-25k|mecca": {
+    "estimated_fair_price_sar": 219000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 C-Class, 22k km, Mecca. Median 215k SAR (n=7). Premium 5.6% justified by low mileage, offset by Mecca location (not Riyadh/Jeddah). Conservative estimate."
+  },
+  "mercedes-benz|c-class|2024|50-75k|mecca": {
+    "estimated_fair_price_sar": 198000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 C-Class, 63k km, Mecca (5% discount vs Riyadh). Below median; conservative upward adjustment."
+  },
+  "mercedes-benz|c-class|2024|25-50k|riyadh": {
+    "estimated_fair_price_sar": 210000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 C-Class, low mileage, Riyadh premium. Listing ~14% below median; conservative estimate near market."
+  },
+  "mercedes-benz|c-class|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 228000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 C-Class in Riyadh; median 215k SAR (2023 data). Newer model +Riyadh premium ~6%, unknown mileage adds caution. List price 23% above median—likely overpriced."
+  },
+  "mercedes-benz|c-class|2025|0-25k|eastern-province": {
+    "estimated_fair_price_sar": 205000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 C-Class, low mileage, Eastern Province. Slight discount vs median justified by regional factors."
+  },
+  "mercedes-benz|c-class|2025|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 205000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 C200L new, Riyadh premium, 195k below median 215k. Conservative markup for features and warranty."
+  },
+  "mercedes-benz|c-class|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 C-Class in Riyadh; listing 65% above median. New model yr justifies premium but 270k seems inflated for market."
+  },
+  "mercedes-benz|c-class|2026|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 C200 AMG Premium new/near-new in Riyadh; listed 59% above median. Market context suggests overpricing; conservative adjustment yields ~185k SAR."
+  },
+  "mercedes-benz|c-class|2026|unknown|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 C-Class new/near-new; Mecca +5% vs Riyadh baseline; listing 47% above median suggests overpricing for used market."
+  },
+  "mercedes-benz|cla|2021|50-75k|khobar": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 CLA, 66k km, Khobar. Below median by 19%; conservative upside justified."
+  },
+  "mercedes-benz|cla|2018|100-150k|riyadh": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 CLA, 127k km, Riyadh. Market median 160k SAR. Listed 50% below—unusual for Mercedes luxury segment unless hidden issues."
+  },
+  "mercedes-benz|cla|2023|100-150k|riyadh": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 CLA, 101k km, Riyadh. Sample median 160k SAR; listing 18% below. High mileage for model year suggests wear; conservative upward adjustment warranted."
+  },
+  "mercedes-benz|cls|2009|150k+|riyadh": {
+    "estimated_fair_price_sar": 55000,
+    "confidence": "medium",
+    "reasoning_ar": "2009 Mercedes CLS, 190k km, Riyadh. 15yr old luxury sedan at high mileage significantly underpriced vs market."
+  },
+  "mercedes-benz|cls|2016|150k+|dammam": {
+    "estimated_fair_price_sar": 65000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 CLS 258k km high mileage; luxury depreciation steep; SAR 75k above fair range"
+  },
+  "mercedes-benz|cls|2022|0-25k|riyadh": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 CLS, low mileage, Riyadh premium. Conservative luxury pricing."
+  },
+  "mercedes-benz|e-class|2011|150k+|riyadh": {
+    "estimated_fair_price_sar": 35000,
+    "confidence": "medium",
+    "reasoning_ar": "2011 E-Class, 249k km, Riyadh. High mileage depresses value ~75% from median. Conservative estimate."
+  },
+  "mercedes-benz|e-class|2014|25-50k|unknown": {
+    "estimated_fair_price_sar": 135000,
+    "confidence": "medium",
+    "reasoning_ar": "2014 E-Class, 37k km, low mileage premium offset by age; median 141k SAR anchor"
+  },
+  "mercedes-benz|e-class|2015|50-75k|riyadh": {
+    "estimated_fair_price_sar": 132000,
+    "confidence": "medium",
+    "reasoning_ar": "2015 E-Class, 70k km, Riyadh. Listed 45% below median. Conservative valuation accounts for age, luxury depreciation, and market positioning."
+  },
+  "mercedes-benz|e-class|2012|150k+|dammam": {
+    "estimated_fair_price_sar": 48000,
+    "confidence": "medium",
+    "reasoning_ar": "2012 E-Class, 183k km, high mileage discount. Market median 141k SAR for all years; 12yo with wear justifies significant reduction. Conservative estimate."
+  },
+  "mercedes-benz|e-class|2015|150k+|mecca": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2015 E-Class, 230k km (high mileage), Mecca. Below median due to age + wear."
+  },
+  "mercedes-benz|e-class|2017|150k+|mecca": {
+    "estimated_fair_price_sar": 115000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 E-Class, 194k km (high mileage), Mecca market. Median 141k SAR; age+km justify discount. Conservative estimate."
+  },
+  "mercedes-benz|e-class|2017|150k+|riyadh": {
+    "estimated_fair_price_sar": 135000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 E-Class, 156k km, Riyadh. Below median but mileage high. Conservative 4% discount."
+  },
+  "mercedes-benz|e-class|2017|100-150k|riyadh": {
+    "estimated_fair_price_sar": 138000,
+    "confidence": "high",
+    "reasoning_ar": "2017 E-Class, 100k km, Riyadh. Below median by ~8%. Conservative pricing."
+  },
+  "mercedes-benz|e-class|2019|75-100k|riyadh": {
+    "estimated_fair_price_sar": 135000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 E-Class, 90k km, Riyadh premium. Median 128.5k; listing 24% high."
+  },
+  "mercedes-benz|e-class|2019|100-150k|riyadh": {
+    "estimated_fair_price_sar": 132000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 E-Class, 110k km, Riyadh. Market median 128.5k SAR. Premium ~3% for location, offset by moderate mileage wear."
+  },
+  "mercedes-benz|e-class|2019|75-100k|mecca": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 E-Class, 78k km, Mecca. Market median 128.5k SAR, but sample small (n=6). Conservative premium for lower mileage and Mecca location (+13%)."
+  },
+  "mercedes-benz|e-class|2018|75-100k|riyadh": {
+    "estimated_fair_price_sar": 128500,
+    "confidence": "medium",
+    "reasoning_ar": "2018 E-Class, 75k km, Riyadh. Listed 14% below median; conservative luxury pricing warranted."
+  },
+  "mercedes-benz|e-class|2019|100-150k|mecca": {
+    "estimated_fair_price_sar": 142000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 E-Class, 105k km, above median. Conservative luxury depreciation applied."
+  },
+  "mercedes-benz|e-class|2022|25-50k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 E-Class, low mileage, Riyadh premium. Context median 156k; 9.6% markup justified."
+  },
+  "mercedes-benz|e-class|2019|25-50k|mecca": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 E-Class, low mileage (32k km), but Mecca listing. Market median 128.5k SAR from limited sample (n=6). Mercedes luxury trim variance high; conservative adjustment for mileage & condition upside yields ~145k SAR. Listing at 220k SAR appears overpriced by ~52%."
+  },
+  "mercedes-benz|e-class|2019|150k+|riyadh": {
+    "estimated_fair_price_sar": 122000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 E-Class, 212k km (high mileage), Riyadh +5%. Below median; conservative for luxury wear."
+  },
+  "mercedes-benz|e-class|2022|50-75k|mecca": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 E-Class, 66k km, Mecca. Market median 156k SAR; listing 25% high."
+  },
+  "mercedes-benz|e-class|2022|50-75k|eastern-province": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 E-Class, 60k km, Eastern Province. Listing 50% above median; luxury depreciation+mileage suggest 160–175k range fair."
+  },
+  "mercedes-benz|e-class|2022|unknown|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 E-Class in Riyadh; listing 70% above median. Conservative luxury pricing suggests 185k SAR fair value."
+  },
+  "mercedes-benz|e-class|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "low",
+    "reasoning_ar": "2023 E-Class, low mileage, Riyadh premium. Listed 73% above median; likely trim/spec variance. Conservative estimate."
+  },
+  "mercedes-benz|e-class|2022|25-50k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 E-Class, low mileage (29k km), Mecca premium +5%. Listing 40% above median; conservative estimate 18% above."
+  },
+  "mercedes-benz|e-class|2022|25-50k|unknown": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 E-Class, 40k km, low mileage premium. Median 156k SAR; listed 186k is ~19% above. Adjust down for market reality."
+  },
+  "mercedes-benz|e-class|2023|25-50k|medina": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 E-Class, 45k km, low mileage. Market median 156k SAR from 2021 data; 2023 model commands premium. Medina <5% coastal adjustment. Conservative estimate."
+  },
+  "mercedes-benz|e-class|2023|unknown|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "low",
+    "reasoning_ar": "2023 E-Class in Riyadh; listing 124% above low sample median. Conservative luxury estimate."
+  },
+  "mercedes-benz|e-class|2023|0-25k|unknown": {
+    "estimated_fair_price_sar": 180000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 E-Class, low mileage, but listed 60% above median. Conservative estimate accounts for luxury depreciation."
+  },
+  "mercedes-benz|e-class|2023|0-25k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 E-Class, low mileage, but listing 45% above median. Conservative adjustment applied."
+  },
+  "mercedes-benz|e-class|2023|25-50k|mecca": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "low",
+    "reasoning_ar": "2023 E-Class luxury sedan, low mileage. Listing price 2.1x median from 2021 data; conservative luxury markup applied."
+  },
+  "mercedes-benz|e-class|2023|100-150k|riyadh": {
+    "estimated_fair_price_sar": 158000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 E-Class, 110k km, Riyadh. Market median 156k SAR; listing 11% above. Conservative adjustment for mileage and luxury variance."
+  },
+  "mercedes-benz|e-class|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "low",
+    "reasoning_ar": "2024 E-Class ultra-low mileage in Riyadh. Market median (all years) 141k SAR. New E-Class list ~250–300k; heavy depreciation from new. 501 km suggests nearly new. Price plausible but luxury variance high."
+  },
+  "mercedes-benz|e-class|2024|0-25k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "low",
+    "reasoning_ar": "2024 E-Class 12k km should be 180–210k SAR. Listing 370k is 2× market median; likely older year or data error."
+  },
+  "mercedes-benz|e-class|2024|25-50k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 E-Class, low mileage, Riyadh premium. Listed 2.2x median; likely higher trim/spec or overpriced."
+  },
+  "mercedes-benz|e-class|2025|0-25k|mecca": {
+    "estimated_fair_price_sar": 178000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 E-Class, 2k km. Median 141k SAR across all years. New cars command 25-30% premium. Mecca location neutral. Conservative estimate."
+  },
+  "mercedes-benz|e-class|2024|unknown|mecca": {
+    "estimated_fair_price_sar": 280000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 E-Class in Mecca. Median 141k is likely older/lower trims. 2024 luxury sedan commands premium. Mecca upmarketed ~5%."
+  },
+  "mercedes-benz|e-class|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 E-Class in Riyadh; listing 2.2x median (all years). Likely trim variance."
+  },
+  "mercedes-benz|e-class|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "low",
+    "reasoning_ar": "2025 E-Class in Riyadh; market median 141k SAR across all years. New model commands premium; luxury variance high."
+  },
+  "mercedes-benz|e-class|2025|0-25k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 E-Class, low mileage, Riyadh premium. Market median 141k appears outdated/mixed-year. Conservative upward adjustment for new model year and condition."
+  },
+  "mercedes-benz|e-class|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 E-Class, 4k km, Riyadh premium. Context median 141k (mixed years). 2025 commands 30-40% premium over avg."
+  },
+  "mercedes-benz|e-class|2025|unknown|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 E-Class in Mecca; market median 141k SAR across all years. New model commands premium; Mecca +5% coastal adj. Conservative estimate."
+  },
+  "mercedes-benz|e-class|2025|25-50k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 E-Class, low mileage, Riyadh premium. Market median 141k spans all years; 2025 new model commands significant uplift."
+  },
+  "mercedes-benz|e-class|2026|0-25k|riyadh": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "low",
+    "reasoning_ar": "2026 E-Class extremely low mileage, Riyadh premium. Luxury variant unclear."
+  },
+  "mercedes-benz|e-class|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 280000,
+    "confidence": "low",
+    "reasoning_ar": "2026 E-Class in Riyadh; luxury EUR makes volatile. Context median likely older models. 379,999 SAR appears high."
+  },
+  "mercedes-benz|e-class|2026|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 289999,
+    "confidence": "low",
+    "reasoning_ar": "2026 E200 AMG new/near-new; market context median (141k) likely older model years. Conservative pricing justified."
+  },
+  "mercedes-benz|g-amg|2020|50-75k|riyadh": {
+    "estimated_fair_price_sar": 850000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 G-Class AMG in Riyadh, 70k km; conservative luxury pricing given model prestige"
+  },
+  "mercedes-benz|g-class|2011|150k+|riyadh": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2011 G-Class, 164k km, well below median. High mileage+age justify discount from ~545k median."
+  },
+  "mercedes-benz|g-class|1990|150k+|unknown": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "medium",
+    "reasoning_ar": "1990 G-Class, 180k km, classic/vintage status. Market median 545k but mostly newer models. Conservative vintage adjustment."
+  },
+  "mercedes-benz|g-class|2008|100-150k|riyadh": {
+    "estimated_fair_price_sar": 480000,
+    "confidence": "medium",
+    "reasoning_ar": "2008 G-Class, 110k km, Riyadh. Older model year discounts ~12%, mileage medium. Below median but reasonable."
+  },
+  "mercedes-benz|g-class|2013|150k+|riyadh": {
+    "estimated_fair_price_sar": 240000,
+    "confidence": "medium",
+    "reasoning_ar": "2013 G-Class, 270k km, high mileage discount applied. Riyadh +5%."
+  },
+  "mercedes-benz|g-class|2016|25-50k|mecca": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 G-Class, low mileage (34k km), priced well below market median. Conservative estimate accounts for age and model variance."
+  },
+  "mercedes-benz|g-class|2016|25-50k|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 G-Class, low mileage (39k km), Riyadh premium. Below median but conservative for age."
+  },
+  "mercedes-benz|g-class|2016|50-75k|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 G-Class, 62k km, Riyadh. Listed 23% below median. Conservative luxury pricing."
+  },
+  "mercedes-benz|g-class|2016|150k+|riyadh-riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 G-Class, 171k km, V8 twin-turbo AMG. Listed 65% below median; likely accident/mechanical damage history undisclosed."
+  },
+  "mercedes-benz|g-class|2016|100-150k|mecca": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 G-Class, 119k km, Mecca. Market median 546k; older year & higher mileage justify ~30% discount. Conservative estimate."
+  },
+  "mercedes-benz|g-class|2017|25-50k|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "high",
+    "reasoning_ar": "2017 G-Class, 37k km, low mileage premium; Riyadh +5%; below median suggests good value"
+  },
+  "mercedes-benz|g-class|2017|50-75k|mecca": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 G-Class, 64k km, well-maintained range. Mecca location slight discount vs Riyadh/Jeddah. Age & mileage vs median."
+  },
+  "mercedes-benz|g-class|2017|0-25k|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "high",
+    "reasoning_ar": "2017 G-Class, low mileage (21k km), Riyadh premium. Below median but reasonable."
+  },
+  "mercedes-benz|g-class|2019|100-150k|riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 G-Class, 117k km, Riyadh premium +5%. Market median 380k; high mileage lifts fair baseline to 420k SAR."
+  },
+  "mercedes-benz|g-class|2018|75-100k|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 G-Class, 91k km, Riyadh. Listed 235k SAR is 57% below market median 545.9k. Likely error or distressed sale."
+  },
+  "mercedes-benz|g-class|2017|25-50k|mecca": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 G-Class, low mileage (48k km), priced 21% below median. Conservative premium luxury valuation."
+  },
+  "mercedes-benz|g-class|2019|150k+|riyadh": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 G-Class, 243k km is high mileage. Median 380k reflects newer/lower km samples. Conservative deduction warranted."
+  },
+  "mercedes-benz|g-class|2019|50-75k|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 G-Class, 60k km, Riyadh. Listing 89% above median; G-Class premium SUV but 720k is high. Conservative estimate ~520k."
+  },
+  "mercedes-benz|g-class|2019|100-150k|unknown": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 G-Class, 128k km (medium mileage). Listing 10% above median; luxury SUV premium justified but mileage softens value. Conservative anchor near median."
+  },
+  "mercedes-benz|g-class|2019|50-75k|unknown": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 G-Class, 72k km, median 380k SAR. Slight premium justified; conservative estimate."
+  },
+  "mercedes-benz|g-class|2020|25-50k|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 G-Class, 43k km, Riyadh. Market median 380k but sample small (n=6). Conservative premium for low mileage, luxury trim variance."
+  },
+  "mercedes-benz|g-class|2020|100-150k|eastern-province": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 G-Class, 143k km, Eastern Province. Median 380k SAR from 6 samples. Price 14% above median—modest premium justified by G-Class prestige but mileage is medium-high. Conservative estimate near market median."
+  },
+  "mercedes-benz|g-class|2019|100-150k|mecca": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 G-Class, 130k km, Mecca. Market median 380k SAR (n=6). Slight premium for location justified but listing 15% high."
+  },
+  "mercedes-benz|g-class|2020|75-100k|riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 G-Class, 91k km, Riyadh. Median 380k SAR (6 samples). Premium for condition/location justified but 535k appears high."
+  },
+  "mercedes-benz|g-class|2020|50-75k|riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 G-Class, 51k km, Riyadh. Median 380k SAR from 6 samples. Premium for low mileage and location justified, but 530k listing is 26% above fair."
+  },
+  "mercedes-benz|g-class|2020|100-150k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 G63 in Riyadh, 130k km. Listed 468k vs median 380k. Conservative adj for Riyadh premium +5%, mileage medium, trim premium."
+  },
+  "mercedes-benz|g-class|2020|100-150k|riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 G-Class, 119k km, Riyadh. Median 380k SAR but high mileage and market variability warrant modest premium. Conservative estimate."
+  },
+  "mercedes-benz|g-class|2023|unknown|riyadh": {
+    "estimated_fair_price_sar": 820000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 G-Class in Riyadh; context median 745k SAR (2022 data). Premium SUV holds value; unknown mileage is risk. Riyadh +5-8% premium applied."
+  },
+  "mercedes-benz|g-class|2023|0-25k|mecca": {
+    "estimated_fair_price_sar": 820000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 G-Class, 21k km, low mileage. Market median 745k SAR; Mecca +5% premium. Conservative luxury variance applied."
+  },
+  "mercedes-benz|g-class|2023|25-50k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 720000,
+    "confidence": "high",
+    "reasoning_ar": "2023 G-Class 45k km, Riyadh location. Listed 700k vs median 745k. Conservative given low mileage, luxury segment variance."
+  },
+  "mercedes-benz|g-class|2020|50-75k|mecca": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 G-Class, 52k km, Mecca. Market median 380k SAR (n=6). G-Class commands premium over median; Mecca ~3% above interior baseline. Listing 570k is ~50% above median—overpriced."
+  },
+  "mercedes-benz|g-class|2023|50-75k|riyadh": {
+    "estimated_fair_price_sar": 745000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 G-Class, 61k km, Riyadh. Median 745k SAR from 5 samples. Price aligned."
+  },
+  "mercedes-benz|g-class|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 890000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 G-Class, low mileage, Riyadh premium. Listing 58% above median; conservative estimate 19% above."
+  },
+  "mercedes-benz|g-class|2023|100-150k|riyadh": {
+    "estimated_fair_price_sar": 745000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 G-Class, 123k km, Riyadh. Market median 745k SAR (n=5). Listed 15% below—conservative given mileage and luxury variance."
+  },
+  "mercedes-benz|g-class|2024|0-25k|mecca": {
+    "estimated_fair_price_sar": 820000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 G-Class, 9k km, Mecca. Market median 745k (2022 data, likely older vehicles). 2024 model + low mileage + luxury brand justifies premium, but 950k is ~29% above median. Conservative 10% uplift yields ~820k SAR."
+  },
+  "mercedes-benz|g-class|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 650000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 G-Class in Riyadh; listed 56% above median. New model commands premium but 849.8k is aggressive."
+  },
+  "mercedes-benz|g-class|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 1050000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 G-Class, low mileage, Riyadh premium. Median 545k is mixed-year; 2025 commands significant markup. Conservative estimate."
+  },
+  "mercedes-benz|g-class|2024|0-25k|unknown": {
+    "estimated_fair_price_sar": 745000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 G-Class, 900km is pristine. Market median 745k SAR from 5 samples. Listing at 580k is 22% below—suspicious for luxury. Conservative alignment to median."
+  },
+  "mercedes-benz|g-class|2025|0-25k|unknown": {
+    "estimated_fair_price_sar": 620000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 G-Class, ultra-low mileage. Median 545k for all years. New model cmd premium but 889k exceeds market by 44%."
+  },
+  "mercedes-benz|g-class|2025|0-25k|riyadh-riyadh": {
+    "estimated_fair_price_sar": 1050000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 G-Class V8 Turbo 4.0L, 11.8k km, Riyadh. Comps at 990k SAR. Premium luxury."
+  },
+  "mercedes-benz|g-class|2025|0-25k|mecca": {
+    "estimated_fair_price_sar": 680000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 G-Class, 4k km, Mecca. Market median 545k (all years). New model commands premium; 25% above median justified. Seller asks 870k—likely optimistic."
+  },
+  "mercedes-benz|g-class|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 620000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 G-Class in Riyadh; median 546k SAR across years. New model commands premium but 806k is 48% above median—likely overpriced."
+  },
+  "mercedes-benz|g-class|2026|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 1520000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Mercedes G63 AMG in Riyadh. New model, premium specs, but listing 143% above median. Conservative premium adjustment for 2026 + AMG V8 + Riyadh location yields ~1.52M SAR."
+  },
+  "mercedes-benz|g-class|2026|0-25k|riyadh": {
+    "estimated_fair_price_sar": 850000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 G-Class, 10k km, Riyadh. Market median 545k for all years; new 2026 commands premium. Conservative estimate 55% above median for newest model year."
+  },
+  "mercedes-benz|g-class|2026|unknown|unknown": {
+    "estimated_fair_price_sar": 850000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 G-Class is premium luxury SUV. Listed at 1.08M SAR vs median 546k SAR (all years). 2026 model commands 55-65% premium over older stock. Conservative estimate ~850k SAR."
+  },
+  "mercedes-benz|g-class|2026|0-25k|jeddah-makkah": {
+    "estimated_fair_price_sar": 545909,
+    "confidence": "medium",
+    "reasoning_ar": "2026 AMG GLE 63 S nearly new (408km). Listed price 79% below market median. High-end luxury; list price appears severely undervalued."
+  },
+  "mercedes-benz|gla|2016|150k+|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 GLA, 170k km, Riyadh. Mercedes luxury depreciation steep at age+mileage. Listed price 41% below market."
+  },
+  "mercedes-benz|gla|2017|0-25k|jeddah": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 GLA, 6.4k km, Jeddah. Low mileage premium justified but Mercedes luxury depreciation. SAR 80k appears underpriced by ~16%."
+  },
+  "mercedes-benz|gla|2022|75-100k|riyadh": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 GLA, 80k km, Riyadh. Mercedes entry luxury. List ~10% low."
+  },
+  "mercedes-benz|gla|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 GLA, 134k km, Riyadh. Listed ~7.4% below est. fair; med-high mileage limits value."
+  },
+  "mercedes-benz|gla|2023|50-75k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 GLA, 52k km, Riyadh. Mercedes luxury entry-SUV. Price reasonable."
+  },
+  "mercedes-benz|glb|2025|unknown|rumah-riyadh": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "low",
+    "reasoning_ar": "2025 Mercedes GLB220 new, Gulf spec, 2yr warranty. 195k SAR reasonable but unverified mileage, trim details unclear limit confidence."
+  },
+  "mercedes-benz|glb200|2024|0-25k|jeddah": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 GLB200 is entry luxury SUV; new condition; Jeddah +5-8% premium applies. Listing slightly high."
+  },
+  "mercedes-benz|glc|2018|100-150k|riyadh": {
+    "estimated_fair_price_sar": 215000,
+    "confidence": "high",
+    "reasoning_ar": "2018 GLC250 4MATIC, 135k km (medium), Riyadh +5%. Market median 232.5k; mileage justifies discount."
+  },
+  "mercedes-benz|glc|2019|100-150k|riyadh": {
+    "estimated_fair_price_sar": 168000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 GLC, 114k km, Riyadh. Below median by ~20%; mileage medium-high. Conservative adjustment upward."
+  },
+  "mercedes-benz|glc|2020|75-100k|khobar-eastern-region": {
+    "estimated_fair_price_sar": 175000,
+    "confidence": "low",
+    "reasoning_ar": "Market context median 175k SAR far above listing 38k SAR; likely data error or incomplete specs. Conservative anchor applied."
+  },
+  "mercedes-benz|glc|2020|50-75k|jeddah-makkah": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "high",
+    "reasoning_ar": "2020 GLC 55k km, Jeddah premium +5%, median 175k SAR; asking 145k is 17% below market—underpriced but plausible for quick sale."
+  },
+  "mercedes-benz|glc|2025|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 345000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Mercedes GLC, Riyadh. New/near-new, 2.0L turbo, AWD. Comps ~355k."
+  },
+  "mercedes-benz|glc|2026|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 GLC 200 Coupe, new condition, Riyadh premium +8%. Listed well above median; conservative adjustment applied."
+  },
+  "mercedes-benz|glc|2026|unknown|jeddah-makkah": {
+    "estimated_fair_price_sar": 220000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 GLC hybrid, Jeddah (+5%), low mileage; listing $55k below MSRP but SAR conversion suggests underpricing vs market median."
+  },
+  "mercedes-benz|gle|2017|75-100k|al-baha-al-baha": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "low",
+    "reasoning_ar": "2017 Mercedes GLE 75k km typically 80–95k SAR. Listed price 39390 SAR is severely underpriced; possible data error or major undisclosed damage."
+  },
+  "mercedes-benz|gle|2019|25-50k|riyadh": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "high",
+    "reasoning_ar": "2019 GLE, 46.9k km, low mileage premium. Riyadh +5%. Context median 244.5k SAR."
+  },
+  "mercedes-benz|gle|2021|0-25k|riyadh": {
+    "estimated_fair_price_sar": 380000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 Mercedes GLE, 23k km, Riyadh. Median matches listing. Low sample size limits confidence."
+  },
+  "mercedes-benz|gle|2026|150k+|dammam": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 GLE at 158.5k km well below median. Mileage high for new model year suggests discrepancy or fleet use. Conservative estimate 75% of median."
+  },
+  "mercedes-benz|gle400|2016|75-100k|jeddah": {
+    "estimated_fair_price_sar": 115000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 GLE400, 99k km, Jeddah. Conservative for luxury; mileage mid-range"
+  },
+  "mercedes-benz|gle400|2016|150k+|dammam": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 GLE400, 158.8k km, Dammam. Mercedes luxury SUV; mileage is medium-high. Conservative estimate."
+  },
+  "mercedes-benz|ml|2015|100-150k|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2015 ML-Class, 140k km, Riyadh. MB luxury SUV; 9yr old, medium mileage. Listed 62k is ~27% undermarket."
+  },
+  "mercedes-benz|s-class|1987|100-150k|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "1987 S-Class, 146k km, older luxury. Market median 321k SAR is modern models. Conservative 26% discount for age."
+  },
+  "mercedes-benz|s-class|1995|150k+|riyadh": {
+    "estimated_fair_price_sar": 48000,
+    "confidence": "medium",
+    "reasoning_ar": "1995 S-Class, 244k km, high mileage heavily discounts luxury sedan value"
+  },
+  "mercedes-benz|s-class|2006|150k+|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2006 S-Class, 155k km, Riyadh. Older luxury sedan; significant age depreciation from median. Conservative estimate."
+  },
+  "mercedes-benz|s-class|2009|100-150k|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2009 S-Class, 138k km, Riyadh. 15yr age + mileage depress value significantly vs median (2020+ mix). Conservative discount applied."
+  },
+  "mercedes-benz|s-class|2008|0-25k|riyadh": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2008 S-Class, ultra-low mileage (10k km) is unusual. Riyadh +5%. Conservative premium for condition vs median."
+  },
+  "mercedes-benz|s-class|2006|0-25k|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2006 S-Class, 17k km is exceptionally low mileage for age; however, 18-year-old luxury sedan. Median 321k SAR is for all years; older models trade significantly lower. Conservative adjustment for age."
+  },
+  "mercedes-benz|s-class|2012|25-50k|unknown": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2012 S-Class, low mileage (47k km), but 12+ years old. Market median 321k; age/year discount applied."
+  },
+  "mercedes-benz|s-class|2009|75-100k|jeddah": {
+    "estimated_fair_price_sar": 280000,
+    "confidence": "medium",
+    "reasoning_ar": "2009 S-Class, 90k km, Jeddah. Listed at 60k is severely underpriced vs market median 321k SAR. Conservative estimate accounting for age/mileage."
+  },
+  "mercedes-benz|s-class|2012|100-150k|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2012 S-Class, 134k km, Riyadh. Median 321k SAR is newer/lower-mileage mix. 12yr age + 134k km justify significant discount from median. Listed at 60k appears underpriced; fair value ~85k."
+  },
+  "mercedes-benz|s-class|2014|150k+|riyadh": {
+    "estimated_fair_price_sar": 135000,
+    "confidence": "medium",
+    "reasoning_ar": "2014 S-Class, 198k km, high mileage reduces value significantly from median"
+  },
+  "mercedes-benz|s-class|2014|100-150k|riyadh": {
+    "estimated_fair_price_sar": 157500,
+    "confidence": "high",
+    "reasoning_ar": "2014 S-Class, 111k km, Riyadh. Median 157.5k SAR (n=9). Listed at 160k—within ±2%. Solid match."
+  },
+  "mercedes-benz|s-class|2014|100-150k|mecca": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "medium",
+    "reasoning_ar": "2014 S-Class, 136.5k km, mid-range mileage. Market median 157.5k SAR (n=9). Mecca +2-3% vs national. Conservative discount for age/km."
+  },
+  "mercedes-benz|s-class|2016|25-50k|mecca": {
+    "estimated_fair_price_sar": 162000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 S-Class, low mileage (40k km), Mecca premium ~3%. Above median but within range."
+  },
+  "mercedes-benz|s-class|2016|150k+|eastern-province": {
+    "estimated_fair_price_sar": 135000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 S-Class, 185k km, high mileage discount. Context median 157.5k SAR; conservative 14% reduction justified."
+  },
+  "mercedes-benz|s-class|2016|50-75k|riyadh": {
+    "estimated_fair_price_sar": 175000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 S-Class, 62k km, Riyadh premium +5%. Listed 37% above median; conservative adjustment to +11% justified by low mileage and location."
+  },
+  "mercedes-benz|s-class|2016|75-100k|mecca": {
+    "estimated_fair_price_sar": 175000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 S-Class, 79k km, Mecca. Market median 157.5k SAR for 2015 scope. Conservative adjustment +10% for younger model year, low mileage. Listing 220k SAR appears overpriced."
+  },
+  "mercedes-benz|s-class|2016|100-150k|riyadh": {
+    "estimated_fair_price_sar": 157500,
+    "confidence": "high",
+    "reasoning_ar": "2016 Mercedes S-Class, 114k km, Riyadh. Market median 157.5k SAR (n=9). Listed at 158k SAR—essentially fair."
+  },
+  "mercedes-benz|s-class|2016|150k+|mecca": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 S-Class, 156k km, Mecca. Median 157.5k SAR from 9 samples. Slight discount for mileage (156k=high), offset by location premium. Conservative estimate."
+  },
+  "mercedes-benz|s-class|2016|25-50k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 S-Class, low mileage (28k km), Riyadh premium +5%. Above median but overpriced for age/mkt."
+  },
+  "mercedes-benz|s-class|2016|50-75k|mecca": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2016 S-Class, 59k km, Mecca. Market median 157.5k for 2015 scope; S-Class commands significant premium. Conservative adjustment upward."
+  },
+  "mercedes-benz|s-class|2018|100-150k|riyadh": {
+    "estimated_fair_price_sar": 210000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, 105k km, Riyadh premium +5%. Context median 197.5k; mileage medium-high. Conservative adjust."
+  },
+  "mercedes-benz|s-class|2018|0-25k|riyadh": {
+    "estimated_fair_price_sar": 215000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, low mileage, Riyadh premium +5%. Above median but within range."
+  },
+  "mercedes-benz|s-class|2018|75-100k|riyadh": {
+    "estimated_fair_price_sar": 205000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, 79.8k km, Riyadh premium +5%. Market median 197.5k; conservative upside justified."
+  },
+  "mercedes-benz|s-class|2018|75-100k|mecca": {
+    "estimated_fair_price_sar": 205000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, 86k km, Mecca. Median 197.5k; listing 5% high. Conservative adj."
+  },
+  "mercedes-benz|s-class|2018|50-75k|riyadh": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, 73k km, Riyadh. Market median 197.5k for 2017 sample; 2018 model premium ~15-20%. Luxury pricing volatile; conservative upward adj."
+  },
+  "mercedes-benz|s-class|2018|25-50k|riyadh": {
+    "estimated_fair_price_sar": 215000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, low mileage (43k km), Riyadh premium +5%. Sample small (n=6)."
+  },
+  "mercedes-benz|s-class|2018|100-150k|mecca": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, 109k km, Mecca. Market median 197.5k SAR. Price 3% below median is reasonable for mileage in medium range."
+  },
+  "mercedes-benz|s-class|2018|50-75k|mecca": {
+    "estimated_fair_price_sar": 205000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, 64k km, Mecca. Median 197.5k SAR from 6 units. Slight premium justified by low mileage, conservative adjustment."
+  },
+  "mercedes-benz|s-class|2018|25-50k|mecca": {
+    "estimated_fair_price_sar": 280000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, low mileage, Mecca premium +5-8%. Market median 197.5k is outlier-skewed; luxury depreciation & trim variance typical."
+  },
+  "mercedes-benz|s-class|2018|50-75k|eastern-province": {
+    "estimated_fair_price_sar": 193000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, 66k km, Eastern Province. Median 197.5k SAR from 6 comps."
+  },
+  "mercedes-benz|s-class|2018|150k+|riyadh": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, 151k km, Riyadh. Median 197.5k SAR from 6 samples. Slight discount for mileage in medium-high range."
+  },
+  "mercedes-benz|s-class|2018|150k+|eastern-province": {
+    "estimated_fair_price_sar": 168000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 S-Class, 202k km, Eastern Province. High mileage reduces value. Market median 197.5k SAR; conservative adjustment downward justified."
+  },
+  "mercedes-benz|s-class|2019|50-75k|unknown": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 S-Class, 60k km, below median. Conservative luxury valuation."
+  },
+  "mercedes-benz|s-class|2019|100-150k|riyadh": {
+    "estimated_fair_price_sar": 220000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 S-Class, 109k km, Riyadh premium. Market median low; luxury variance high."
+  },
+  "mercedes-benz|s-class|2019|75-100k|riyadh": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 S-Class, 78k km, Riyadh. Median 197.5k SAR from 6 samples. Slightly under but reasonable for condition."
+  },
+  "mercedes-benz|s-class|2019|25-50k|riyadh": {
+    "estimated_fair_price_sar": 245000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 S-Class, low mileage, Riyadh premium. Market median 197.5k from 2017 scope; adjust for model year, condition, location uplift."
+  },
+  "mercedes-benz|s-class|2019|100-150k|mecca": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 S-Class, 108k km, Mecca. Median 197.5k SAR (n=6). Price slightly low but within range."
+  },
+  "mercedes-benz|s-class|2019|25-50k|mecca": {
+    "estimated_fair_price_sar": 197500,
+    "confidence": "medium",
+    "reasoning_ar": "2019 S-Class, 40k km. Median 197.5k SAR from 6 samples. Listing 250k is ~27% above median—overpriced for age/mileage despite Mecca location premium."
+  },
+  "mercedes-benz|s-class|2019|150k+|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 S-Class, 171k km, Riyadh. High mileage pulls down; median 197.5k slightly above. Conservative adj."
+  },
+  "mercedes-benz|s-class|2019|0-25k|riyadh": {
+    "estimated_fair_price_sar": 215000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 S-Class, 22k km, low mileage premium. Riyadh +5%. Context median 197.5k for mixed years; 2019 commands ~8-10% premium. Conservative estimate."
+  },
+  "mercedes-benz|s-class|2020|100-150k|riyadh": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 S-Class, 100k km, Riyadh. Market median 372k but older/higher mileage. Conservative discount applied."
+  },
+  "mercedes-benz|s-class|2020|25-50k|riyadh": {
+    "estimated_fair_price_sar": 365000,
+    "confidence": "high",
+    "reasoning_ar": "2020 S-Class, low mileage, Riyadh premium. Market median 372k SAR; listing 37% below."
+  },
+  "mercedes-benz|s-class|2020|75-100k|mecca": {
+    "estimated_fair_price_sar": 365000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 S-Class, 77k km, medium mileage. Listing 22% below market median; conservative luxury depreciation suggests ~365k SAR fair value."
+  },
+  "mercedes-benz|s-class|2020|50-75k|mecca": {
+    "estimated_fair_price_sar": 365000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 S-Class, 53k km, well below median. Listing price 50% undervalued; luxury sedan depreciation, regional premium. Conservative estimate."
+  },
+  "mercedes-benz|s-class|2020|75-100k|riyadh": {
+    "estimated_fair_price_sar": 365000,
+    "confidence": "high",
+    "reasoning_ar": "2020 S-Class, 92k km, Riyadh. Market median 372k SAR. Price listed 255k is ~31% below market—likely reflects negotiation room or listing error."
+  },
+  "mercedes-benz|s-class|2020|0-25k|riyadh": {
+    "estimated_fair_price_sar": 365000,
+    "confidence": "high",
+    "reasoning_ar": "2020 S-Class, low mileage (19.5k km), Riyadh premium +8%. Market median 372k SAR; conservative adjustment for age."
+  },
+  "mercedes-benz|s-class|2020|100-150k|mecca": {
+    "estimated_fair_price_sar": 365000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 S-Class, 102k km, Mecca. Market median 372k SAR. Price 200k seems significantly low—likely needs verification or has undisclosed issues."
+  },
+  "mercedes-benz|s-class|2020|0-25k|mecca": {
+    "estimated_fair_price_sar": 368000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 S-Class, 11k km, low mileage. Listed 23% below median. Conservative estimate near market median."
+  },
+  "mercedes-benz|s-class|2024|25-50k|mecca": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 S-Class, low mileage, Mecca location. Listed 22% above median; conservative estimate within +7% of context."
+  },
+  "mercedes-benz|s-class|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 355000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 S-Class, 11k km, Riyadh. Listed 65k SAR is clearly error/typo."
+  },
+  "mercedes-benz|s-class|2024|0-25k|mecca": {
+    "estimated_fair_price_sar": 380000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 S-Class, low mileage, but Mecca (non-metro) & source_tier=3. Context median 360k suggests overpriced listing."
+  },
+  "mercedes-benz|s-class|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 1150000,
+    "confidence": "low",
+    "reasoning_ar": "2025 S-Class w/ 6k km in Riyadh. Market context from 2023 (older data, low N=8) not reliable for luxury segment pricing variance."
+  },
+  "mercedes-benz|s-class|2025|unknown|mecca": {
+    "estimated_fair_price_sar": 380000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 S-Class in Mecca; median 360k SAR from 2023 sample. Price 41% above median suggests overvaluation. Conservative 2025 markup +5–10% justified; estimated 380k SAR fair."
+  },
+  "mercedes-benz|s-class|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 520000,
+    "confidence": "low",
+    "reasoning_ar": "2025 S-Class in Riyadh; luxury sedan. Market context (2023, n=8) median 360k likely includes older/lower trims. New S-Class commands premium; listing 1.55M is 4.3x median—extremely high. Conservative estimate for 2025 base S-Class ~520k SAR."
+  },
+  "mercedes-benz|s-class|2025|0-25k|jeddah": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 S-Class, 40km, Jeddah premium (+5%), slightly above median but within range"
+  },
+  "mercedes-benz|s-class|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 485000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 S-Class in Riyadh commands premium; context median lower due to older years."
+  },
+  "mercedes-benz|s-class|2025|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 720000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 S-Class V6 Twin-Turbo in Riyadh; luxury sedan premium justified; new model year commands higher valuation"
+  },
+  "mercedes-benz|s-class|2026|0-25k|mecca": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 S-Class, low mileage. Market median 321k SAR across all years. New model commands premium. Mecca inland location neutral."
+  },
+  "mercedes-benz|s-class|2026|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 850000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 S-Class 442hp turbo+hybrid, Riyadh premium, but listing price 116% above median; luxury new model justifies premium but 695k seems underpriced for specs."
+  },
+  "mercedes-benz|s-class|2026|0-25k|riyadh": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 S-Class, 5k km, Riyadh. New luxury car; market median 321k but sample mixed years. Riyadh +5-10% premium. Conservative estimate."
+  },
+  "mercedes-benz|sl|2022|25-50k|riyadh": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 MB SL low-mileage Riyadh. Listed price 12121 SAR is clearly erroneous"
+  },
+  "mercedes-benz|v-class|2015|150k+|mecca": {
+    "estimated_fair_price_sar": 78000,
+    "confidence": "medium",
+    "reasoning_ar": "2015 Mercedes V-Class, 176k km, Mecca. Used MPVs depreciate; luxury segment variance high."
+  },
+  "mercedes-benz|v-class|2018|100-150k|riyadh": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 V-Class, 138k km, Riyadh premium. Mid-range luxury van, moderate mileage."
+  },
+  "mercedes-benz|v-class|2018|25-50k|mecca": {
+    "estimated_fair_price_sar": 195000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 V-Class, low mileage (43k km), Mecca location. Mercedes van market limited."
+  },
+  "mercedes-benz|v-class|2019|75-100k|unknown": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 Mercedes V-Class, 94k km, medium mileage. Listing price 32% below fair market."
+  },
+  "mercedes-benz|v-class|2019|150k+|mecca": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "2019 V-Class, 162k km, Mecca. Luxury van segment; listing 13% below fair range."
+  },
+  "mercedes-benz|v-class|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 185000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Mercedes V-Class, 103k km, Riyadh. Mid-range MPV, modest mileage."
+  },
+  "mercedes-benz|v-class|2022|0-25k|mecca": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Mercedes V-Class (premium MPV) with ultra-low mileage. Listed at 250k SAR is ~40% below market. Fair estimate ~420k SAR."
+  },
+  "mercedes-benz|v-class|2023|50-75k|mecca": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 V-Class 59k km; premium van segment. Listed price ~19% below fair market; likely underpriced."
+  },
+  "mercedes-benz|v-class|2021|25-50k|unknown": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 Mercedes V-Class, low mileage (45k km). Luxury MPV; listing price is 12% below estimate."
+  },
+  "mercedes-benz|v-class|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 V-Class, low mileage, Riyadh premium. Listed 22% below fair."
+  },
+  "mercedes-benz|v-class|2024|0-25k|mecca": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 V-Class, low mileage, Mecca location. Mercedes MPV premium positioning."
+  },
+  "mercedes-benz|v-class|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 320000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Mercedes V-Class, 15k km, Riyadh. Listed low vs typical market."
+  },
+  "mercedes-benz|v-class|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 420000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 V-Class, 8k km, Riyadh. Luxury MPV; listing ~11% below fair."
+  },
+  "mercedes-benz|v-class|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 385000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Mercedes V-Class luxury MPV; Riyadh premium +5-8%; limited mileage data inflates uncertainty."
+  },
+  "mercedes-benz|v-class|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 480000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 V-Class in Riyadh; luxury van segment. Listed below market; conservative estimate ~10% above list."
+  },
+  "mercury|unknown|2010|150k+|dammam": {
+    "estimated_fair_price_sar": 18000,
+    "confidence": "low",
+    "reasoning_ar": "Mercury Grand Marquis 2010, 200k km, Dammam. Rare US full-size sedan in Saudi market; high mileage limits demand. Conservative 18k SAR estimate."
+  },
+  "mg|5|2002|100-150k|tabuk-city-tabuk": {
+    "estimated_fair_price_sar": 38000,
+    "confidence": "medium",
+    "reasoning_ar": "MG 5 2022, 103k km, auto, standard trim. Below median; Tabuk discount ~5%. Conservative estimate."
+  },
+  "mg|5|2026|unknown|riyadh-riyadh": {
+    "estimated_fair_price_sar": 49500,
+    "confidence": "high",
+    "reasoning_ar": "2026 MG 5 in Riyadh; new model commands ~4% premium over 2025 median (47,725 SAR). Listed price 52,000 SAR is ~9% above fair value."
+  },
+  "mg|5|2021|25-50k|riyadh": {
+    "estimated_fair_price_sar": 33500,
+    "confidence": "medium",
+    "reasoning_ar": "2021 MG 5, 48k km, Riyadh. Slightly below median (34k SAR). Chinese make, low mileage supports value."
+  },
+  "mg|6|2020|100-150k|riyadh": {
+    "estimated_fair_price_sar": 42000,
+    "confidence": "medium",
+    "reasoning_ar": "MG 6 2020, 104k km, Riyadh. Chinese sedan; fair ~42k SAR. Listed price reasonable."
+  },
+  "mg|6|2023|0-25k|riyadh": {
+    "estimated_fair_price_sar": 55000,
+    "confidence": "medium",
+    "reasoning_ar": "MG 6 2023, low mileage, Riyadh premium. Chinese make priced competitively."
+  },
+  "mg|5|2026|unknown|eastern-province": {
+    "estimated_fair_price_sar": 48500,
+    "confidence": "medium",
+    "reasoning_ar": "2026 MG5, Eastern Province. Listing 9% above median (47.7k). MG5 is budget sedan; new year supports slight premium. Conservative anchor."
+  },
+  "mg|7|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "MG 7 2025 is new sedan, Riyadh premium applies. Price slightly below fair."
+  },
+  "mg|hs|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 MG HS new, automatic, grey. Riyadh +5%. Chinese brand pricing lower than Japanese equivalent but new condition supports mid-range estimate."
+  },
+  "mg|one|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 68000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 MG One, ultra-low mileage, Riyadh premium. MG priced 35-40% below Japanese equivalents."
+  },
+  "mg|rx5|2021|25-50k|riyadh": {
+    "estimated_fair_price_sar": 48500,
+    "confidence": "medium",
+    "reasoning_ar": "2021 MG RX5, low mileage (25k km), Riyadh premium +5%. Market median 45k SAR; listed 58k is ~29% high."
+  },
+  "mg|rx5|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 48500,
+    "confidence": "medium",
+    "reasoning_ar": "2024 MG RX5, low mileage, Riyadh +5%. Market median 45k; listing 45% above."
+  },
+  "mg|rx5|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 45000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 MG RX5 new; Riyadh +5%. Market median 45k SAR. Listed 78.2k is outlier high."
+  },
+  "mg|rx8|2023|25-50k|riyadh": {
+    "estimated_fair_price_sar": 68000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 MG RX8, low mileage (37k km), Riyadh premium applied. Chinese SUV priced competitively."
+  },
+  "mg|rx8|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 72000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 MG RX8, very low mileage, Riyadh premium. Chinese brand ~10-15% below Japanese equivalents."
+  },
+  "mg|t60|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 62000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 MG T60 Riyadh, new/low mileage. Chinese SUV priced 9% below fair value"
+  },
+  "mg|std|2025|0-25k|unknown": {
+    "estimated_fair_price_sar": 45000,
+    "confidence": "low",
+    "reasoning_ar": "2025 MG STD ultra-low mileage, new. Chinese brand pricing uncertain, minimal market data."
+  },
+  "mg|zs|2021|50-75k|jeddah-makkah": {
+    "estimated_fair_price_sar": 37500,
+    "confidence": "high",
+    "reasoning_ar": "MG ZS 2021, 63.5k km, Jeddah. Market median 37.5k SAR (n=20). Price matches."
+  },
+  "mg|zs|2022|25-50k|riyadh": {
+    "estimated_fair_price_sar": 37500,
+    "confidence": "high",
+    "reasoning_ar": "2022 MG ZS, low mileage (48k km), Riyadh premium. Aligns with median."
+  },
+  "mini|clubman|2021|100-150k|riyadh": {
+    "estimated_fair_price_sar": 72000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 MINI Clubman, Riyadh, 125k km. Premium compact, moderate mileage. Listed 6.5% below est."
+  },
+  "mini|cooper|2021|100-150k|jeddah": {
+    "estimated_fair_price_sar": 95000,
+    "confidence": "medium",
+    "reasoning_ar": "MINI Cooper 2021, 140k km, Jeddah. Market median 105k SAR; modest discount justified by mileage and European luxury depreciation."
+  },
+  "mini|countryman|2020|50-75k|riyadh": {
+    "estimated_fair_price_sar": 145000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 MINI Countryman, 51k km, Riyadh. Market median 152.5k SAR; listed 88k is ~42% below. Low mileage supports premium but significant underpricing likely reflects source_tier=3 reliability or undisclosed issues."
+  },
+  "mini|countryman|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 MINI Countryman, low mileage, Riyadh premium. Context median 152.5k; new model commands +8-10% markup."
+  },
+  "mini|countryman|2026|0-25k|riyadh": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 MINI Countryman, ultra-low mileage, Riyadh. Context median 152.5k SAR; new model commands premium. Listing +11% vs median is reasonable for near-new condition."
+  },
+  "mini|countryman|2025|25-50k|riyadh": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 MINI Countryman, low mileage, Riyadh premium. Market median 152.5k SAR; listing 4.3% above. Fair adjustment for low km."
+  },
+  "nissan|unknown|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 94000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Nissan X-Trail, low mileage, Riyadh premium, white auto. Price matches market expectation"
+  },
+  "nissan|armada|2010|150k+|unknown": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2010 Armada, 200k km (high mileage), Al-Hufuf inland location. Listed price 20% above fair value."
+  },
+  "nissan|x-trail|2019|150k+|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "high",
+    "reasoning_ar": "2019 X-Trail, 155k km, medium mileage. Market median 89k SAR across all years. Riyadh +5%. Conservative discount for age/km."
+  },
+  "nissan|x-trail|2021|150k+|riyadh": {
+    "estimated_fair_price_sar": 89500,
+    "confidence": "medium",
+    "reasoning_ar": "2021 X-Trail, 159k km (medium-high). Listed 36% below median. Mileage wear typical; no red flags. Fair price ~89-91k SAR."
+  },
+  "nissan|x-trail|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 87500,
+    "confidence": "medium",
+    "reasoning_ar": "2022 X-Trail, 131k km, Riyadh. Listed 38% below median. Mid-mileage suggests fair wear; Nissan X-Trail holds value. Estimate anchors near median with modest discount for mileage."
+  },
+  "nissan|x-trail|2022|150k+|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 X-Trail, 163k km (medium-high), Riyadh +5%. Context median 92.3k SAR; mileage discount ~8-10% applied."
+  },
+  "nissan|x-trail|2022|75-100k|riyadh": {
+    "estimated_fair_price_sar": 89500,
+    "confidence": "medium",
+    "reasoning_ar": "2022 X-Trail, 75k km, Riyadh. Market median 92k SAR but sample small (n=5). Conservative adjustment down ~3% for mileage within typical range."
+  },
+  "nissan|x-trail|2026|0-25k|riyadh": {
+    "estimated_fair_price_sar": 98500,
+    "confidence": "high",
+    "reasoning_ar": "2026 Nissan X-Trail, 363km, Riyadh. Near-new condition, minimal mileage. Market median 96k SAR (n=11). Riyadh +5-10% premium applies. Fair range 96-102k SAR."
+  },
+  "omoda|c5|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 81000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Omoda C5, low mileage, Riyadh premium applied. Below median suggests negotiation room or market variance."
+  },
+  "peugeot|3008|2020|100-150k|riyadh": {
+    "estimated_fair_price_sar": 68000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 Peugeot 3008, 120k km, Riyadh. Listed 49900 SAR vs median 70000 SAR suggests underpricing or dealer clearance. Conservative estimate near market median."
+  },
+  "peugeot|expert|2022|150k+|riyadh": {
+    "estimated_fair_price_sar": 22000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Expert van, extreme mileage (345k km) severely depresses value despite Riyadh location"
+  },
+  "peugeot|partner|2021|150k+|riyadh": {
+    "estimated_fair_price_sar": 28500,
+    "confidence": "medium",
+    "reasoning_ar": "2021 Peugeot Partner, 169k km, Riyadh. Market median 28k SAR. Mileage slightly high but typical. Minor discount applied."
+  },
+  "peugeot|partner|2024|150k+|riyadh": {
+    "estimated_fair_price_sar": 32500,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Peugeot Partner, 160k km, Riyadh. Mileage high for year; median 30.9k SAR. +32% ask vs median unjustified."
+  },
+  "peugeot|partner|2025|0-25k|riyadh": {
+    "estimated_fair_price_sar": 32000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Partner, low mileage, Riyadh markup. Context median 30.9k SAR; new model commands ~3-5% premium over 2023 baseline."
+  },
+  "peugeot|partner|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 32450,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Peugeot Partner van; listing 105% above median. Partner is commercial/utility vehicle, typically 25-35k SAR. New 2025 model justifies modest premium over 2023 median, but 63.5k SAR appears significantly overpriced."
+  },
+  "renault|arkana|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 92000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Renault Arkana, Riyadh. New/low-mileage compact SUV. Renault prices slightly below Toyota; Riyadh adds 5-10% premium. Listing appears slightly underpriced."
+  },
+  "renault|docker|2020|150k+|riyadh": {
+    "estimated_fair_price_sar": 32000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 Renault Dacia (Docker), 155k km, Riyadh. Market median 33k SAR. Mileage medium-high; modest discount justified."
+  },
+  "renault|docker|2020|100-150k|riyadh": {
+    "estimated_fair_price_sar": 32000,
+    "confidence": "medium",
+    "reasoning_ar": "2020 Renault Dacia Duster; 113k km mid-range; below median but reasonable for mileage"
+  },
+  "renault|docker|2022|75-100k|riyadh": {
+    "estimated_fair_price_sar": 35000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Renault Dacia Duster; 77.5k km medium-low; Riyadh +5% premium; sample small but consistent."
+  },
+  "renault|docker|2022|100-150k|riyadh": {
+    "estimated_fair_price_sar": 34000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 Renault Dacia (Docker) mid-mileage; market median 33k SAR; Riyadh +5%"
+  },
+  "renault|express|2023|50-75k|riyadh": {
+    "estimated_fair_price_sar": 42000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Renault Express, 69k km, Riyadh. Below median (43k SAR) by ~13%. Conservative adjustment upward for location premium & mainstream model."
+  },
+  "renault|koleos|2021|100-150k|riyadh": {
+    "estimated_fair_price_sar": 52000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 Koleos, 139.5k km (medium), Riyadh premium +7%. Renault mid-range SUV."
+  },
+  "renault|koleos|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 118000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Renault Koleos, Riyadh. Renault mid-range SUV; less preferred than Toyota/Hyundai in Saudi market. Listing slightly high."
+  },
+  "renault|megane|2021|50-75k|riyadh": {
+    "estimated_fair_price_sar": 55000,
+    "confidence": "medium",
+    "reasoning_ar": "2021 Megane, 73.5k km, Riyadh. Market median 57.2k SAR (n=31). Listed 18% below median—underpriced but reasonable given mileage and Renault resale softness."
+  },
+  "rox|unknown|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "low",
+    "reasoning_ar": "ROX 01 is niche Chinese EV; 2026 model year unusual; limited market data; conservative discount applied"
+  },
+  "skoda|unknown|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 175000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Skoda Kodiaq new, auto, grey. Riyadh +5%. Czech brand less popular than Japanese but solid value. Conservative estimate."
+  },
+  "suzuki|baleno|2023|50-75k|riyadh": {
+    "estimated_fair_price_sar": 41500,
+    "confidence": "high",
+    "reasoning_ar": "2023 Baleno, 54.8k km, Riyadh. Market median 41.7k SAR (n=32). Listed 37k is ~11% below; conservative upward adj."
+  },
+  "suzuki|dzire|2022|150k+|riyadh": {
+    "estimated_fair_price_sar": 33500,
+    "confidence": "high",
+    "reasoning_ar": "2022 Suzuki Dzire, 182k km (high mileage), Riyadh. Median 33.8k SAR aligns."
+  },
+  "suzuki|dzire|2020|unknown|riyadh": {
+    "estimated_fair_price_sar": 32500,
+    "confidence": "medium",
+    "reasoning_ar": "2020 Dzire auto in Riyadh; unknown mileage is concern. Listed 21% below median (36,285 SAR). Conservative estimate accounting for mileage uncertainty."
+  },
+  "suzuki|dzire|2025|unknown|jeddah": {
+    "estimated_fair_price_sar": 38500,
+    "confidence": "medium",
+    "reasoning_ar": "2025 Suzuki Dzire automatic; new stock; Jeddah +5% premium; listing 34% above median—overpriced"
+  },
+  "suzuki|jimny|2024|25-50k|riyadh": {
+    "estimated_fair_price_sar": 91000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Suzuki Jimny, 28k km, Riyadh. Listed 12% below median. Conservative upward adjustment justified by low mileage and location premium."
+  },
+  "tank|300c|2026|unknown|jeddah": {
+    "estimated_fair_price_sar": 139850,
+    "confidence": "medium",
+    "reasoning_ar": "Tank 300 2026 new, automatic, black. Chinese SUV positioned competitively in Saudi market. Price aligns with typical new Tank 300 retail pricing in Jeddah."
+  },
+  "toyota|hiace|2022|150k+|riyadh": {
+    "estimated_fair_price_sar": 115000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 HiAce, 162k km (high), Riyadh +5%. Median 110k; high mileage and condition justify modest premium only."
+  },
+  "toyota|hiace|2025|unknown|riyadh": {
+    "estimated_fair_price_sar": 189000,
+    "confidence": "medium",
+    "reasoning_ar": "2025 HiAce in Riyadh. Listed 32% below median; unknown mileage raises concern. Toyota brand strong. Market context suggests fair ~189k SAR."
+  },
+  "toyota|land-cruiser-70|2023|0-25k|jizan": {
+    "estimated_fair_price_sar": 285000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 LC70 auto, 20k km, Jizan. Market baseline ~320k; list price 196k is ~39% below fair value."
+  },
+  "toyota|land-cruiser-prado|2010|150k+|unknown": {
+    "estimated_fair_price_sar": 38000,
+    "confidence": "medium",
+    "reasoning_ar": "2010 Prado, 357k km (very high). Market median 43k SAR for 2009 cohort. Excessive mileage warrants 10-15% discount. Price 65k is 51% above market."
+  },
+  "toyota|land-cruiser-prado|2015|150k+|jeddah": {
+    "estimated_fair_price_sar": 62000,
+    "confidence": "medium",
+    "reasoning_ar": "2015 Prado, 400k km (very high); median 85.5k for all years. Age + mileage justify 25–30% discount."
+  },
+  "toyota|land-cruiser-prado|2019|150k+|eastern-province": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "high",
+    "reasoning_ar": "2019 Prado, 157k km (medium mileage), Eastern Province. Median 164k SAR; listing 8% below. Conservative fair estimate ~155k SAR."
+  },
+  "toyota|land-cruiser-prado|2020|75-100k|mecca": {
+    "estimated_fair_price_sar": 165000,
+    "confidence": "high",
+    "reasoning_ar": "2020 Prado, 92k km, medium mileage. Market median 164k SAR (n=6). Price 168k slightly above but within normal range."
+  },
+  "toyota|land-cruiser-prado|2020|100-150k|eastern-province": {
+    "estimated_fair_price_sar": 155000,
+    "confidence": "high",
+    "reasoning_ar": "2020 Prado, 125k km, Eastern Province. Market median 164k SAR (n=6). Below median but reasonable for mileage and region."
+  },
+  "toyota|land-cruiser-prado|2026|unknown|riyadh": {
+    "estimated_fair_price_sar": 213000,
+    "confidence": "high",
+    "reasoning_ar": "2026 Prado in Riyadh, near median. Toyota retains value well. Low mileage expected."
+  },
+  "toyota|land-cruiser-prado|2024|unknown|riyadh": {
+    "estimated_fair_price_sar": 220000,
+    "confidence": "medium",
+    "reasoning_ar": "2024 Prado in Riyadh; listing 51% above median. New model commands premium but 275k SAR overpriced."
+  },
+  "toyota|land-cruiser-prado|2026|unknown|eastern-province": {
+    "estimated_fair_price_sar": 213000,
+    "confidence": "medium",
+    "reasoning_ar": "2026 Prado, Eastern Province. Market median 213k SAR (n=5). Listed 234k is +10% above median. Toyota Prado holds value well; new model year supports premium. Unknown mileage is slight risk. Fair price near median."
+  },
+  "toyota|land-cruiser-prado|2024|0-25k|riyadh": {
+    "estimated_fair_price_sar": 181000,
+    "confidence": "high",
+    "reasoning_ar": "2024 Prado, low mileage, Riyadh premium applies. Near median; solid condition."
+  },
+  "toyota|raize|2022|50-75k|riyadh": {
+    "estimated_fair_price_sar": 51200,
+    "confidence": "high",
+    "reasoning_ar": "2022 Toyota Raize, 60k km, Riyadh. Listed 14% below median (52150 SAR). Toyota Raize retains value well; mileage medium-low. Riyadh +5% premium applied. Fair price ~51k SAR."
+  },
+  "toyota|rav4|2017|150k+|riyadh": {
+    "estimated_fair_price_sar": 42000,
+    "confidence": "medium",
+    "reasoning_ar": "2017 RAV4, 232k km is high mileage. Market median 63k SAR for 2018 models. Age/wear justify discount. Riyadh +5% offset."
+  },
+  "volkswagen|arteon|2018|100-150k|riyadh": {
+    "estimated_fair_price_sar": 85000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 VW Arteon, 137k km, Riyadh. German sedan, moderate mileage. Listed 6% low."
+  },
+  "volkswagen|t-roc|2022|50-75k|riyadh": {
+    "estimated_fair_price_sar": 72000,
+    "confidence": "medium",
+    "reasoning_ar": "2022 VW T-Roc, 74k km, Riyadh. Compact SUV segment, European make. Listed 12% below est. fair."
+  },
+  "volkswagen|teramont|2018|100-150k|riyadh": {
+    "estimated_fair_price_sar": 56000,
+    "confidence": "medium",
+    "reasoning_ar": "2018 Teramont, 146k km, Riyadh. Median 54.5k SAR; listing 3% above. Modest premium justified for location."
+  },
+  "volkswagen|tiguan|2023|25-50k|riyadh": {
+    "estimated_fair_price_sar": 92000,
+    "confidence": "medium",
+    "reasoning_ar": "2023 Tiguan, low mileage, Riyadh premium. VW holds value moderately; listing slightly underpriced."
   }
 }

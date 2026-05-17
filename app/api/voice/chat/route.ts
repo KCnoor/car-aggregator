@@ -53,10 +53,12 @@ type SearchInput = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function searchListings(input: SearchInput, supabase: any) {
+  // Same 15k-SAR junk floor as the rest of the site (see (modes)/layout.tsx).
   let q = supabase
     .from('listings')
     .select('id, source, source_url, make_en, make_ar, model_en, model_ar, year, price_sar, mileage_km, city_ar, city_en, color_ar, trim, deal_score, deal_score_label, contact_for_price, photo_urls, transmission_slug, fuel_type_slug, body_type_slug, seller_type')
     .eq('is_active', true)
+    .gte('price_sar', 15000)
 
   if (input.make)        q = q.ilike('make_en',  `%${input.make}%`)
   if (input.model)       q = q.ilike('model_en', `%${input.model}%`)

@@ -11,12 +11,16 @@ const PER_PERSONA_LIMIT = 12
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadPersona (apply: (q: any) => any): Promise<Listing[]> {
+  // Junk floor (see (modes)/layout.tsx): under-15k listings are filtered
+  // out site-wide. Per-persona caps below stack on top of this base
+  // floor (Postgres ANDs them; the tighter one wins).
   let q = supabase.from('listings')
     .select('*')
     .eq('is_active', true)
     .neq('freshness_state', 'dead')
     .neq('needs_make_review', true)
     .not('price_sar', 'is', null)
+    .gte('price_sar', 15000)
     .order('deal_score', { ascending: false, nullsFirst: false })
     .limit(PER_PERSONA_LIMIT)
   q = apply(q)

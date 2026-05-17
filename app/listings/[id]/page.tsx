@@ -20,7 +20,9 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   // longer resolves to a real ad.
   if (listing.freshness_state === 'dead' || listing.is_active === false) notFound()
 
-  // Fetch similar listings (same make + model, different id)
+  // Fetch similar listings (same make + model, different id). Junk floor
+  // (under-15k) matches the rest of the site so a fair-priced car never
+  // lists a 5,000 SAR typo as a comparable.
   const { data: similar } = await supabase
     .from('listings')
     .select('*')
@@ -29,6 +31,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .eq('is_active', true)
     .neq('freshness_state', 'dead')
     .neq('id', listing.id)
+    .gte('price_sar', 15000)
     .order('deal_score', { ascending: false, nullsFirst: false })
     .limit(6)
 
