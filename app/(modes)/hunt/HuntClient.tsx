@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Target, AlertCircle, Scale, MousePointer2, Pin, Sparkles,
+  Target, AlertCircle, Scale, MousePointer2, Pin, Sparkles, Layers,
 } from 'lucide-react'
 import {
   ComposedChart, Scatter, XAxis, YAxis, CartesianGrid,
@@ -349,15 +349,30 @@ export default function HuntClient ({
     setHoverId(prev => (prev && !renderedIds.has(prev) ? null : prev))
   }, [chart.rendered])
 
-  // Click → pin (max 4). Click again → unpin. Updates the canonical
-  // selection state owned by this parent; the strip reads from it
-  // synchronously on the same render.
+  // Toast state — surfaces when the user tries to pin a 9th car.
+  // Self-clears after 3 seconds. Side effects live outside the
+  // setSelectedListingIds updater so they don't double-fire under
+  // StrictMode.
+  const [toast, setToast] = useState<string | null>(null)
+  useEffect(() => {
+    if (!toast) return
+    const id = window.setTimeout(() => setToast(null), 3000)
+    return () => window.clearTimeout(id)
+  }, [toast])
+
+  // Click → pin (max 8). Click again → unpin. Out-of-room → toast.
+  const PIN_CAP = 8
   function togglePin (id: string) {
-    setSelectedListingIds(prev =>
-      prev.includes(id)
-        ? prev.filter(x => x !== id)
-        : (prev.length >= 4 ? prev : [...prev, id])
-    )
+    setSelectedListingIds(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id)
+      if (prev.length >= PIN_CAP) {
+        // Defer toast surfaces to a microtask so we never call setState
+        // from inside another setState updater.
+        queueMicrotask(() => setToast('وصلت الحد الأقصى — ٨ سيارات للمقارنة'))
+        return prev
+      }
+      return [...prev, id]
+    })
   }
 
   // ── Strip data ───────────────────────────────────────────────────────────
@@ -507,7 +522,7 @@ export default function HuntClient ({
             <span>
               <span aria-hidden style={{ marginInlineEnd: 8 }}>👇</span>
               {selectedListingIds.length > 0
-                ? <>السيارات المثبتة ({selectedListingIds.length} من {chart.rendered.length})</>
+                ? <>السيارات للمقارنة ({selectedListingIds.length} من ٨)</>
                 : <>السيارات في المخطط ({chart.rendered.length} سيارة)</>}
             </span>
             {selectedListingIds.length > 0 && (
@@ -529,17 +544,81 @@ export default function HuntClient ({
           {/* Sort pill row — controls the order of cards in the strip. */}
           <SortPills value={sortKey} onChange={setSortKey} />
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {stripListings.map((l, i) => {
-              const color = colorOf(l.id)
-              return (
-                <div key={l.id} style={{ borderInlineStart: `4px solid ${color}`, paddingInlineStart: 8 }}>
-                  <ListingCard listing={l} lang="ar" index={i} />
-                </div>
-              )
-            })}
-          </div>
+          {selectedListingIds.length > 0 ? (
+            // Pinned mode — horizontal scroll. 4 cards visible desktop,
+            // 2 on mobile. Each card has a fixed width so the scroll
+            // container can overflow horizontally.
+            <div
+              className="overflow-x-auto no-scrollbar"
+              style={{ scrollSnapType: 'x mandatory' }}
+              dir="rtl"
+            >
+              <div className="flex gap-4 pb-2" style={{ minWidth: 'min-content' }}>
+                {stripListings.map((l, i) => {
+                  const color = colorOf(l.id)
+                  return (
+                    <div
+                      key={l.id}
+                      style={{
+                        borderInlineStart: `4px solid ${color}`,
+                        paddingInlineStart: 8,
+                        width: 'var(--cmp-card-w, calc(50% - 8px))',
+                        flexShrink: 0,
+                        scrollSnapAlign: 'start',
+                      }}
+                    >
+                      <ListingCard listing={l} lang="ar" index={i} />
+                    </div>
+                  )
+                })}
+              </div>
+              <style>{`
+                /* Mobile: 2 cards visible. Desktop: 4 cards visible. */
+                :root { --cmp-card-w: calc(50% - 8px); }
+                @media (min-width: 768px) {
+                  :root { --cmp-card-w: calc(25% - 12px); }
+                }
+              `}</style>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {stripListings.map((l, i) => {
+                const color = colorOf(l.id)
+                return (
+                  <div key={l.id} style={{ borderInlineStart: `4px solid ${color}`, paddingInlineStart: 8 }}>
+                    <ListingCard listing={l} lang="ar" index={i} />
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </section>
+      )}
+
+      {/* Toast — auto-dismisses after 3s via the toast effect above. */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          dir="rtl"
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            insetInlineEnd: 24,
+            background: '#FEF3C7',
+            color: '#1E293B',
+            fontSize: 14,
+            fontWeight: 700,
+            padding: '12px 16px',
+            borderRadius: 12,
+            border: '1px solid #FCD34D',
+            boxShadow: '0 14px 32px rgba(15,23,42,0.18)',
+            zIndex: 60,
+            maxWidth: 320,
+          }}
+        >
+          {toast}
+        </div>
       )}
     </div>
   )
@@ -624,11 +703,15 @@ function TooManyModelsBanner ({ onDismiss }: { onDismiss: () => void }) {
 
 // ─── Tips panel ─────────────────────────────────────────────────────────────
 function UsageTips () {
+  // Tip 4 uses single-click wording because that's the actual
+  // behaviour — togglePin runs on every click. Tip 5 sets expectations
+  // on the 8-car comparison cap so users don't feel boxed in.
   const TIPS: { Icon: typeof Scale; text: string }[] = [
     { Icon: Scale,         text: 'قارن سيارات من نفس الفئة (مو رولز رويس مع كورولا)' },
     { Icon: Target,        text: 'النتيجة الأوضح بـ ٣ موديلات أو أقل' },
     { Icon: MousePointer2, text: 'حوم على نقطة لتفاصيل السيارة' },
-    { Icon: Pin,           text: 'اضغط لتثبيت سيارة للمقارنة' },
+    { Icon: Pin,           text: 'اضغط على النقطة لتثبيت السيارة في المقارنة تحت' },
+    { Icon: Layers,        text: 'يمكنك مقارنة حتى ٨ سيارات في وقت واحد' },
     { Icon: Sparkles,      text: 'انتبه وتأكد من اللقطات لا يكونوا قفطات 😉' },
   ]
   return (
@@ -850,6 +933,7 @@ function HuntChart ({
           cursor: 'pointer',
           transition: 'r 0.18s',
           filter: isPinned ? 'drop-shadow(0 0 6px rgba(255,107,74,0.55))' : 'none',
+          pointerEvents: 'auto',
         }}
         onMouseEnter={e => {
           const rect = containerRef.current?.getBoundingClientRect()
@@ -862,12 +946,33 @@ function HuntChart ({
           if (rect) onHover(id, { x: e.clientX - rect.left, y: e.clientY - rect.top })
         }}
         onMouseLeave={() => onHover(null, null)}
+        // Belt-and-suspenders: bind BOTH onClick and onPointerDown. Safari
+        // desktop sometimes drops `click` on small SVG primitives after a
+        // fast tap but reliably fires `pointerdown`. Pointer events also
+        // unify mouse + touch + pen on every modern browser.
         onClick={() => onClick(id)}
+        onPointerDown={e => {
+          // Only treat primary-button pointer events as a click.
+          if (e.isPrimary && (e.pointerType === 'mouse' ? e.button === 0 : true)) {
+            onClick(id)
+          }
+        }}
       >
+        {/* Invisible larger hit target — the fix for desktop Safari's
+            strict SVG per-pixel hit-testing on small <circle> elements.
+            Mobile Safari auto-expands touch targets so it worked there;
+            desktop Safari and Chrome with precise mice don't. r=18 gives
+            a ~36×36 click zone regardless of the visible dot size. */}
+        <circle
+          cx={cx} cy={cy} r={18}
+          fill="transparent"
+          stroke="none"
+          style={{ pointerEvents: 'all' }}
+        />
         {/* White halo behind the coral border so the ring reads against
             similar-color zone backgrounds. */}
         {isPinned && (
-          <circle cx={cx} cy={cy} r={r + 2} fill="none" stroke="#FFFFFF" strokeWidth={4} />
+          <circle cx={cx} cy={cy} r={r + 2} fill="none" stroke="#FFFFFF" strokeWidth={4} pointerEvents="none" />
         )}
         <circle
           cx={cx} cy={cy} r={r}
@@ -875,6 +980,7 @@ function HuntChart ({
           fillOpacity={fillOpacity}
           stroke={isPinned ? CORAL : '#FFFFFF'}
           strokeWidth={isPinned ? 3 : 1}
+          pointerEvents="none"
         />
       </g>
     )
@@ -1065,50 +1171,9 @@ function HuntChart ({
               ممشى أقل
             </span>
 
-            {/* Horizontal strip — below the X axis tick numbers.
-                Emerald (cheaper / better) at the left → amber at the right. */}
-            <div
-              aria-hidden
-              style={{
-                position: 'absolute',
-                left: 104, right: 28,
-                bottom: 6, height: 12,
-                borderRadius: 999,
-                background: 'linear-gradient(to right, #10B981 0%, #F59E0B 100%)',
-                opacity: 0.40,
-                zIndex: 5,
-              }}
-            />
-            <span
-              style={{
-                position: 'absolute',
-                left: 108, bottom: 4,
-                color: '#047857',
-                fontSize: 11, fontWeight: 700,
-                background: 'rgba(255,255,255,0.85)',
-                padding: '1px 5px',
-                borderRadius: 4,
-                zIndex: 6,
-                pointerEvents: 'none',
-              }}
-            >
-              سعر أرخص
-            </span>
-            <span
-              style={{
-                position: 'absolute',
-                right: 32, bottom: 4,
-                color: '#B45309',
-                fontSize: 11, fontWeight: 700,
-                background: 'rgba(255,255,255,0.85)',
-                padding: '1px 5px',
-                borderRadius: 4,
-                zIndex: 6,
-                pointerEvents: 'none',
-              }}
-            >
-              سعر أغلى
-            </span>
+            {/* Horizontal X gradient strip moved OUT of the chart frame
+                — see the band below the X axis title in the parent
+                stack. The vertical Y strip above is unchanged. */}
           </>
         )}
 
@@ -1142,15 +1207,79 @@ function HuntChart ({
         )}
       </div>
 
-      {/* Zone legend strip — sized up so it reads at a glance instead of
-          requiring a squint. RTL order so the deal-zone swatch (green)
-          comes first under Arabic. */}
+      {/* X axis title — sits immediately below the chart frame, above
+          the price-gradient strip (the gradient now belongs with the
+          axis it describes, not with the zone color key). */}
+      <div className="flex" style={{
+        color: NAVY_900, fontSize: 18, fontWeight: 800,
+        marginTop: 8, justifyContent: 'center',
+      }}>
+        {xTitle}
+      </div>
+
+      {/* External horizontal price gradient — emerald (cheaper) on the
+          left, amber (more expensive) on the right. Inset to roughly
+          match the chart's plot-area horizontal extent (88px left for
+          the YAxis area + 16px right margin). */}
+      {xMid > 0 && yMid > 0 && (
+        <div
+          className="relative"
+          style={{
+            marginTop: 8,
+            paddingInlineStart: 88,
+            paddingInlineEnd: 16,
+            height: 22,
+          }}
+        >
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: 88, right: 16,
+              top: 4, height: 12,
+              borderRadius: 999,
+              background: 'linear-gradient(to right, #10B981 0%, #F59E0B 100%)',
+              opacity: 0.55,
+            }}
+          />
+          <span
+            style={{
+              position: 'absolute',
+              left: 92, top: 2,
+              color: '#047857',
+              fontSize: 11, fontWeight: 700,
+              background: 'rgba(255,255,255,0.92)',
+              padding: '1px 5px',
+              borderRadius: 4,
+            }}
+          >
+            سعر أرخص
+          </span>
+          <span
+            style={{
+              position: 'absolute',
+              right: 20, top: 2,
+              color: '#B45309',
+              fontSize: 11, fontWeight: 700,
+              background: 'rgba(255,255,255,0.92)',
+              padding: '1px 5px',
+              borderRadius: 4,
+            }}
+          >
+            سعر أغلى
+          </span>
+        </div>
+      )}
+
+      {/* Zone legend — now the bottom-most chart-related element.
+          Separated from the price gradient by 8px so the two read as
+          distinct concepts (gradient = direction; squares = zone key). */}
       {xMid > 0 && yMid > 0 && (
         <div
           dir="rtl"
           className="flex flex-wrap items-center justify-center"
           style={{
-            marginTop: 12,
+            marginTop: 8,
             background: SLATE_50,
             borderTop: `1px solid ${SLATE_200}`,
             padding: '14px 20px',
@@ -1165,14 +1294,6 @@ function HuntChart ({
           <LegendEntry text={pills.avoid}   fill="#FFF1F2" stroke="#F43F5E" />
         </div>
       )}
-
-      {/* X axis title below the legend */}
-      <div className="flex" style={{
-        color: NAVY_900, fontSize: 18, fontWeight: 800,
-        marginTop: 12, justifyContent: 'center',
-      }}>
-        {xTitle}
-      </div>
     </div>
   )
 }
