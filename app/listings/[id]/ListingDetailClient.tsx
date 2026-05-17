@@ -237,21 +237,25 @@ export default function ListingDetailClient({
                   </div>
 
                   {/* Deal score block — flat pill matches ListingCard tier
-                       style. Raw score shows alongside, only on this page. */}
-                  {!listing.contact_for_price && listing.deal_score !== null && deal && (
+                       style. The raw number stays on this page even when
+                       no tier label fits (score < 6.0), so the detail page
+                       always exposes the underlying value. */}
+                  {!listing.contact_for_price && listing.deal_score !== null && (
                     <div className="flex items-center gap-3">
-                      <span
-                        className="inline-flex items-center rounded-full text-white shadow-sm"
-                        style={{
-                          background: deal.bg,
-                          padding: '8px 14px',
-                          fontSize: 14,
-                          fontWeight: 800,
-                          lineHeight: 1,
-                        }}
-                      >
-                        {deal.label}
-                      </span>
+                      {deal && (
+                        <span
+                          className="inline-flex items-center rounded-full text-white shadow-sm"
+                          style={{
+                            background: deal.bg,
+                            padding: '8px 14px',
+                            fontSize: 14,
+                            fontWeight: 800,
+                            lineHeight: 1,
+                          }}
+                        >
+                          {deal.label}
+                        </span>
+                      )}
                       <div className="flex flex-col leading-tight">
                         <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--text-primary)' }}>
                           {listing.deal_score.toFixed(1)}
