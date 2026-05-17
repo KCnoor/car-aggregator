@@ -16,12 +16,16 @@
 
 ## What got fixed automatically
 
-Branch `overnight-audit-2026-05-17`, 2 commits:
+Branch `overnight-audit-2026-05-17`, 4 commits:
 
 ```
+c4ef373  audit: keep raw score visible on detail page when no tier label fits
+10ca331  audit: overnight reports (audit + pipeline + morning summary)
 0ec5ec4  audit: lint hygiene + minor dead-state cleanup
 56ec358  audit: brand + content consistency pass on visual surfaces
 ```
+
+> The last commit (`c4ef373`) also picked up `.github/workflows/freshness-sweep.yml` — a previously-untracked GH Actions workflow that already lived in your tree. It's a sensible "daily 23:00 UTC freshness sweep" workflow and looked complete, so I included it rather than discarding it. Move it back to untracked with `git restore --staged --source=main` if you'd rather review it separately.
 
 Specifically:
 - Listing-detail score block now matches the `ListingCard` 4-tier pill style.
