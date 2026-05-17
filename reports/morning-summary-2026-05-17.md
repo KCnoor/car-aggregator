@@ -4,16 +4,21 @@
 
 1. **`/browse` filters never reach the server.** Every dropdown (city / make / price / year / …) mutates React state only; the URL never updates and the server only ships 50 rows per page. The "X results" counter and the filtered grid only reflect the current page slice. High-impact UX bug — fix is bounded but not auto-applied. Details in `reports/overnight-audit-2026-05-17.md`.
 2. **Listing-detail score block is now brand-consistent.** Replaced the gold-gradient 6-tier pill with the same 4-tier label-only pill used in `ListingCard`. Build clean.
-3. **Pipeline will likely still be running.** `pipeline:refresh` started 04:55 KSA. The scrape phase is two-pass per source: list-page crawl, then detail-scrape every URL. Syarah's list-crawl found 3,323 URLs and the detail-scrape rate is ~22 listings/min, so each source takes roughly 1.5–2.5 h. The full 9-source scrape alone is on track for ~12–18 h — well past the 6 h window. Expect to wake up with the scrape still mid-flight or only 2–3 sources past it; **the normalize / freshness / baselines / score stages won't have started** unless something is faster than I'm estimating. Live log: `logs/pipeline-2026-05-17.log`. No errors so far.
+3. **Pipeline is still running. Syarah done (3 h 56 m), motory in flight at 5 h.** No errors so far, no AI spend yet (scoring hasn't run). The remaining 7 sources will push total runtime past the 6 h window; **normalize / freshness / baselines / score have NOT run**. Live log: `logs/pipeline-2026-05-17.log`. Three options for the morning: (a) let it finish naturally (~20-30 h total), (b) `kill -INT 8642` and run `pipeline_full.js --only=freshness,baselines,score` (~30-60 min, refreshes current rows but no new ones), (c) keep it running and ignore until tomorrow.
 
 ## Pipeline outcome
 
-- **Status:** Almost certainly still running at hand-off. The detail-scrape rate (~22 listings/min) means each source takes 1.5–2.5 h. With 9 sources, the scrape stage alone is ~12–18 h. `pipeline_runs` will show `status='running'` on whichever source is in progress.
+- **Status at 05:02 elapsed (06:57 KSA, ~5 h in):** scrape stage still running. Syarah completed in **3 h 56 min** (raw_listings 276 → 3,388, +3,112 new). Motory in progress (275 / 1,509 URLs scraped). 7 sources still queued.
+- **`pipeline_runs` snapshot:**
+  - `success scrape syarah 14,154 s` — drift null, exit 0
+  - `running scrape motory …` — list-crawl done at 1,509 URLs, detail scrape underway
 - **Listings before:** 17,058 active.
-- **Sources with issues:** none yet.
+- **Sources with issues:** none.
 - **AI cost:** $0 so far (scoring stage hasn't run).
-- **What to do if it's still running:** let it continue — partial scrape data is being written incrementally to `raw_listings` and is safe to keep. The normalize/baselines/score stages are idempotent and can be (re)run once the scrape finishes. If you need to free the machine, send SIGINT (`Ctrl-C` or `kill -INT 8642`) — the orchestrator catches it and leaves a clean `pipeline_runs` row.
+- **Likely runtime to full completion:** 9 sources × ~2-4 h ≈ 20-30 h. Won't finish today without intervention.
+- **What to do if it's still running:** let it continue — partial scrape data is written incrementally to `raw_listings` and is safe to keep. Normalize/baselines/score are idempotent and can be (re)run once the scrape finishes. If you need the machine back, `kill -INT 8642` — the orchestrator catches it and leaves a clean `pipeline_runs` row.
 - **What to do once it lands:** `node scripts/pipeline-fill-report.js > reports/pipeline-2026-05-17.filled.md` to auto-generate the per-source / scoring / baseline summary.
+- **Possible fast-path:** if you only care about refreshing the currently-active rows (not pulling new ones), `node scripts/pipeline_full.js --only=freshness,baselines,score` after killing the scrape stage will run those three stages in ~30-60 min. The raw_listings already captured from syarah will still feed into normalize on the next full refresh.
 - See `reports/pipeline-2026-05-17.md` for the pre-refresh snapshot.
 
 ## What got fixed automatically
