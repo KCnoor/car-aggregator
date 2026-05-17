@@ -41,6 +41,8 @@ export type SlotSpec = {
 }
 type Slot = SlotSpec | null
 
+type SortKey = 'score' | 'price' | 'mileage' | 'year'
+
 type CanonicalMake = {
   canonical_make_slug: string
   canonical_name_en: string
@@ -119,7 +121,13 @@ export default function HuntClient ({
     return seeded
   })
   const [perSlot, setPerSlot] = useState<Listing[][]>(initialPerSlot)
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
+  // Canonical selection state. Stored as a string[] (not Set) so click
+  // order is preserved for the comparison strip and so the array
+  // identity changes on every update (Sets are mutable + reference-stable
+  // which used to trip React's bailout heuristics in dev).
+  const [selectedListingIds, setSelectedListingIds] = useState<string[]>([])
+  // Default sort for the strip.
+  const [sortKey, setSortKey] = useState<SortKey>('score')
   const [hoverId,   setHoverId]   = useState<string | null>(null)
   const [hoverXY,   setHoverXY]   = useState<{ x: number; y: number } | null>(null)
 
@@ -160,7 +168,7 @@ export default function HuntClient ({
     // Reset interactions — pinned/hover IDs may belong to listings about
     // to disappear. The pinned-prune effect below will refill what's still
     // valid once the next data fetch lands.
-    setPinnedIds(new Set())
+    setSelectedListingIds([])
     setHoverId(null)
     setHoverXY(null)
   }
@@ -177,7 +185,7 @@ export default function HuntClient ({
       next[idx] = { ...cur, model: modelSlug ?? '' }
       return next
     })
-    setPinnedIds(new Set()); setHoverId(null); setHoverXY(null)
+    setSelectedListingIds([]); setHoverId(null); setHoverXY(null)
   }
   function setSlotYears (idx: number, yearMin: number, yearMax: number) {
     setSlots(prev => {
@@ -187,7 +195,7 @@ export default function HuntClient ({
       next[idx] = { ...cur, yearMin, yearMax }
       return next
     })
-    setPinnedIds(new Set()); setHoverId(null); setHoverXY(null)
+    setSelectedListingIds([]); setHoverId(null); setHoverXY(null)
   }
 
   // ── Group resolved metadata for each filled slot (in slot order) ─────────
@@ -334,25 +342,22 @@ export default function HuntClient ({
     const sig = chart.rendered.map(p => p.id).sort().join(',')
     if (sig === lastRenderedIdsRef.current) return
     lastRenderedIdsRef.current = sig
-    setPinnedIds(prev => {
-      const next = new Set<string>()
-      let changed = false
-      for (const id of prev) {
-        if (renderedIds.has(id)) next.add(id)
-        else changed = true
-      }
-      return changed ? next : prev
+    setSelectedListingIds(prev => {
+      const next = prev.filter(id => renderedIds.has(id))
+      return next.length === prev.length ? prev : next
     })
     setHoverId(prev => (prev && !renderedIds.has(prev) ? null : prev))
   }, [chart.rendered])
 
+  // Click → pin (max 4). Click again → unpin. Updates the canonical
+  // selection state owned by this parent; the strip reads from it
+  // synchronously on the same render.
   function togglePin (id: string) {
-    setPinnedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else if (next.size < 4) next.add(id)
-      return next
-    })
+    setSelectedListingIds(prev =>
+      prev.includes(id)
+        ? prev.filter(x => x !== id)
+        : (prev.length >= 4 ? prev : [...prev, id])
+    )
   }
 
   // ── Strip data ───────────────────────────────────────────────────────────
@@ -362,16 +367,25 @@ export default function HuntClient ({
   //   - No pins      → every chart.rendered listing, sorted by deal_score
   //   - 1–4 pins     → only those listings, in click order
   const stripListings: Listing[] = useMemo(() => {
-    if (pinnedIds.size > 0) {
-      const ids = [...pinnedIds]
-      return ids
+    // Step 1 — pick the visible set: pinned subset if any, else all chart points.
+    let visible: Listing[]
+    if (selectedListingIds.length > 0) {
+      visible = selectedListingIds
         .map(id => chart.byId.get(id)?.listing)
         .filter(Boolean) as Listing[]
+    } else {
+      visible = chart.rendered.map(p => p.listing)
     }
-    return chart.rendered
-      .map(p => p.listing)
-      .sort((a, b) => (b.deal_score ?? -1) - (a.deal_score ?? -1))
-  }, [pinnedIds, chart])
+    // Step 2 — apply sort. Stable copy so the original chart order isn't disturbed.
+    const sorted = [...visible]
+    switch (sortKey) {
+      case 'score':   sorted.sort((a, b) => (b.deal_score ?? -1) - (a.deal_score ?? -1)); break
+      case 'price':   sorted.sort((a, b) => (a.price_sar  ??  Infinity) - (b.price_sar  ??  Infinity)); break
+      case 'mileage': sorted.sort((a, b) => (a.mileage_km ??  Infinity) - (b.mileage_km ??  Infinity)); break
+      case 'year':    sorted.sort((a, b) => (b.year       ??  0) - (a.year       ??  0)); break
+    }
+    return sorted
+  }, [selectedListingIds, chart, sortKey])
 
   // Look up the listing's slot color when rendering the comparison strip
   // (must match the dot's color so the user can tell which slot a card
@@ -463,7 +477,7 @@ export default function HuntClient ({
               xStep={chart.xStep} yStep={chart.yStep}
               xMid={chart.xMid} yMid={chart.yMid}
               hoverId={hoverId}
-              pinnedIds={pinnedIds}
+              selectedIds={selectedListingIds}
               onHover={(id, xy) => { setHoverId(id); setHoverXY(xy) }}
               onClick={togglePin}
               offChartCount={chart.excluded.offChart + chart.excluded.invalid}
@@ -478,15 +492,13 @@ export default function HuntClient ({
       {/* ── Listings strip ── */}
       {hasAnyFullSlot && chart.rendered.length > 0 && (
         <section className="max-w-screen-xl mx-auto px-4 pb-12">
-          {/* Bridge — copy + clear control depend on whether the user has
-              pinned anything. Selection mode shows "X من Y" so the user
-              can see how many of the chart's points they've isolated. */}
+          {/* Bridge — copy + clear control depend on the selection state. */}
           <div
             className="rounded-2xl flex items-center justify-between flex-wrap gap-2"
             style={{
               background: SLATE_50,
               padding: 12,
-              marginBottom: 16,
+              marginBottom: 12,
               color: SLATE_700,
               fontSize: 16,
               fontWeight: 600,
@@ -494,13 +506,13 @@ export default function HuntClient ({
           >
             <span>
               <span aria-hidden style={{ marginInlineEnd: 8 }}>👇</span>
-              {pinnedIds.size > 0
-                ? <>السيارات المثبتة ({pinnedIds.size} من {chart.rendered.length})</>
-                : <>السيارات في المخطط ({stripListings.length} سيارة) — مرتبة حسب أحسن صفقة</>}
+              {selectedListingIds.length > 0
+                ? <>السيارات المثبتة ({selectedListingIds.length} من {chart.rendered.length})</>
+                : <>السيارات في المخطط ({chart.rendered.length} سيارة)</>}
             </span>
-            {pinnedIds.size > 0 && (
+            {selectedListingIds.length > 0 && (
               <button
-                onClick={() => setPinnedIds(new Set())}
+                onClick={() => setSelectedListingIds([])}
                 className="inline-flex items-center gap-1"
                 style={{
                   color: CORAL,
@@ -514,6 +526,9 @@ export default function HuntClient ({
             )}
           </div>
 
+          {/* Sort pill row — controls the order of cards in the strip. */}
+          <SortPills value={sortKey} onChange={setSortKey} />
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {stripListings.map((l, i) => {
               const color = colorOf(l.id)
@@ -526,6 +541,52 @@ export default function HuntClient ({
           </div>
         </section>
       )}
+    </div>
+  )
+}
+
+// ─── Sort pill row ─────────────────────────────────────────────────────────
+const SORT_PILLS: { key: SortKey; labelAr: string }[] = [
+  { key: 'score',   labelAr: 'أحسن صفقة' },
+  { key: 'price',   labelAr: 'الأرخص' },
+  { key: 'mileage', labelAr: 'الأقل ممشى' },
+  { key: 'year',    labelAr: 'الأحدث' },
+]
+function SortPills ({ value, onChange }: { value: SortKey; onChange: (k: SortKey) => void }) {
+  return (
+    <div
+      dir="rtl"
+      className="flex flex-wrap items-center gap-2"
+      style={{ marginBottom: 12 }}
+    >
+      <span style={{ color: '#475569', fontSize: 14, fontWeight: 600, marginInlineEnd: 4 }}>
+        ترتيب حسب:
+      </span>
+      {SORT_PILLS.map(p => {
+        const active = value === p.key
+        return (
+          <button
+            key={p.key}
+            type="button"
+            onClick={() => onChange(p.key)}
+            aria-pressed={active}
+            className="transition-colors"
+            style={{
+              background: active ? CORAL : '#FFFFFF',
+              color: active ? '#FFFFFF' : '#334155',
+              border: active ? '1px solid transparent' : '1px solid #E2E8F0',
+              borderRadius: 12,
+              padding: '8px 16px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {p.labelAr}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -743,7 +804,7 @@ function SlotCard ({
 function HuntChart ({
   points,
   xMin, xMax, yMin, yMax, xStep, yStep, xMid, yMid,
-  hoverId, pinnedIds, onHover, onClick,
+  hoverId, selectedIds, onHover, onClick,
   offChartCount, lang,
   hoverPoint, hoverXY,
 }: {
@@ -752,7 +813,7 @@ function HuntChart ({
   xStep: number; yStep: number
   xMid: number; yMid: number
   hoverId: string | null
-  pinnedIds: Set<string>
+  selectedIds: string[]
   onHover: (id: string | null, xy: { x: number; y: number } | null) => void
   onClick: (id: string) => void
   offChartCount: number
@@ -761,23 +822,35 @@ function HuntChart ({
   hoverXY: { x: number; y: number } | null
 }) {
   const anyHover = hoverId !== null
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds])
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // One Scatter for all points; the dot shape reads its own color and
-  // hover/pin state from the `id` stamped on each datum. This avoids the
-  // multiple-Scatter z-stacking bug that made dots in earlier groups
-  // unhoverable in the previous implementation.
+  // Single <Scatter> renders every point. The dot shape reads color +
+  // hover + pinned state from the datum stamped with its own listing.id.
+  //
+  // Pinned visual is intentionally LOUD so the click→pin feedback can't
+  // be missed:
+  //   - 3px coral stroke (was 3px before but blended with circle rim)
+  //   - inner white halo (4px white inner stroke under the coral)
+  //   - radius bumped to 12 (vs 9 unpinned, 14 hovered)
+  //   - coral drop-shadow filter for a soft glow
+  //   - pinned dots also paint AFTER the others in SVG order, so they
+  //     sit on top of unpinned dots when overlapping (see render block).
   const dotShape = useCallback((props: { cx?: number; cy?: number; payload?: ChartPoint }) => {
     const { cx, cy, payload } = props
     if (cx == null || cy == null || !payload) return <g />
     const id = payload.id
     const isHover  = hoverId === id
-    const isPinned = pinnedIds.has(id)
-    const r = isHover ? 14 : 9
-    const fillOpacity = anyHover ? (isHover ? 1 : 0.25) : 1
+    const isPinned = selectedSet.has(id)
+    const r = isPinned ? 12 : isHover ? 14 : 9
+    const fillOpacity = anyHover ? (isHover || isPinned ? 1 : 0.25) : 1
     return (
       <g
-        style={{ cursor: 'pointer', transition: 'r 0.18s' }}
+        style={{
+          cursor: 'pointer',
+          transition: 'r 0.18s',
+          filter: isPinned ? 'drop-shadow(0 0 6px rgba(255,107,74,0.55))' : 'none',
+        }}
         onMouseEnter={e => {
           const rect = containerRef.current?.getBoundingClientRect()
           onHover(id, rect
@@ -791,6 +864,11 @@ function HuntChart ({
         onMouseLeave={() => onHover(null, null)}
         onClick={() => onClick(id)}
       >
+        {/* White halo behind the coral border so the ring reads against
+            similar-color zone backgrounds. */}
+        {isPinned && (
+          <circle cx={cx} cy={cy} r={r + 2} fill="none" stroke="#FFFFFF" strokeWidth={4} />
+        )}
         <circle
           cx={cx} cy={cy} r={r}
           fill={payload.modelColor}
@@ -800,7 +878,20 @@ function HuntChart ({
         />
       </g>
     )
-  }, [hoverId, pinnedIds, anyHover, onHover, onClick])
+  }, [hoverId, selectedSet, anyHover, onHover, onClick])
+
+  // Render pinned dots LAST so they paint on top of unpinned siblings.
+  // SVG has no z-index; document order wins, so we reorder the data.
+  const orderedPoints = useMemo(() => {
+    if (selectedIds.length === 0) return points
+    const pinned: ChartPoint[] = []
+    const rest: ChartPoint[] = []
+    for (const p of points) {
+      if (selectedSet.has(p.id)) pinned.push(p)
+      else rest.push(p)
+    }
+    return [...rest, ...pinned]
+  }, [points, selectedSet, selectedIds.length])
 
   const xTicks = ticksForDomain(xMin, xMax, xStep)
   const yTicks = ticksForDomain(yMin, yMax, yStep)
@@ -914,7 +1005,7 @@ function HuntChart ({
                   Drawing in a single SVG layer fixes the cross-group hover
                   occlusion bug from the previous N-Scatter implementation. */}
               <Scatter
-                data={points}
+                data={orderedPoints}
                 isAnimationActive={false}
                 shape={dotShape}
               />
