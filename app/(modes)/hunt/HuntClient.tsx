@@ -106,11 +106,18 @@ export default function HuntClient ({
   initialPerSlot,
   canonicalMakes,
   canonicalModels,
+  presentMakeSlugs = [],
+  presentModelKeys = [],
 }: {
   initialSpecs: SlotSpec[]
   initialPerSlot: Listing[][]
   canonicalMakes: CanonicalMake[]
   canonicalModels: CanonicalModel[]
+  // Corpus-presence facets from the server (15k floor applied). The slot
+  // dropdowns surface only makes/models that have ≥1 current listing —
+  // so picking a make never opens a "this brand has no cars" dead end.
+  presentMakeSlugs?: string[]
+  presentModelKeys?: string[]  // "<make_slug>|<model_slug>"
 }) {
   const router = useRouter()
   const { lang } = useLang()
@@ -447,6 +454,8 @@ export default function HuntClient ({
               color={MODEL_COLORS[idx]}
               canonicalMakes={canonicalMakes}
               canonicalModels={canonicalModels}
+              presentMakeSlugs={presentMakeSlugs}
+              presentModelKeys={presentModelKeys}
               lang={lang}
               onPickMake={make => setSlotMake(idx, make)}
               onPickModel={model => setSlotModel(idx, model)}
@@ -780,7 +789,8 @@ function EmptyState ({ lang }: { lang: 'ar' | 'en' }) {
 // ─── Slot card ──────────────────────────────────────────────────────────────
 function SlotCard ({
   slotIndex, slot, color,
-  canonicalMakes, canonicalModels, lang,
+  canonicalMakes, canonicalModels,
+  presentMakeSlugs, presentModelKeys, lang,
   onPickMake, onPickModel, onPickYears, onClear,
 }: {
   slotIndex: number
@@ -788,6 +798,8 @@ function SlotCard ({
   color: string
   canonicalMakes: CanonicalMake[]
   canonicalModels: CanonicalModel[]
+  presentMakeSlugs: string[]
+  presentModelKeys: string[]
   lang: 'ar' | 'en'
   onPickMake: (slug: string | null) => void
   onPickModel: (slug: string | null) => void
@@ -796,8 +808,21 @@ function SlotCard ({
 }) {
   const filled = !!slot?.make
   const fullyFilled = !!(slot?.make && slot?.model)
+  // Restrict the make dropdown to makes with ≥1 current listing past the
+  // 15k floor. The presentMakeSlugs set is computed server-side so the
+  // dropdown reflects DB state, not whatever subset the chart happens to
+  // be holding.
+  const presentMakeSet = useMemo(() => new Set(presentMakeSlugs), [presentMakeSlugs])
+  const presentModelSet = useMemo(() => new Set(presentModelKeys), [presentModelKeys])
+  const availableMakes = useMemo(
+    () => canonicalMakes.filter(m => presentMakeSet.has(m.canonical_make_slug)),
+    [canonicalMakes, presentMakeSet],
+  )
   const modelsForMake = slot?.make
-    ? canonicalModels.filter(m => m.canonical_make_slug === slot.make)
+    ? canonicalModels.filter(m =>
+        m.canonical_make_slug === slot.make &&
+        presentModelSet.has(`${slot.make}|${m.canonical_model_slug}`),
+      )
     : []
   const yearMin = slot?.yearMin ?? DEFAULT_YEAR_MIN
   const yearMax = slot?.yearMax ?? DEFAULT_YEAR_MAX
@@ -851,7 +876,7 @@ function SlotCard ({
         }}
       >
         <option value="">{lang === 'ar' ? 'الماركة' : 'Make'}</option>
-        {canonicalMakes.map(m => (
+        {availableMakes.map(m => (
           <option key={m.canonical_make_slug} value={m.canonical_make_slug}>
             {lang === 'ar' ? m.canonical_name_ar : m.canonical_name_en}
           </option>

@@ -87,13 +87,24 @@ export default async function HuntPage ({
   const params = await searchParams
   const specs = buildSpecs(params.models, params.years)
 
-  const [canonicalMakesRes, canonicalModelsRes] = await Promise.all([
+  // Catalogue + corpus-presence query. The (make_slug, model_slug) facet
+  // pulls every distinct pair past the 15k floor so the slot dropdowns
+  // hide makes/models that have zero current inventory. Same shape as
+  // browse/page.tsx — DISTINCT happens client-side because PostgREST
+  // doesn't expose it.
+  const [canonicalMakesRes, canonicalModelsRes, facetRes] = await Promise.all([
     supabase.from('canonical_makes')
       .select('canonical_make_slug, canonical_name_en, canonical_name_ar')
       .order('canonical_name_en'),
     supabase.from('canonical_models')
       .select('canonical_make_slug, canonical_model_slug, canonical_name_en, canonical_name_ar')
       .order('canonical_name_en'),
+    supabase.from('listings')
+      .select('make_slug, model_slug')
+      .eq('is_active', true)
+      .neq('freshness_state', 'dead')
+      .gte('price_sar', 15000)
+      .limit(20000),
   ])
 
   // Fire one query per filled slot in parallel. Each slot owns its own
@@ -102,12 +113,22 @@ export default async function HuntPage ({
     ? await Promise.all(specs.map(loadSlotListings))
     : []
 
+  const facetRows = (facetRes.data ?? []) as { make_slug: string | null; model_slug: string | null }[]
+  const presentMakeSlugs   = new Set<string>()
+  const presentModelKeyset = new Set<string>()   // "<make>|<model>" — used by SlotCard to filter the model list
+  for (const r of facetRows) {
+    if (r.make_slug) presentMakeSlugs.add(r.make_slug)
+    if (r.make_slug && r.model_slug) presentModelKeyset.add(`${r.make_slug}|${r.model_slug}`)
+  }
+
   return (
     <HuntClient
       initialSpecs={specs}
       initialPerSlot={perSlot}
       canonicalMakes={canonicalMakesRes.data ?? []}
       canonicalModels={canonicalModelsRes.data ?? []}
+      presentMakeSlugs={[...presentMakeSlugs]}
+      presentModelKeys={[...presentModelKeyset]}
     />
   )
 }
